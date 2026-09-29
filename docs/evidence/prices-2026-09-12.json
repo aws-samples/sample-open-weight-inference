@@ -1,0 +1,1499 @@
+{
+  "retrieved_date": "2026-09-12",
+  "extracted_at": "2026-09-12T18:11:46.672927+00:00",
+  "region": "us-east-1",
+  "currency": "USD",
+  "pricing_basis": "Public AWS Price List Bulk API; no account discounts, taxes, capacity assertions, or measured performance.",
+  "catalogs": [
+    {
+      "service": "AmazonBedrock",
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/20260911124408/us-east-1/index.json",
+      "catalog_publication_date": "2026-09-11T12:44:08Z",
+      "catalog_version": "20260911124408",
+      "download_sha256": "c854008e445a3da07c5c216d30aa08e3d641da2be32c55a99ec95f4342243a68",
+      "products": {
+        "8EJKXB49YY4SMCKM": {
+          "sku": "8EJKXB49YY4SMCKM",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Llama-CustomModelImport-Inference-v1:0",
+            "operation": "",
+            "architecture": "Llama",
+            "architectureName": "Llama",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "HNSV8S3265Q9CBKM": {
+          "sku": "HNSV8S3265Q9CBKM",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Flan-CustomModelImport-Inference-v1:0",
+            "operation": "",
+            "architecture": "Flan",
+            "architectureName": "Flan",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "ME93GQVWQPECZK69": {
+          "sku": "ME93GQVWQPECZK69",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-OSS-CustomModelImport-Inference-v2:0",
+            "operation": "",
+            "architecture": "OSS",
+            "architectureName": "OSS",
+            "customModelUnitVersion": "v2.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "ZXB3HHGAAQPPBXP9": {
+          "sku": "ZXB3HHGAAQPPBXP9",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Mixtral-CustomModelImport-Inference-v1:0",
+            "operation": "",
+            "architecture": "Mixtral",
+            "architectureName": "Mixtral",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "UCS8HCJ38DSG7ZAR": {
+          "sku": "UCS8HCJ38DSG7ZAR",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Qwen2VL-CustomModelImport-Inference-v1:0",
+            "operation": "",
+            "architecture": "Qwen2VL",
+            "architectureName": "Qwen2VL",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "8QPAS8XXF6SMYXMK": {
+          "sku": "8QPAS8XXF6SMYXMK",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Qwen2VL-CustomModelImport-Storage-v1:0",
+            "operation": "",
+            "architecture": "Qwen2VL",
+            "architectureName": "Qwen2VL",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "3FCUBZTU3FT23U4G": {
+          "sku": "3FCUBZTU3FT23U4G",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-GPTBigCode-CustomModelImport-Inference-v1:0",
+            "operation": "",
+            "architecture": "GPT_BigCode",
+            "architectureName": "GPTBigCode",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "WQUUNUEJGNTY3SND": {
+          "sku": "WQUUNUEJGNTY3SND",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-OSS-CustomModelImport-Storage-v2:0",
+            "operation": "",
+            "architecture": "OSS",
+            "architectureName": "OSS",
+            "customModelUnitVersion": "v2.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "E5RV7NM4755DRNCH": {
+          "sku": "E5RV7NM4755DRNCH",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Flan-CustomModelImport-Storage-v1:0",
+            "operation": "",
+            "architecture": "Flan",
+            "architectureName": "Flan",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "YQSJA22BPUVEWDW3": {
+          "sku": "YQSJA22BPUVEWDW3",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Llama-CustomModelImport-Storage-v1:0",
+            "operation": "",
+            "architecture": "Llama",
+            "architectureName": "Llama",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "KD6SZE96VFZCVWHW": {
+          "sku": "KD6SZE96VFZCVWHW",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Mistral-CustomModelImport-Storage-v1:0",
+            "operation": "",
+            "architecture": "Mistral",
+            "architectureName": "Mistral",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "49XK3TDNJEEGFWQP": {
+          "sku": "49XK3TDNJEEGFWQP",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Mistral-CustomModelImport-Inference-v1:0",
+            "operation": "",
+            "architecture": "Mistral",
+            "architectureName": "Mistral",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "GCYW4N2GX3EJ5N4R": {
+          "sku": "GCYW4N2GX3EJ5N4R",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-OSS-CustomModelImport-Storage-v1:0",
+            "operation": "",
+            "architecture": "OSS",
+            "architectureName": "OSS",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "ECZ5AXBK9FHPZU3X": {
+          "sku": "ECZ5AXBK9FHPZU3X",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Qwen2-CustomModelImport-Inference-v1:0",
+            "operation": "",
+            "architecture": "Qwen2",
+            "architectureName": "Qwen2",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "HKDUH7HQMGVFHWRZ": {
+          "sku": "HKDUH7HQMGVFHWRZ",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-MLlama-CustomModelImport-Storage-v1:0",
+            "operation": "",
+            "architecture": "MLlama",
+            "architectureName": "Multimodal Llama",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "9Y2ERW3ANCDMZFA3": {
+          "sku": "9Y2ERW3ANCDMZFA3",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Qwen2-5-VL-CustomModelImport-Storage-v1:0",
+            "operation": "",
+            "architecture": "Qwen2_5VL",
+            "architectureName": "Qwen2_5VL",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "CPZZQXURZN69847R": {
+          "sku": "CPZZQXURZN69847R",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Mixtral-CustomModelImport-Storage-v1:0",
+            "operation": "",
+            "architecture": "Mixtral",
+            "architectureName": "Mixtral",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "22Z2C7232PZ4PV5K": {
+          "sku": "22Z2C7232PZ4PV5K",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-OSS-CustomModelImport-Inference-v1:0",
+            "operation": "",
+            "architecture": "OSS",
+            "architectureName": "OSS",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "XZ3PWM6SDSM9CEEM": {
+          "sku": "XZ3PWM6SDSM9CEEM",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-MLlama-CustomModelImport-Inference-v1:0",
+            "operation": "",
+            "architecture": "MLlama",
+            "architectureName": "Multimodal Llama",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "GEKDFM9C27E5GY2X": {
+          "sku": "GEKDFM9C27E5GY2X",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Qwen2-5-VL-CustomModelImport-Inference-v1:0",
+            "operation": "",
+            "architecture": "Qwen2_5VL",
+            "architectureName": "Qwen2_5VL",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Inference",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "ANNP5URT4TMHEG2K": {
+          "sku": "ANNP5URT4TMHEG2K",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-GPTBigCode-CustomModelImport-Storage-v1:0",
+            "operation": "",
+            "architecture": "GPT_BigCode",
+            "architectureName": "GPTBigCode",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        },
+        "HBD5MEHQHPPES2J7": {
+          "sku": "HBD5MEHQHPPES2J7",
+          "productFamily": "Amazon Bedrock",
+          "attributes": {
+            "servicecode": "AmazonBedrock",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "usagetype": "USE1-Qwen2-CustomModelImport-Storage-v1:0",
+            "operation": "",
+            "architecture": "Qwen2",
+            "architectureName": "Qwen2",
+            "customModelUnitVersion": "v1.0",
+            "feature": "Custom Model Import",
+            "featureType": "Storage",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon Bedrock"
+          }
+        }
+      },
+      "terms": {
+        "OnDemand": {
+          "8EJKXB49YY4SMCKM": {
+            "8EJKXB49YY4SMCKM.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "8EJKXB49YY4SMCKM",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "8EJKXB49YY4SMCKM.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "8EJKXB49YY4SMCKM.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.05718 per Custom Model Unit per Min for Inference for Llama architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.0571800000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "HNSV8S3265Q9CBKM": {
+            "HNSV8S3265Q9CBKM.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "HNSV8S3265Q9CBKM",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "HNSV8S3265Q9CBKM.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "HNSV8S3265Q9CBKM.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.05718 per Custom Model Unit per Min for Inference for Flan architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.0571800000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "ME93GQVWQPECZK69": {
+            "ME93GQVWQPECZK69.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "ME93GQVWQPECZK69",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "ME93GQVWQPECZK69.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "ME93GQVWQPECZK69.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.1433 per Custom Model Unit per Min for Inference for OSS architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.1433000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "ZXB3HHGAAQPPBXP9": {
+            "ZXB3HHGAAQPPBXP9.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "ZXB3HHGAAQPPBXP9",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "ZXB3HHGAAQPPBXP9.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "ZXB3HHGAAQPPBXP9.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.05718 per Custom Model Unit per Min for Inference for Mixtral architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.0571800000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "UCS8HCJ38DSG7ZAR": {
+            "UCS8HCJ38DSG7ZAR.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "UCS8HCJ38DSG7ZAR",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "UCS8HCJ38DSG7ZAR.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "UCS8HCJ38DSG7ZAR.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.05718 per Custom Model Unit per Min for Inference for Qwen2VL architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.0571800000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "8QPAS8XXF6SMYXMK": {
+            "8QPAS8XXF6SMYXMK.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "8QPAS8XXF6SMYXMK",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "8QPAS8XXF6SMYXMK.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "8QPAS8XXF6SMYXMK.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model Unit per Month for Storage for Qwen2VL architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "3FCUBZTU3FT23U4G": {
+            "3FCUBZTU3FT23U4G.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "3FCUBZTU3FT23U4G",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "3FCUBZTU3FT23U4G.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "3FCUBZTU3FT23U4G.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.05718 per Custom Model Unit per Min for Inference for GPTBigCode architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.0571800000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "WQUUNUEJGNTY3SND": {
+            "WQUUNUEJGNTY3SND.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "WQUUNUEJGNTY3SND",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "WQUUNUEJGNTY3SND.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "WQUUNUEJGNTY3SND.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model Unit per Month for Storage for OSS architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "E5RV7NM4755DRNCH": {
+            "E5RV7NM4755DRNCH.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "E5RV7NM4755DRNCH",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "E5RV7NM4755DRNCH.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "E5RV7NM4755DRNCH.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model/Month Storage for Flan architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "YQSJA22BPUVEWDW3": {
+            "YQSJA22BPUVEWDW3.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "YQSJA22BPUVEWDW3",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "YQSJA22BPUVEWDW3.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "YQSJA22BPUVEWDW3.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model/Month Storage for Llama architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "KD6SZE96VFZCVWHW": {
+            "KD6SZE96VFZCVWHW.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "KD6SZE96VFZCVWHW",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "KD6SZE96VFZCVWHW.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "KD6SZE96VFZCVWHW.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model Unit/Month Storage for Mistral architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "49XK3TDNJEEGFWQP": {
+            "49XK3TDNJEEGFWQP.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "49XK3TDNJEEGFWQP",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "49XK3TDNJEEGFWQP.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "49XK3TDNJEEGFWQP.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.05718 per Custom Model Unit per Min for Inference for Mistral architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.0571800000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "GCYW4N2GX3EJ5N4R": {
+            "GCYW4N2GX3EJ5N4R.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "GCYW4N2GX3EJ5N4R",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "GCYW4N2GX3EJ5N4R.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "GCYW4N2GX3EJ5N4R.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model Unit per Month for Storage for OSS architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "ECZ5AXBK9FHPZU3X": {
+            "ECZ5AXBK9FHPZU3X.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "ECZ5AXBK9FHPZU3X",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "ECZ5AXBK9FHPZU3X.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "ECZ5AXBK9FHPZU3X.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.05718 per Custom Model Unit per Min for Inference for Qwen2 architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.0571800000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "HKDUH7HQMGVFHWRZ": {
+            "HKDUH7HQMGVFHWRZ.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "HKDUH7HQMGVFHWRZ",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "HKDUH7HQMGVFHWRZ.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "HKDUH7HQMGVFHWRZ.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model Unit/Month Storage for Multimodal Llama architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "9Y2ERW3ANCDMZFA3": {
+            "9Y2ERW3ANCDMZFA3.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "9Y2ERW3ANCDMZFA3",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "9Y2ERW3ANCDMZFA3.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "9Y2ERW3ANCDMZFA3.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model Unit per Month for Storage for Qwen2_5VL architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "CPZZQXURZN69847R": {
+            "CPZZQXURZN69847R.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "CPZZQXURZN69847R",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "CPZZQXURZN69847R.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "CPZZQXURZN69847R.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model Unit/Month Storage for Mixtral architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "22Z2C7232PZ4PV5K": {
+            "22Z2C7232PZ4PV5K.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "22Z2C7232PZ4PV5K",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "22Z2C7232PZ4PV5K.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "22Z2C7232PZ4PV5K.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.05718 per Custom Model Unit per Min for Inference for OSS architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.0571800000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "XZ3PWM6SDSM9CEEM": {
+            "XZ3PWM6SDSM9CEEM.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "XZ3PWM6SDSM9CEEM",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "XZ3PWM6SDSM9CEEM.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "XZ3PWM6SDSM9CEEM.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.05718 per Custom Model Unit per Min for Inference for Multimodal Llama architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.0571800000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "GEKDFM9C27E5GY2X": {
+            "GEKDFM9C27E5GY2X.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "GEKDFM9C27E5GY2X",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "GEKDFM9C27E5GY2X.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "GEKDFM9C27E5GY2X.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$0.05718 per Custom Model Unit per Min for Inference for Qwen2_5VL architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Custom Model Unit per Min",
+                  "pricePerUnit": {
+                    "USD": "0.0571800000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "ANNP5URT4TMHEG2K": {
+            "ANNP5URT4TMHEG2K.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "ANNP5URT4TMHEG2K",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "ANNP5URT4TMHEG2K.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "ANNP5URT4TMHEG2K.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model Unit/Month Storage for GPTBigCode architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "HBD5MEHQHPPES2J7": {
+            "HBD5MEHQHPPES2J7.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "HBD5MEHQHPPES2J7",
+              "effectiveDate": "2026-08-01T00:00:00Z",
+              "priceDimensions": {
+                "HBD5MEHQHPPES2J7.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "HBD5MEHQHPPES2J7.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.95 per Custom Model Unit per Month for Storage for Qwen2 architecture models in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Model/month",
+                  "pricePerUnit": {
+                    "USD": "1.9500000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "service": "AmazonSageMaker",
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonSageMaker/20260911194304/us-east-1/index.json",
+      "catalog_publication_date": "2026-09-11T19:43:04Z",
+      "catalog_version": "20260911194304",
+      "download_sha256": "928d61fb9765ef36117c7697e7646eaaabe9a922062397b003cb3d575dcf0f13",
+      "products": {
+        "BTQ8KZF3DKVFJY87": {
+          "sku": "BTQ8KZF3DKVFJY87",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g5.2xlarge-Hosting",
+            "currentGeneration": "Yes",
+            "clockSpeed": "3 GHz",
+            "memory": "32 GiB",
+            "storage": "1 x 3800 NVMe SSD",
+            "networkPerformance": "N/A",
+            "processorArchitecture": "64-bit",
+            "usagetype": "USE1-Host:ml.g5.2xlarge",
+            "operation": "RunInstance",
+            "component": "Hosting",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "24",
+            "instanceName": "ml.g5.2xlarge",
+            "physicalCpu": "N/A",
+            "physicalGpu": "N/A",
+            "platoinstancename": "g5",
+            "platoinstancetype": "Hosting",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "8"
+          }
+        },
+        "3Q7F5GS2TPJ87UUD": {
+          "sku": "3Q7F5GS2TPJ87UUD",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g5.xlarge-Hosting",
+            "currentGeneration": "Yes",
+            "clockSpeed": "3 GHz",
+            "memory": "16 GiB",
+            "storage": "1 x 3800 NVMe SSD",
+            "networkPerformance": "N/A",
+            "processorArchitecture": "64-bit",
+            "usagetype": "USE1-Host:ml.g5.xlarge",
+            "operation": "RunInstance",
+            "component": "Hosting",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "24",
+            "instanceName": "ml.g5.xlarge",
+            "physicalCpu": "N/A",
+            "physicalGpu": "N/A",
+            "platoinstancename": "g5",
+            "platoinstancetype": "Hosting",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "4"
+          }
+        },
+        "GE8448GAC2VY852K": {
+          "sku": "GE8448GAC2VY852K",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g6.xlarge-Cluster",
+            "currentGeneration": "Yes",
+            "clockSpeed": "3.4 GHz",
+            "memory": "16 GiB",
+            "storage": "1 x 250 NVMe SSD",
+            "networkPerformance": "Up to 10 Gpbs",
+            "processorArchitecture": "64-bit",
+            "usagetype": "USE1-Cluster:ml.g6.xlarge",
+            "operation": "RunInstance",
+            "component": "Cluster",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "24",
+            "instanceName": "ml.g6.xlarge",
+            "physicalCpu": "AMD EPYC 7R13 Processor",
+            "physicalGpu": "NVIDIA L4",
+            "platoinstancename": "g6",
+            "platoinstancetype": "Cluster",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "4"
+          }
+        },
+        "V2M7T5EMDHXNEM45": {
+          "sku": "V2M7T5EMDHXNEM45",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g6e.2xlarge-Cluster",
+            "currentGeneration": "Yes",
+            "clockSpeed": "N/A",
+            "memory": "64 GiB",
+            "storage": "1 x 450 NVMe SSD",
+            "networkPerformance": "up to 20 gpbs",
+            "processorArchitecture": "64-bit",
+            "usagetype": "USE1-Cluster:ml.g6e.2xlarge",
+            "operation": "RunInstance",
+            "component": "Cluster",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "48",
+            "instanceName": "ml.g6e.2xlarge",
+            "physicalCpu": "N/A",
+            "physicalGpu": "N/A",
+            "platoinstancename": "g6e",
+            "platoinstancetype": "Cluster",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "8"
+          }
+        },
+        "JKTVGD4C242NB7SE": {
+          "sku": "JKTVGD4C242NB7SE",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g5.4xlarge-Cluster",
+            "currentGeneration": "Yes",
+            "memory": "64 GiB",
+            "storage": "1 x 600 NVMe SSD",
+            "networkPerformance": "Up to 25 Gbps",
+            "usagetype": "USE1-Cluster:ml.g5.4xlarge",
+            "operation": "RunInstance",
+            "component": "Cluster",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "24",
+            "instanceName": "ml.g5.4xlarge",
+            "physicalCpu": "Intel Xeon Family",
+            "physicalGpu": "nvidia a10g",
+            "platoinstancename": "g5",
+            "platoinstancetype": "Cluster",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "16"
+          }
+        },
+        "YE8QFRFXT8FW6HSD": {
+          "sku": "YE8QFRFXT8FW6HSD",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g6e.xlarge-Hosting",
+            "currentGeneration": "Yes",
+            "clockSpeed": "2.6 GHz",
+            "memory": "32 GiB",
+            "storage": "1 x 250 GB NVMe SSD",
+            "networkPerformance": "Up to 20 Gigabit",
+            "processorArchitecture": "64-bit",
+            "usagetype": "USE1-Host:ml.g6e.xlarge",
+            "operation": "RunInstance",
+            "component": "Hosting",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "48",
+            "instanceName": "ml.g6e.xlarge",
+            "physicalCpu": "AMD EPYC 7R13 Processor",
+            "physicalGpu": "N/A",
+            "platoinstancename": "g6e",
+            "platoinstancetype": "Hosting",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "4"
+          }
+        },
+        "2J4SA8FBM4CK72CR": {
+          "sku": "2J4SA8FBM4CK72CR",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g5.2xlarge-Cluster",
+            "currentGeneration": "Yes",
+            "memory": "32 GiB",
+            "storage": "1 x 450 NVMe SSD",
+            "networkPerformance": "Up to 10 Gpbs",
+            "usagetype": "USE1-Cluster:ml.g5.2xlarge",
+            "operation": "RunInstance",
+            "component": "Cluster",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "24",
+            "instanceName": "ml.g5.2xlarge",
+            "physicalCpu": "Intel Xeon Family",
+            "physicalGpu": "nvidia a10g",
+            "platoinstancename": "g5",
+            "platoinstancetype": "Cluster",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "8"
+          }
+        },
+        "6VB699CCQSHXQ2PK": {
+          "sku": "6VB699CCQSHXQ2PK",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g6e.xlarge-Cluster",
+            "currentGeneration": "Yes",
+            "clockSpeed": "N/A",
+            "memory": "32 GiB",
+            "storage": "1 x 250 NVMe SSD",
+            "networkPerformance": "up to 20 gpbs",
+            "processorArchitecture": "64-bit",
+            "usagetype": "USE1-Cluster:ml.g6e.xlarge",
+            "operation": "RunInstance",
+            "component": "Cluster",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "48",
+            "instanceName": "ml.g6e.xlarge",
+            "physicalCpu": "N/A",
+            "physicalGpu": "N/A",
+            "platoinstancename": "g6e",
+            "platoinstancetype": "Cluster",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "4"
+          }
+        },
+        "7E3NZ22X4GC8EH5K": {
+          "sku": "7E3NZ22X4GC8EH5K",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g5.4xlarge-Hosting",
+            "currentGeneration": "Yes",
+            "clockSpeed": "3 GHz",
+            "memory": "64 GiB",
+            "storage": "1 x 3800 NVMe SSD",
+            "networkPerformance": "N/A",
+            "processorArchitecture": "64-bit",
+            "usagetype": "USE1-Host:ml.g5.4xlarge",
+            "operation": "RunInstance",
+            "component": "Hosting",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "24",
+            "instanceName": "ml.g5.4xlarge",
+            "physicalCpu": "N/A",
+            "physicalGpu": "N/A",
+            "platoinstancename": "g5",
+            "platoinstancetype": "Hosting",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "16"
+          }
+        },
+        "VS6QR2AYRGYF5H3F": {
+          "sku": "VS6QR2AYRGYF5H3F",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g6.xlarge-Hosting",
+            "currentGeneration": "Yes",
+            "clockSpeed": "2.6 GHz",
+            "memory": "16 GiB",
+            "storage": "N/A",
+            "networkPerformance": "N/A",
+            "processorArchitecture": "64-bit",
+            "usagetype": "USE1-Host:ml.g6.xlarge",
+            "operation": "RunInstance",
+            "component": "Hosting",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "24",
+            "instanceName": "ml.g6.xlarge",
+            "physicalCpu": "N/A",
+            "physicalGpu": "N/A",
+            "platoinstancename": "g6",
+            "platoinstancetype": "Hosting",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "4"
+          }
+        },
+        "RK2X4PYCAU9FFDEM": {
+          "sku": "RK2X4PYCAU9FFDEM",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g6e.2xlarge-Hosting",
+            "currentGeneration": "Yes",
+            "clockSpeed": "2.6 GHz",
+            "memory": "64 GiB",
+            "storage": "1 x 450 GB NVMe SSD",
+            "networkPerformance": "Up to 20 Gigabit",
+            "processorArchitecture": "64-bit",
+            "usagetype": "USE1-Host:ml.g6e.2xlarge",
+            "operation": "RunInstance",
+            "component": "Hosting",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "48",
+            "instanceName": "ml.g6e.2xlarge",
+            "physicalCpu": "AMD EPYC 7R13 Processor",
+            "physicalGpu": "N/A",
+            "platoinstancename": "g6e",
+            "platoinstancetype": "Hosting",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "8"
+          }
+        },
+        "WCPGT5KY7PYWZ2XY": {
+          "sku": "WCPGT5KY7PYWZ2XY",
+          "productFamily": "ML Instance",
+          "attributes": {
+            "servicecode": "AmazonSageMaker",
+            "location": "US East (N. Virginia)",
+            "locationType": "AWS Region",
+            "instanceType": "ml.g5.xlarge-Cluster",
+            "currentGeneration": "Yes",
+            "memory": "16 GiB",
+            "storage": "1 x 250 NVMe SSD",
+            "networkPerformance": "Up to 10 Gpbs",
+            "usagetype": "USE1-Cluster:ml.g5.xlarge",
+            "operation": "RunInstance",
+            "component": "Cluster",
+            "computeType": "Accelerated Computing Instances",
+            "gpu": "1",
+            "gpuMemory": "24",
+            "instanceName": "ml.g5.xlarge",
+            "physicalCpu": "Intel Xeon Family",
+            "physicalGpu": "nvidia a10g",
+            "platoinstancename": "g5",
+            "platoinstancetype": "Cluster",
+            "regionCode": "us-east-1",
+            "servicename": "Amazon SageMaker",
+            "vCpu": "4"
+          }
+        }
+      },
+      "terms": {
+        "OnDemand": {
+          "BTQ8KZF3DKVFJY87": {
+            "BTQ8KZF3DKVFJY87.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "BTQ8KZF3DKVFJY87",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "BTQ8KZF3DKVFJY87.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "BTQ8KZF3DKVFJY87.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.515 per Hosting ml.g5.2xlarge hour in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "1.5150000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "3Q7F5GS2TPJ87UUD": {
+            "3Q7F5GS2TPJ87UUD.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "3Q7F5GS2TPJ87UUD",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "3Q7F5GS2TPJ87UUD.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "3Q7F5GS2TPJ87UUD.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.408 per Hosting ml.g5.xlarge hour in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "1.4080000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "GE8448GAC2VY852K": {
+            "GE8448GAC2VY852K.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "GE8448GAC2VY852K",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "GE8448GAC2VY852K.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "GE8448GAC2VY852K.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "1.127 per Hrs for Cluster:ml.g6.xlarge in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "1.1270000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "V2M7T5EMDHXNEM45": {
+            "V2M7T5EMDHXNEM45.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "V2M7T5EMDHXNEM45",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "V2M7T5EMDHXNEM45.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "V2M7T5EMDHXNEM45.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "2.8 per Hrs for Cluster:ml.g6e.2xlarge in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "2.8000000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "JKTVGD4C242NB7SE": {
+            "JKTVGD4C242NB7SE.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "JKTVGD4C242NB7SE",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "JKTVGD4C242NB7SE.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "JKTVGD4C242NB7SE.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "2.03 per Hrs for Cluster:ml.g5.4xlarge in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "2.0300000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "YE8QFRFXT8FW6HSD": {
+            "YE8QFRFXT8FW6HSD.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "YE8QFRFXT8FW6HSD",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "YE8QFRFXT8FW6HSD.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "YE8QFRFXT8FW6HSD.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$2.6054 per Hosting ml.g6e.xlarge hour in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "2.6054000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "2J4SA8FBM4CK72CR": {
+            "2J4SA8FBM4CK72CR.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "2J4SA8FBM4CK72CR",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "2J4SA8FBM4CK72CR.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "2J4SA8FBM4CK72CR.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "1.515 per Hrs for Cluster:ml.g5.2xlarge in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "1.5150000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "6VB699CCQSHXQ2PK": {
+            "6VB699CCQSHXQ2PK.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "6VB699CCQSHXQ2PK",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "6VB699CCQSHXQ2PK.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "6VB699CCQSHXQ2PK.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "2.61 per Hrs for Cluster:ml.g6e.xlarge in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "2.6100000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "7E3NZ22X4GC8EH5K": {
+            "7E3NZ22X4GC8EH5K.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "7E3NZ22X4GC8EH5K",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "7E3NZ22X4GC8EH5K.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "7E3NZ22X4GC8EH5K.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$2.030 per Hosting ml.g5.4xlarge hour in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "2.0300000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "VS6QR2AYRGYF5H3F": {
+            "VS6QR2AYRGYF5H3F.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "VS6QR2AYRGYF5H3F",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "VS6QR2AYRGYF5H3F.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "VS6QR2AYRGYF5H3F.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$1.1267 per Hosting ml.g6.xlarge hour in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "1.1267000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "RK2X4PYCAU9FFDEM": {
+            "RK2X4PYCAU9FFDEM.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "RK2X4PYCAU9FFDEM",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "RK2X4PYCAU9FFDEM.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "RK2X4PYCAU9FFDEM.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "$2.8026 per Hosting ml.g6e.2xlarge hour in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "2.8026000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          },
+          "WCPGT5KY7PYWZ2XY": {
+            "WCPGT5KY7PYWZ2XY.JRTCKXETXF": {
+              "offerTermCode": "JRTCKXETXF",
+              "sku": "WCPGT5KY7PYWZ2XY",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "priceDimensions": {
+                "WCPGT5KY7PYWZ2XY.JRTCKXETXF.6YS6EN2CT7": {
+                  "rateCode": "WCPGT5KY7PYWZ2XY.JRTCKXETXF.6YS6EN2CT7",
+                  "description": "1.408 per Hrs for Cluster:ml.g5.xlarge in US East (N. Virginia)",
+                  "beginRange": "0",
+                  "endRange": "Inf",
+                  "unit": "Hrs",
+                  "pricePerUnit": {
+                    "USD": "1.4080000000"
+                  },
+                  "appliesTo": []
+                }
+              },
+              "termAttributes": {}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

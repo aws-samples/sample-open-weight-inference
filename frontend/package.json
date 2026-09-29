@@ -1,0 +1,39 @@
+{
+  "name": "eddie-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "EDDIE — Evaluate, Design & Deploy Inference Environments (Cloudscape frontend)",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --noEmit false --emitDeclarationOnly false || tsc -b",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@cloudscape-design/chat-components": "^1.0.172",
+    "@cloudscape-design/components": "^3.0.1377",
+    "@cloudscape-design/global-styles": "^1.0.69",
+    "amazon-cognito-identity-js": "^6.3.20",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^24.13.4",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^30.0.1",
+    "typescript": "^5.9.0",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
+  }
+}

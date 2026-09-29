@@ -1,0 +1,150 @@
+/*
+ * Minimal application-level styling only. Cloudscape's global stylesheet
+ * supplies typography, colour and spacing; nothing here overrides component
+ * internals.
+ */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Compact history uses Cloudscape links in the navigation's supported slot.
+   The full title stays in the accessible link and native hover title. */
+.eddie-conversation-navigation { display: grid; gap: 12px; min-width: 0; }
+.eddie-history-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.eddie-history-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; min-width: 0; border-radius: 8px; }
+.eddie-history-link { display: block; min-width: 0; max-width: 100%; }
+.eddie-history-title {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 8px;
+  line-height: 20px;
+}
+.eddie-history-item:hover, .eddie-history-item:focus-within { background: rgb(127 127 127 / 8%); }
+.eddie-history-item[data-active='true'] { background: rgb(127 127 127 / 12%); font-weight: 600; }
+
+/* Respect a reduced-motion preference across the whole application. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * Chat surface layout.
+ *
+ * These are EDDIE's own classes on EDDIE's own wrappers — not overrides of any
+ * Cloudscape component's internals.
+ *
+ * The pane is a flex column that fills the height left over below the shell
+ * chrome. The thread is the only scrolling region and the composer is a
+ * non-shrinking sibling after it, so the composer is always on screen and the
+ * conversation scrolls behind it. Previously the pane took its height from the
+ * viewport while sitting below the top navigation and the context strip, so it
+ * overhung by the height of that chrome and the composer sat ~20px past the
+ * bottom edge at every content length.
+ */
+.eddie-chat-pane {
+  display: flex;
+  flex-direction: column;
+  /* Without this a flex parent refuses to shrink below its content. */
+  min-height: 0;
+}
+
+.eddie-chat-thread {
+  flex: 1 1 auto;
+  /*
+   * The part that is easy to miss: a flex child's default `min-height: auto`
+   * makes it refuse to shrink, so it overflows its parent instead of scrolling.
+   */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.eddie-chat-composer {
+  /* Never shrink: this is the control the user needs at all times. */
+  flex: 0 0 auto;
+}
+
+/*
+ * The wordmark is the TopNavigation identity. Cloudscape does not size the logo
+ * image, so it is constrained here: tall enough to read, short enough to sit inside
+ * the bar without inflating its height.
+ */
+#eddie-top-navigation img[alt='EDDIE'] {
+  height: 18px;
+  width: auto;
+  display: block;
+}
+
+@media (max-width: 688px) {
+  #eddie-top-navigation img[alt='EDDIE'] {
+    height: 16px;
+  }
+}
+
+.eddie-brand-name { display: inline; white-space: nowrap; }
+.eddie-brand-visible { user-select: none; }
+/* Mirror the same D glyph so its cap height, baseline and weight stay identical. */
+.eddie-brand-mirrored-d { display: inline-block; transform: scaleX(-1); }
+/* Keep the spoken name continuous and avoid copying a duplicated wordmark. */
+.eddie-brand-accessible {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+.eddie-signin-brand { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; }
+.eddie-signin-wordmark { width: auto; height: 30px; display: block; }
+
+/* Project workspace: optional sections, with no wizard or application-wide scroll trap. */
+.eddie-project-workspace { max-width: 1200px; margin-inline: auto; }
+.eddie-inline-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.eddie-input-action { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 12px; }
+.eddie-example-row { padding-block: 12px; }
+.eddie-readable-list { padding-left: 20px; line-height: 1.8; margin-block: 0; }
+@media (max-width: 688px) {
+  .eddie-input-action { grid-template-columns: minmax(0, 1fr); }
+  .eddie-inline-summary { align-items: start; }
+}
+
+/* Cloudscape supplies every status icon; layout only is customized here. */
+.eddie-deployment-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 16px;
+}
+.eddie-model-answer {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+
+.eddie-project-progress { display: grid; grid-template-columns: repeat(5, minmax(104px, 1fr)); gap: 12px; overflow-x: auto; }
+.eddie-progress-item { display: flex; flex-direction: column; gap: 8px; padding: 12px 4px; border-bottom: 2px solid transparent; min-width: 0; }
+.eddie-progress-item span { overflow-wrap: normal; word-break: normal; }
+.eddie-status-text { overflow-wrap: normal; word-break: normal; }
+.eddie-progress-item.active { border-bottom-color: currentColor; }
+.eddie-save-controls { padding-block: 16px; }
+.eddie-advisor-panel { display: flex; flex-direction: column; gap: 16px; height: calc(100dvh - 200px); min-height: 360px; }
+.eddie-advisor-thread { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 8px; overflow-wrap: anywhere; }
+.eddie-advisor-welcome { display: grid; gap: 16px; padding-block: 24px; }
+.eddie-hosting-path { display: grid; gap: 12px; padding-block: 12px; }
+.eddie-decision-check { display: grid; gap: 4px; }
+@media (max-width: 900px) {
+  .eddie-project-progress { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .eddie-advisor-panel { height: 55dvh; min-height: 280px; }
+}

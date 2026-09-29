@@ -1,0 +1,3 @@
+boto3==1.43.93
+PyJWT==2.14.0
+cryptography==50.0.1

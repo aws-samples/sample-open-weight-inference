@@ -1,0 +1,1420 @@
+{
+  "format": 1,
+  "version": "2026-09-29.1",
+  "purpose": "Public inference decision guidance; never price, gate or deployment authority.",
+  "contractSha256": "e52e86fe0a17d7359c651b26e3c054d67938eb782bc48237ebd64edf6462f5ce",
+  "runbooks": [
+    {
+      "id": "qualify-inference-workload",
+      "title": "Qualify the inference workload",
+      "description": "Turn a business request into an inference decision without preselecting a model or AWS service. Use when the workload, output, or acceptance criteria are unclear.",
+      "stage": "qualify",
+      "tags": [
+        "discovery",
+        "workload",
+        "business task",
+        "inference",
+        "BYO",
+        "start",
+        "Acme"
+      ],
+      "questions": [
+        "Where should I start before choosing a model or an AWS service?"
+      ],
+      "sources": [
+        "aws-sagemaker-serving",
+        "stanford-helm"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "5754cdf61415a8b0546bf5e5752a84530a6589d4aad09ea3a3789b22d2320a21"
+    },
+    {
+      "id": "pin-model-identity",
+      "title": "Pin the model being evaluated",
+      "description": "Establish exact model, revision, tokenizer, precision and artifact identity before making compatibility or sizing claims. Use for ambiguous names, model aliases and public repository links.",
+      "stage": "qualify",
+      "tags": [
+        "artifact",
+        "revision",
+        "digest",
+        "Kimi K2",
+        "Kimi K3",
+        "gpt-oss",
+        "model name",
+        "metadata"
+      ],
+      "questions": [
+        "How do I establish which exact model and revision we are comparing?"
+      ],
+      "sources": [
+        "aws-bedrock-lifecycle",
+        "hf-model-cards",
+        "hf-peft"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "2a0c3ea9eca5bc7d0feef76c86466178f129914cb7c4f8adab06ee5c803a6b7e"
+    },
+    {
+      "id": "qualify-byo-checkpoint",
+      "title": "Qualify an existing fine-tuned checkpoint",
+      "description": "Distinguish full fine-tuned weights, merged checkpoints and adapters before comparing Bedrock import or SageMaker BYO serving. Use when the customer brings an existing customized model.",
+      "stage": "qualify",
+      "tags": [
+        "BYO",
+        "BYOM",
+        "fine-tuned",
+        "checkpoint",
+        "downloadable weights",
+        "adapter",
+        "merged",
+        "base"
+      ],
+      "questions": [
+        "What do you need to host my existing fine-tuned model?"
+      ],
+      "sources": [
+        "aws-bedrock-import",
+        "aws-sagemaker-container",
+        "hf-peft"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "2392da55293fb2d7222f90f6df008a5a117d3afb60a9405a6210434ae80bbaa9"
+    },
+    {
+      "id": "set-workload-slos",
+      "title": "Define what \"fast enough\" means",
+      "description": "Translate responsiveness and completion requirements into measurable inference SLOs. Use when latency is missing, vague, or confused with token throughput or batch completion.",
+      "stage": "qualify",
+      "tags": [
+        "TTFT",
+        "ITL",
+        "TPOT",
+        "P99",
+        "latency",
+        "first audio",
+        "deadline",
+        "streaming"
+      ],
+      "questions": [
+        "What speed target should I specify for this workload?"
+      ],
+      "sources": [
+        "google-sre-slo",
+        "mlcommons-inference",
+        "vllm-metrics"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "00acef3b4b49245a034d0a86af53f45a0ada42996f7b0b561ce999de359af0eb"
+    },
+    {
+      "id": "model-traffic-shape",
+      "title": "Turn traffic into explicit demand",
+      "description": "Separate requests, tokens, concurrency, batch jobs and allocated hours when estimating inference demand. Use for monthly-volume claims, bursts, schedules and missing usage assumptions.",
+      "stage": "qualify",
+      "tags": [
+        "requests",
+        "tokens",
+        "billion",
+        "monthly",
+        "users",
+        "concurrency",
+        "bursty",
+        "duty cycle",
+        "volume"
+      ],
+      "questions": [
+        "Does one billion tokens per month mean one billion requests?"
+      ],
+      "sources": [
+        "google-sre-overload",
+        "mlcommons-inference",
+        "vllm-benchmark"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "e9996864716b5bbd9bf045201ac2aa04b21cf9c4cb7479de0626d6ca81e55966"
+    },
+    {
+      "id": "qualify-data-boundaries",
+      "title": "Qualify data and model boundaries",
+      "description": "Establish permitted processing locations, weight custody, logging and access boundaries for inference. Use for residency, private fine-tunes, tenant isolation or hosted-provider concerns.",
+      "stage": "qualify",
+      "tags": [
+        "data",
+        "privacy",
+        "PII",
+        "Region",
+        "residency",
+        "encryption",
+        "tenant",
+        "retention"
+      ],
+      "questions": [
+        "What data and isolation requirements change the inference path?"
+      ],
+      "sources": [
+        "aws-bedrock-observability",
+        "aws-bedrock-regions",
+        "aws-sagemaker-isolation"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "3a81ba115d0816ce89a85b09f5703b0fbece3713939f082a4ede5d3fb6a77089"
+    },
+    {
+      "id": "choose-operating-model",
+      "title": "Choose who operates each layer",
+      "description": "Compare managed APIs, managed model serving and an existing self-managed platform using workload needs and operating responsibilities. Use before treating services as a fixed fallback ladder.",
+      "stage": "qualify",
+      "tags": [
+        "operations",
+        "managed",
+        "control",
+        "Kubernetes",
+        "platform",
+        "team",
+        "ownership"
+      ],
+      "questions": [
+        "How much of the inference platform should our team operate?"
+      ],
+      "sources": [
+        "aws-sagemaker-hyperpod",
+        "aws-sagemaker-jumpstart",
+        "aws-sagemaker-serving"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "fde60f297865ded73d9a4c7099d06e1c53d553be96a2d4daf4000daa00ecba80"
+    },
+    {
+      "id": "evaluate-model-shortlist",
+      "title": "Evaluate a model shortlist",
+      "description": "Build a workload-specific shortlist and compare quality before substituting models or choosing hosting. Use when the customer has not committed to an exact model or asks which model is best.",
+      "stage": "evaluate",
+      "tags": [
+        "model selection",
+        "shortlist",
+        "HELM",
+        "leaderboard",
+        "baseline",
+        "quality",
+        "gpt-oss",
+        "Qwen"
+      ],
+      "questions": [
+        "Which model should we evaluate for our task?"
+      ],
+      "sources": [
+        "aws-bedrock-evaluation",
+        "eleutherai-evaluation",
+        "stanford-helm"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "ad5b950b581378e98ed6a52e4c66c3de76dfd68506a8ea2bcb738c3b85a23fb4"
+    },
+    {
+      "id": "build-task-evaluation",
+      "title": "Build a task evaluation",
+      "description": "Design a representative evaluation set, rubric and acceptance rule before treating model outputs as evidence. Use for small demonstrations, missing quality goals or inappropriate exact-match scoring.",
+      "stage": "evaluate",
+      "tags": [
+        "rubric",
+        "held-out",
+        "quality",
+        "golden dataset",
+        "exact match",
+        "judge",
+        "acceptance"
+      ],
+      "questions": [
+        "How do we decide whether a model gives good answers?"
+      ],
+      "sources": [
+        "aws-bedrock-evaluation",
+        "eleutherai-evaluation",
+        "stanford-helm"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "e1efcc1c88993fc85622f244c4d39bd2dc363721f4ef1b539215ef4dbc0dc4de"
+    },
+    {
+      "id": "evaluate-rag-grounding",
+      "title": "Evaluate retrieval and grounded answers",
+      "description": "Separate retrieval failures, unsupported answers and serving latency in a RAG workload. Use for document question answering, citations, long context or knowledge-base model comparisons.",
+      "stage": "evaluate",
+      "tags": [
+        "RAG",
+        "retrieval",
+        "grounding",
+        "citations",
+        "documents",
+        "hallucination",
+        "knowledge"
+      ],
+      "questions": [
+        "Is the problem our retrieval or the model generating the answer?"
+      ],
+      "sources": [
+        "aws-bedrock-evaluation",
+        "vllm-pooling",
+        "vllm-prefix"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "74fd5700a509a8ab9be7da2b67161815b117bd3777eca94d9f200a8a20e73417"
+    },
+    {
+      "id": "evaluate-classifiers-rerankers",
+      "title": "Evaluate classification and ranking",
+      "description": "Evaluate fixed-label classification, embedding and reranking workloads without assuming generative chat or GPU serving. Use for commercial classifiers, contrastive heads and multi-component scoring models.",
+      "stage": "evaluate",
+      "tags": [
+        "classification",
+        "reranking",
+        "embeddings",
+        "CLM",
+        "contrastive",
+        "calibration",
+        "threshold"
+      ],
+      "questions": [
+        "How should we evaluate a contrastive classifier versus a generative model?"
+      ],
+      "sources": [
+        "hf-security",
+        "stanford-helm",
+        "vllm-pooling"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "6f71914f662867d429e24f226301a0e1866c721b4f0c682f9b61c0b82824c2be"
+    },
+    {
+      "id": "evaluate-speech-generation",
+      "title": "Evaluate speech generation",
+      "description": "Evaluate offline or streaming text-to-speech with listening criteria, audio duration, whole-pipeline memory and completion time. Use for Qwen3-TTS, podcast generation and CPU feasibility questions.",
+      "stage": "evaluate",
+      "tags": [
+        "Qwen3-TTS",
+        "12Hz",
+        "1.7B",
+        "Base",
+        "CustomVoice",
+        "podcast",
+        "audio",
+        "RTF",
+        "Polly"
+      ],
+      "questions": [
+        "What does the recorded Qwen podcast CPU benchmark prove?"
+      ],
+      "sources": [
+        "aws-batch-compute",
+        "mlcommons-inference",
+        "qwen-tts"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "b989c86ba67da96c8f5c95cfe00773f111c8b6129fd92798013495edfd66ec62"
+    },
+    {
+      "id": "evaluate-code-tool-use",
+      "title": "Evaluate code and tool behavior",
+      "description": "Assess code generation, structured output and tool selection using task completion and safe execution boundaries. Use when an open-weight model will produce code, JSON or tool arguments.",
+      "stage": "evaluate",
+      "tags": [
+        "code generation",
+        "tools",
+        "agent",
+        "JSON",
+        "schema",
+        "task success",
+        "authorization"
+      ],
+      "questions": [
+        "How do we test a model for coding or correct tool use?"
+      ],
+      "sources": [
+        "stanford-helm",
+        "vllm-security",
+        "vllm-structured"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "316a60078b2773d5eba4ddd2b9cb1c9342fb29b6343b07d0e17dc8fec832ee23"
+    },
+    {
+      "id": "benchmark-serving-slos",
+      "title": "Benchmark useful serving capacity",
+      "description": "Design a reproducible load experiment measuring useful throughput under latency and error limits. Use before capacity commitments or when a token-per-second figure is being treated as a benchmark.",
+      "stage": "evaluate",
+      "tags": [
+        "load test",
+        "benchmark",
+        "latency",
+        "throughput",
+        "goodput",
+        "MLPerf",
+        "concurrency",
+        "P99"
+      ],
+      "questions": [
+        "What should we measure before saying this serving configuration meets the SLO?"
+      ],
+      "sources": [
+        "aws-sagemaker-recommender",
+        "mlcommons-inference",
+        "vllm-benchmark"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "e94d70e26de699f341e3713ceaf4b7bdfa38c7ca96ac2ef09b5257ecb16a15d9"
+    },
+    {
+      "id": "validate-benchmark-transfer",
+      "title": "Check whether benchmark evidence transfers",
+      "description": "Determine whether published, supplied or earlier benchmark evidence applies to the current model and workload. Use for performance claims, vendor charts, laptop tests and reused measurements.",
+      "stage": "evaluate",
+      "tags": [
+        "empirical evidence",
+        "published",
+        "benchmark",
+        "roofline",
+        "comparison",
+        "reproduce",
+        "speedup"
+      ],
+      "questions": [
+        "Can we use another team's benchmark as evidence for this deployment?"
+      ],
+      "sources": [
+        "mlcommons-inference",
+        "stanford-helm",
+        "vllm-benchmark"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "16c1e2e752ef15d89d9136c2610e35e56bfde4a11961daf019140d45d48c3017"
+    },
+    {
+      "id": "test-quantized-quality",
+      "title": "Validate a quantized serving configuration",
+      "description": "Evaluate a lower-precision model as a new serving configuration with its own kernel, memory and quality evidence. Use before assuming FP8, INT4, AWQ or another format is faster or equivalent.",
+      "stage": "evaluate",
+      "tags": [
+        "quantization",
+        "AWQ",
+        "GPTQ",
+        "FP8",
+        "BF16",
+        "quality",
+        "accuracy",
+        "KV dtype"
+      ],
+      "questions": [
+        "Will quantizing the model or cache preserve the required answer quality?"
+      ],
+      "sources": [
+        "mit-awq",
+        "mit-efficientml",
+        "vllm-quantization"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "ba002e4c0123be397808b1ac4dc2c1d0ab0cd187bc9278fef69382e386e28807"
+    },
+    {
+      "id": "route-bedrock-catalog",
+      "title": "Check the Bedrock model API path",
+      "description": "Check whether an exact Bedrock catalog model can serve the task in the allowed Region and inference mode. Use for native API selection, model access, streaming, inference profiles and catalog-versus-readiness questions.",
+      "stage": "route",
+      "tags": [
+        "Bedrock",
+        "native",
+        "catalog",
+        "model API",
+        "access",
+        "profile",
+        "streaming"
+      ],
+      "questions": [
+        "Can this exact hosted Bedrock model meet our workload and Region requirements?"
+      ],
+      "sources": [
+        "aws-bedrock-access",
+        "aws-bedrock-catalog",
+        "aws-bedrock-regions"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "8eeb106376665f7b0cf04747fe720dd066272e32e06d51f3f0e470223995b983"
+    },
+    {
+      "id": "resolve-bedrock-catalog-gap",
+      "title": "Resolve a missing Bedrock model or feature",
+      "description": "Find an AWS inference path when Bedrock does not list the requested model or feature. Distinguish catalog absence, account access, Region, custom checkpoint, API gaps and tool implementation gaps before considering import, JumpStart, containers or compute.",
+      "stage": "route",
+      "tags": [
+        "Bedrock",
+        "missing model",
+        "not supported",
+        "not available",
+        "gap",
+        "AWS",
+        "JumpStart",
+        "import",
+        "fallback"
+      ],
+      "questions": [
+        "How can we keep this model on AWS when Bedrock does not have it yet?"
+      ],
+      "sources": [
+        "aws-bedrock-catalog",
+        "aws-bedrock-import",
+        "aws-bedrock-marketplace",
+        "aws-sagemaker-serving"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "b8bd85eafaf4274275d941b6232408efd59e3f32c6ce0b397d2fcec2aaa0d5e7"
+    },
+    {
+      "id": "route-bedrock-custom-import",
+      "title": "Assess an existing checkpoint for Bedrock import",
+      "description": "Assess Bedrock Custom Model Import for an existing fine-tuned or open-weight checkpoint. Check exact architecture, artifact format, precision, context, Region, import limits and invocation support without treating the base model as the custom model.",
+      "stage": "route",
+      "tags": [
+        "CMI",
+        "Bedrock",
+        "custom model import",
+        "fine-tuned",
+        "BYO",
+        "Safetensors",
+        "checkpoint",
+        "architecture"
+      ],
+      "questions": [
+        "Can I import my fine-tuned downloadable checkpoint into Bedrock?"
+      ],
+      "sources": [
+        "aws-bedrock-import",
+        "aws-bedrock-import-detail",
+        "aws-bedrock-import-invoke"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "5a2fedc5e4b8450f1e759c3860a2f964d8cfe6cdeb66ad420a8d0cad014f988e"
+    },
+    {
+      "id": "route-jumpstart",
+      "title": "Check the SageMaker JumpStart path",
+      "description": "Evaluate SageMaker JumpStart as a supported model and deployment starting point. Use when a model is missing from Bedrock, a customer asks about JumpStart, or a catalog example must be distinguished from hosting a private fine-tuned checkpoint.",
+      "stage": "route",
+      "tags": [
+        "SageMaker",
+        "JumpStart",
+        "catalog",
+        "model version",
+        "EULA",
+        "not listed",
+        "template"
+      ],
+      "questions": [
+        "What does JumpStart provide and what if my model is not listed?"
+      ],
+      "sources": [
+        "aws-sagemaker-jumpstart",
+        "aws-sagemaker-recommender",
+        "aws-sagemaker-serving"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "723ed37068119361667a63680ff7335cfa69c1ae45afaaad841a28c9025d0312"
+    },
+    {
+      "id": "route-sagemaker-container",
+      "title": "Verify a SageMaker serving container",
+      "description": "Check a SageMaker inference container for an existing model, including architecture, serving contract, CPU or GPU backend, CUDA driver compatibility and artifact loading. Use for BYOC, unsupported JumpStart models and container-start failures.",
+      "stage": "route",
+      "tags": [
+        "SageMaker",
+        "BYOC",
+        "container",
+        "CUDA",
+        "driver",
+        "kernel",
+        "AMI",
+        "health check",
+        "startup"
+      ],
+      "questions": [
+        "The model fits but the SageMaker container fails to start; what should I check?"
+      ],
+      "sources": [
+        "aws-sagemaker-container",
+        "aws-sagemaker-cuda",
+        "aws-sagemaker-transform-resources",
+        "aws-sagemaker-variant"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "57c17ed24786302ba531c0b9cc4f3dd2b8c2a0d659720d82cb19b3e3a642a45f"
+    },
+    {
+      "id": "route-sagemaker-serving-mode",
+      "title": "Choose a SageMaker serving mode",
+      "description": "Choose among SageMaker real-time, asynchronous, serverless and Batch Transform inference using response deadlines, payloads, traffic and cold-start tolerance. Use for scale-to-zero and always-on endpoint questions.",
+      "stage": "route",
+      "tags": [
+        "SageMaker",
+        "real-time",
+        "asynchronous",
+        "serverless",
+        "Batch Transform",
+        "scale to zero",
+        "cold start"
+      ],
+      "questions": [
+        "Should this workload use a real-time endpoint, asynchronous inference or a batch job?"
+      ],
+      "sources": [
+        "aws-sagemaker-async",
+        "aws-sagemaker-batch",
+        "aws-sagemaker-serverless",
+        "aws-sagemaker-serving",
+        "aws-sagemaker-zero"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "f311d1e159728b4fcb1d139d7e4c1279d64be1cd639080b55f6a07ff081a6288"
+    },
+    {
+      "id": "route-self-managed-eks-ec2",
+      "title": "Assess EC2 or EKS inference",
+      "description": "Assess EC2 or EKS inference when the customer needs control of scheduling, runtime, topology or an existing platform. Separate CPU and GPU choices, operating responsibilities, tenancy and failure recovery.",
+      "stage": "route",
+      "tags": [
+        "EKS",
+        "EC2",
+        "self managed",
+        "GPU",
+        "CPU",
+        "Kubernetes",
+        "runtime control",
+        "topology"
+      ],
+      "questions": [
+        "When do EC2 or EKS provide useful control for inference?"
+      ],
+      "sources": [
+        "aws-eks-inference",
+        "vllm-parallel",
+        "vllm-security"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "9fc17b0fa1ba1c0e6d3dfd56cd578da7c31c9c8d680ac3b0370f484d9aa92d8a"
+    },
+    {
+      "id": "route-hyperpod-inference",
+      "title": "Assess HyperPod for inference",
+      "description": "Assess SageMaker HyperPod inference for Kubernetes-based multi-node or shared-fleet serving. Use for managed orchestration, caching, routing, heterogeneous instance choices and the boundary between HyperPod and a managed endpoint.",
+      "stage": "route",
+      "tags": [
+        "SageMaker",
+        "HyperPod",
+        "Kubernetes",
+        "multi-node",
+        "cache",
+        "routing",
+        "shared fleet"
+      ],
+      "questions": [
+        "How does HyperPod inference differ from a SageMaker endpoint or our own EKS cluster?"
+      ],
+      "sources": [
+        "aws-sagemaker-hyperpod",
+        "aws-sagemaker-serving",
+        "vllm-parallel"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "5869efbc3feb142fa404ae0d8b2e6d71f7b32e7da19a95f6f2f10ff91aa4c823"
+    },
+    {
+      "id": "route-cpu-batch",
+      "title": "Consider CPU for offline inference",
+      "description": "Consider CPU EC2 or AWS Batch for offline open-weight inference before assuming a GPU. Use for Qwen3-TTS podcasts, embeddings, classification, reranking and low-concurrency work with completion deadlines.",
+      "stage": "route",
+      "tags": [
+        "CPU",
+        "AWS Batch",
+        "EC2",
+        "Qwen3-TTS",
+        "12Hz",
+        "1.7B",
+        "podcast",
+        "offline",
+        "no latency target",
+        "deadline"
+      ],
+      "questions": [
+        "Why is there no CPU option for Qwen3-TTS with no latency target?"
+      ],
+      "sources": [
+        "aws-batch-compute",
+        "aws-batch-retry",
+        "qwen-tts",
+        "vllm-cpu"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "6973b112fa7823efb953b697c3b340dac3ea630d6f3e06ce89267ce33bd0d5da"
+    },
+    {
+      "id": "route-cpu-serverless",
+      "title": "Choose a CPU execution environment",
+      "description": "Choose CPU hosting among Fargate, Lambda, SageMaker serverless and EC2 using memory, runtime duration, startup, instruction-set support and workload shape. Use for small intermittent inference and Graviton questions.",
+      "stage": "route",
+      "tags": [
+        "CPU",
+        "Fargate",
+        "Lambda",
+        "Graviton",
+        "ARM64",
+        "serverless",
+        "memory limit",
+        "intermittent"
+      ],
+      "questions": [
+        "Can this CPU model run on Fargate, Lambda or Graviton?"
+      ],
+      "sources": [
+        "aws-fargate-sizing",
+        "aws-graviton",
+        "aws-lambda-quotas",
+        "aws-sagemaker-serverless"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "4fb521d8038755b51bdd89029b6f3eead20df6c3094a2d6a8c9c6521f06e965c"
+    },
+    {
+      "id": "route-neuron",
+      "title": "Assess Neuron accelerators for inference",
+      "description": "Assess AWS Inferentia or Trainium for inference through Neuron-supported models and runtimes. Use for accelerator alternatives, compiler compatibility, supported shapes and GPU-to-Neuron migration.",
+      "stage": "route",
+      "tags": [
+        "Neuron",
+        "Inferentia",
+        "Trainium",
+        "NxD",
+        "compiler",
+        "accelerator",
+        "inference"
+      ],
+      "questions": [
+        "Can we use Inferentia or Trainium instead of a GPU for inference?"
+      ],
+      "sources": [
+        "aws-ec2-gpu",
+        "aws-neuron",
+        "aws-sagemaker-variant"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "17e5149042c140635f9dfa33485c06b9119b924344f1ba140c741d6a0235ccf6"
+    },
+    {
+      "id": "qualify-partner-inference",
+      "title": "Qualify a partner inference offering",
+      "description": "Distinguish a partner SaaS API, Marketplace subscription, customer-account endpoint and Bedrock Marketplace model. Use when an offering says it runs on AWS and the customer needs to know where inference, data and billing actually occur.",
+      "stage": "route",
+      "tags": [
+        "partner",
+        "Marketplace",
+        "SaaS",
+        "vendor API",
+        "customer account",
+        "procurement",
+        "data boundary"
+      ],
+      "questions": [
+        "Does buying a model in Marketplace mean inference runs in our AWS account?"
+      ],
+      "sources": [
+        "aws-bedrock-access",
+        "aws-bedrock-marketplace",
+        "aws-marketplace-saas"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "5549a3ed92db221d365a588c45029cb13019575c2eeb0162c35707fe33ca7d07"
+    },
+    {
+      "id": "size-model-memory",
+      "title": "Establish the model memory footprint",
+      "description": "Explain model footprint using tensor bytes, mixed precision, quantization metadata, active versus total parameters and runtime overhead. Use when a parameter count, disk size or advertised VRAM number is being treated as a deployable memory requirement.",
+      "stage": "size",
+      "tags": [
+        "footprint",
+        "weights",
+        "VRAM",
+        "GB",
+        "GiB",
+        "mixed precision",
+        "FP8",
+        "BF16",
+        "overhead",
+        "tensor bytes"
+      ],
+      "questions": [
+        "Why does runtime memory exceed the model's weight size?"
+      ],
+      "sources": [
+        "hf-model-cards",
+        "mit-awq",
+        "pagedattention-paper",
+        "vllm-quantization"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "48edcf2fa72479135b485d40e3b9417496c63d2e6f24f6ca60e662eebca3897f"
+    },
+    {
+      "id": "size-kv-cache",
+      "title": "Account for attention-cache memory",
+      "description": "Size attention-cache memory from exact model geometry, context, active sequences and cache precision. Use for GQA, MQA, MLA, long-context memory, FP8 KV assumptions and tensor-parallel cache replication.",
+      "stage": "size",
+      "tags": [
+        "KV cache",
+        "GQA",
+        "MQA",
+        "MLA",
+        "latent",
+        "context",
+        "concurrent sequences",
+        "FP8",
+        "replication"
+      ],
+      "questions": [
+        "How much KV cache do we need and can I assume FP8 cache with FP8 weights?"
+      ],
+      "sources": [
+        "pagedattention-paper",
+        "vllm-kv",
+        "vllm-parallel"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "5939a8c31ba9ececad4e45a7ebe39292a4e43dc765efd03931e7f7dcafd414f2"
+    },
+    {
+      "id": "size-moe-parallelism",
+      "title": "Plan a deployable model replica",
+      "description": "Plan deployable tensor, pipeline, expert and data parallelism for dense or MoE models. Use when active parameters are confused with resident weights, GPU counts are rounded only by VRAM, or a multi-node layout is proposed.",
+      "stage": "size",
+      "tags": [
+        "MoE",
+        "active parameters",
+        "total parameters",
+        "TP",
+        "DP",
+        "EP",
+        "pipeline",
+        "tensor parallel",
+        "NVLink",
+        "EFA"
+      ],
+      "questions": [
+        "Does a MoE model need memory for all weights or only its active parameters?"
+      ],
+      "sources": [
+        "aws-ec2-gpu",
+        "vllm-parallel",
+        "vllm-quantization"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "cda82a3048623b87297c1a8193ab80d401c2bd731afa0d6b1f7d5508ec6936e8"
+    },
+    {
+      "id": "size-cpu-inference",
+      "title": "Size a CPU inference worker",
+      "description": "Size a CPU inference worker using measured peak RAM, thread scaling, NUMA, job duration and concurrency. Use for Qwen3-TTS, embeddings, rerankers, Graviton comparisons and requests for a universal CPU model-size threshold.",
+      "stage": "size",
+      "tags": [
+        "CPU",
+        "RAM",
+        "threads",
+        "NUMA",
+        "Graviton",
+        "peak memory",
+        "1.7B",
+        "podcast",
+        "threshold"
+      ],
+      "questions": [
+        "What is the largest model that can run acceptably on a CPU?"
+      ],
+      "sources": [
+        "aws-batch-compute",
+        "aws-graviton",
+        "vllm-cpu"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "f758d1b0a6aa16669bbff78fdfbca8db297500ac76d6c2124a8bfb89d3710e88"
+    },
+    {
+      "id": "size-gpu-fleet",
+      "title": "Size a GPU serving fleet",
+      "description": "Convert a validated GPU replica into a serving fleet using peak demand, SLO-constrained throughput, burst handling and redundancy. Use when monthly token volume, theoretical throughput or utilization is being used to commit instance counts.",
+      "stage": "size",
+      "tags": [
+        "GPU",
+        "fleet",
+        "replicas",
+        "peak",
+        "goodput",
+        "capacity",
+        "utilization",
+        "throughput",
+        "redundancy"
+      ],
+      "questions": [
+        "How many GPU replicas do we need for our peak inference traffic?"
+      ],
+      "sources": [
+        "aws-sagemaker-scale",
+        "google-sre-overload",
+        "mlcommons-inference"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "a30fe0e9f5330aced227fcd13f2a1babd9ad2dcd9186afe15f20ce820f2a3c3f"
+    },
+    {
+      "id": "diagnose-prefill-decode",
+      "title": "Locate the inference bottleneck",
+      "description": "Diagnose slow inference by separating queueing, prompt prefill, first-token latency, decoding and transport. Use when a user asks whether caching, a faster GPU, chunked prefill or a smaller output would address latency.",
+      "stage": "optimize",
+      "tags": [
+        "prefill",
+        "decode",
+        "TTFT",
+        "ITL",
+        "TPOT",
+        "queue",
+        "slow",
+        "bottleneck",
+        "roofline"
+      ],
+      "questions": [
+        "The first token is fast but generation is slow; what should we optimize?"
+      ],
+      "sources": [
+        "flashattention-paper",
+        "vllm-chunked-prefill",
+        "vllm-metrics"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "47a3e059f16801601317008969e9038374883d7a1563223f1192175c5a15c383"
+    },
+    {
+      "id": "tune-batching-admission",
+      "title": "Tune batching and admission",
+      "description": "Tune inference batching, concurrency and admission control without sacrificing response deadlines. Use for queue growth, mixed prompt lengths, throughput optimization, overload, CPU batching and request fairness.",
+      "stage": "optimize",
+      "tags": [
+        "batching",
+        "admission",
+        "queue",
+        "concurrency",
+        "overload",
+        "Triton",
+        "continuous",
+        "fairness"
+      ],
+      "questions": [
+        "How do we improve throughput without missing latency deadlines?"
+      ],
+      "sources": [
+        "google-sre-overload",
+        "nvidia-triton-batch",
+        "vllm-chunked-prefill"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "8e833e1f5acb0125d3d07b6842912da19b691f6afc2394e4e9cb0d05845428f9"
+    },
+    {
+      "id": "tune-prefix-caching",
+      "title": "Evaluate prefix-cache reuse",
+      "description": "Assess prefix caching for repeated documents, system prompts and sessions. Use to separate shared-prefix prefill savings from decode speed, validate cache hit assumptions and protect tenant boundaries.",
+      "stage": "optimize",
+      "tags": [
+        "prefix caching",
+        "cache hit",
+        "RAG",
+        "system prompt",
+        "tenant",
+        "reuse",
+        "prefill"
+      ],
+      "questions": [
+        "Will caching repeated prompts speed up decoding or only prefill?"
+      ],
+      "sources": [
+        "aws-bedrock-cache",
+        "sglang-paper",
+        "vllm-prefix",
+        "vllm-security"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "1658d7c7c5ac52b893ecc1699a5f5e29ac2add9b61fdf8d65e666acbe30e0e41"
+    },
+    {
+      "id": "tune-speculative-decoding",
+      "title": "Evaluate speculative decoding",
+      "description": "Evaluate speculative decoding with a supported draft or proposal method and target model. Use for slow decode, code generation and claims of free speedups or guaranteed identical outputs.",
+      "stage": "optimize",
+      "tags": [
+        "speculative decoding",
+        "draft model",
+        "acceptance",
+        "target",
+        "code generation",
+        "lossless"
+      ],
+      "questions": [
+        "When does speculative decoding help and what extra resources does it use?"
+      ],
+      "sources": [
+        "mlcommons-inference",
+        "vllm-metrics",
+        "vllm-speculative"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "56b796f4e8256286922eee9cf7084058efef95f3a9842de0b6c525e355dda468"
+    },
+    {
+      "id": "tune-lora-serving",
+      "title": "Serve an existing adapter or merged checkpoint",
+      "description": "Assess serving existing LoRA adapters versus merged checkpoints. Use for shared-base multi-tenant inference, adapter memory, base revision compatibility and preventing a fine-tuned model from silently becoming the base model.",
+      "stage": "optimize",
+      "tags": [
+        "LoRA",
+        "adapter",
+        "merged",
+        "shared base",
+        "tenant",
+        "dynamic loading",
+        "fine-tuned"
+      ],
+      "questions": [
+        "Should we merge our existing LoRA adapter or serve it on a shared base model?"
+      ],
+      "sources": [
+        "hf-peft",
+        "hf-security",
+        "vllm-lora"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "a8617b01abd0ffd8adc031c6158c1aa6198cea59e2867afc265af23723a2d209"
+    },
+    {
+      "id": "assess-disaggregated-serving",
+      "title": "Assess separate prefill and decode serving",
+      "description": "Assess separating prefill and decode when measured phase interference or different resource needs justify it. Use for long-context tail latency, KV transfer, specialized fleets and experimental serving topologies.",
+      "stage": "optimize",
+      "tags": [
+        "disaggregated",
+        "prefill",
+        "decode",
+        "KV transfer",
+        "connector",
+        "tail latency",
+        "experimental"
+      ],
+      "questions": [
+        "Would separate prefill and decode workers solve our tail-latency problem?"
+      ],
+      "sources": [
+        "aws-sagemaker-hyperpod",
+        "vllm-chunked-prefill",
+        "vllm-disaggregated"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-12-27",
+      "sha256": "5297aa3f7e8b263ef2a6c362898ad920d8f209957d134cf4a3ff811690989a45"
+    },
+    {
+      "id": "compare-like-for-like-cost",
+      "title": "Compare equivalent inference costs",
+      "description": "Normalize inference alternatives to the same workload, quality, deadline, operating schedule and cost period. Use when a CPU job, Bedrock token estimate and monthly GPU endpoint quote appear in one comparison.",
+      "stage": "cost",
+      "tags": [
+        "cost",
+        "CPU",
+        "GPU",
+        "per job",
+        "monthly endpoint",
+        "same workload",
+        "apples to apples",
+        "supporting services"
+      ],
+      "questions": [
+        "Can I compare the podcast CPU job cost with a 30-day GPU endpoint estimate?"
+      ],
+      "sources": [
+        "aws-bedrock-pricing",
+        "aws-price-api",
+        "aws-sagemaker-serving"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "1e43aa475f4086fbdd13c70c657512e1cf5950af9c536eff080b7bf6c5f33339"
+    },
+    {
+      "id": "estimate-native-token-cost",
+      "title": "Estimate native model usage cost",
+      "description": "Build a Bedrock native-model cost estimate from requests, input/output tokens and correctly normalized rates. Use for billion-token scenarios, cache pricing, batch eligibility, service tiers and missing usage estimates.",
+      "stage": "cost",
+      "tags": [
+        "Bedrock",
+        "API",
+        "token cost",
+        "input output",
+        "million",
+        "billion",
+        "cache",
+        "batch"
+      ],
+      "questions": [
+        "How do we estimate token cost without confusing requests and tokens?"
+      ],
+      "sources": [
+        "aws-bedrock-batch",
+        "aws-bedrock-cache",
+        "aws-bedrock-pricing",
+        "aws-bedrock-profiles"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "744e39d092535acf0af93f0f9b4d7e75f87f8fe0b14cc1a26364efaea649633c"
+    },
+    {
+      "id": "estimate-import-copy-cost",
+      "title": "Estimate imported-model capacity cost",
+      "description": "Estimate Custom Model Import cost from assigned CMUs, CMU version, active copies, billed windows and storage. Use when import is incorrectly priced per token or a guessed CMU count produces a misleading comparison.",
+      "stage": "cost",
+      "tags": [
+        "CMI",
+        "CMU",
+        "custom model import",
+        "five minute",
+        "billing windows",
+        "copies",
+        "storage",
+        "rate"
+      ],
+      "questions": [
+        "Why does Bedrock import cost depend on active copies rather than tokens?"
+      ],
+      "sources": [
+        "aws-bedrock-import-cost",
+        "aws-bedrock-import-detail",
+        "aws-bedrock-pricing"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "0ffd13d8ebf0c67496dfe342c0d0c2b94c5fd527e141706a99059f9ed26f28ec"
+    },
+    {
+      "id": "estimate-allocated-compute-cost",
+      "title": "Estimate allocated compute cost",
+      "description": "Estimate CPU or GPU instance costs using allocated lifetime rather than busy inference time. Use for SageMaker endpoints, EC2, AWS Batch, startup, idle retention, shutdown and per-job versus monthly comparisons.",
+      "stage": "cost",
+      "tags": [
+        "EC2",
+        "SageMaker",
+        "AWS Batch",
+        "instance hours",
+        "idle",
+        "startup",
+        "worker lifetime",
+        "CPU",
+        "GPU"
+      ],
+      "questions": [
+        "Does the worker cost money while loading the model or sitting idle?"
+      ],
+      "sources": [
+        "aws-batch-compute",
+        "aws-ec2-spot",
+        "aws-price-api",
+        "aws-sagemaker-serving"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "788c20126668fc3eb627eb877f3749d5a7738f7afb52d2388d408d183ad67b5b"
+    },
+    {
+      "id": "evaluate-discounts-break-even",
+      "title": "Test discounts and break-even claims",
+      "description": "Compare on-demand, Savings Plans, reserved capacity and break-even scenarios with matching terms and service obligations. Use for claimed self-hosting thresholds, commitment discounts and confusion between price savings and GPU availability.",
+      "stage": "cost",
+      "tags": [
+        "break even",
+        "Savings Plans",
+        "commitment",
+        "discount",
+        "reserved",
+        "threshold",
+        "duty cycle"
+      ],
+      "questions": [
+        "At what volume would self-hosting cost less and does a Savings Plan reserve capacity?"
+      ],
+      "sources": [
+        "aws-ec2-reservation",
+        "aws-price-api",
+        "aws-savings-plans"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "933ce88b9e404c059eed886e61ae9f11b768b922d7d787841b096390b964af07"
+    },
+    {
+      "id": "verify-quota-and-capacity",
+      "title": "Verify quota and capacity independently",
+      "description": "Separate supported instance offerings, applied service quotas, available capacity and capacity actually secured. Use before GPU commitments, SageMaker endpoint deployment, Local Zone selection or interpreting a quota increase.",
+      "stage": "capacity",
+      "tags": [
+        "quota",
+        "capacity",
+        "applied limit",
+        "availability",
+        "GPU",
+        "Local Zone",
+        "reservation",
+        "inference plan"
+      ],
+      "questions": [
+        "Does an approved GPU quota mean the instances are available?"
+      ],
+      "sources": [
+        "aws-ec2-reservation",
+        "aws-instance-offerings",
+        "aws-sagemaker-capacity",
+        "aws-service-quotas"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "d594f8d88acc20b90b5b4435efe9af8aba7a6be4961ed4312672e6627afc4bd7"
+    },
+    {
+      "id": "plan-capacity-fallbacks",
+      "title": "Prepare a capacity fallback",
+      "description": "Build tested alternatives when preferred GPU capacity is unavailable or a reservation expires. Use for substitute accelerators, alternate Regions, smaller replicas, CPU batch fallbacks and release deadlines without an ETA.",
+      "stage": "capacity",
+      "tags": [
+        "GPU",
+        "B200",
+        "B300",
+        "g7e",
+        "fallback",
+        "ETA",
+        "capacity",
+        "reservation expiry",
+        "Spot",
+        "deadline"
+      ],
+      "questions": [
+        "What can we do if the preferred GPU has no delivery ETA?"
+      ],
+      "sources": [
+        "aws-ec2-capacity",
+        "aws-ec2-reservation",
+        "aws-ec2-spot",
+        "aws-sagemaker-capacity"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "3d0de757879f16d6874856b8f829c5c7d3f2b461ef04f17e09590f0d3b714b1c"
+    },
+    {
+      "id": "prepare-reproducible-deployment",
+      "title": "Prepare a reproducible inference deployment",
+      "description": "Turn an inference recommendation into a reproducible deployment handoff with pinned model, container, configuration, evidence, identity, budget and cleanup. Use before moving from a planning estimate to a trial or rollout.",
+      "stage": "operate",
+      "tags": [
+        "deployment",
+        "manifest",
+        "digest",
+        "recipe",
+        "review",
+        "checkpoint",
+        "network isolation"
+      ],
+      "questions": [
+        "What should be in a reproducible inference deployment handoff?"
+      ],
+      "sources": [
+        "aws-sagemaker-container",
+        "aws-sagemaker-isolation",
+        "hf-security"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "1d559d1bd1f813e9255d9ed9198e58bb3b588886168e7270001abb1ffc81b6f2"
+    },
+    {
+      "id": "release-with-rollback",
+      "title": "Release with a tested rollback",
+      "description": "Plan canary or staged inference releases with quality, latency, error and cost rollback criteria. Use when a model or runtime update is ready for traffic and the team needs a safe production handoff.",
+      "stage": "operate",
+      "tags": [
+        "release",
+        "canary",
+        "rollback",
+        "blue green",
+        "rolling",
+        "production",
+        "bake",
+        "shadow"
+      ],
+      "questions": [
+        "How should we roll out a model update and recover if it regresses?"
+      ],
+      "sources": [
+        "aws-sagemaker-monitor",
+        "aws-sagemaker-rollout",
+        "google-sre-slo"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "e4256ba7c7245836965cc76566d25b349642249e63bdc6b1e2ade161264b156e"
+    },
+    {
+      "id": "observe-inference-service",
+      "title": "Observe the inference service",
+      "description": "Define inference observability across user latency, quality, errors, queues, cache, resource use and cost. Use to distinguish GPU utilization from service health and avoid logging sensitive prompts by default.",
+      "stage": "operate",
+      "tags": [
+        "observability",
+        "CloudWatch",
+        "metrics",
+        "logs",
+        "quality",
+        "cost",
+        "GPU utilization",
+        "health"
+      ],
+      "questions": [
+        "What should we monitor besides GPU utilization?"
+      ],
+      "sources": [
+        "aws-bedrock-observability",
+        "aws-sagemaker-monitor",
+        "google-sre-slo",
+        "vllm-metrics"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "434d26a576b7af16ab8a11ba35bb0bdb46982a13f35f4b1eb941e04ba196102e"
+    },
+    {
+      "id": "revalidate-model-decisions",
+      "title": "Revalidate a recorded decision",
+      "description": "Reopen an inference recommendation when models, checkpoints, runtime versions, workloads, rates or service support change. Use for stale comparisons, lifecycle notices, expired evidence and migration planning.",
+      "stage": "operate",
+      "tags": [
+        "stale",
+        "lifecycle",
+        "EOL",
+        "migration",
+        "review due",
+        "new model",
+        "price changes",
+        "drift"
+      ],
+      "questions": [
+        "When does a saved recommendation need to be evaluated again?"
+      ],
+      "sources": [
+        "aws-bedrock-catalog",
+        "aws-bedrock-lifecycle",
+        "aws-price-api"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "12cca833ec9f559c5b2f23903b1ace7af6c81a8ee12d5f46ba1985e6d3ecaf2f"
+    },
+    {
+      "id": "handoff-service-gap",
+      "title": "Prepare an actionable service-gap handoff",
+      "description": "Prepare an actionable customer handoff for an unsupported model, missing API feature, capacity issue or unresolved inference optimization. Use to preserve exact workload evidence and next steps without inventing service commitments.",
+      "stage": "operate",
+      "tags": [
+        "handoff",
+        "service gap",
+        "feature request",
+        "support",
+        "account team",
+        "Inference Recommender",
+        "evidence"
+      ],
+      "questions": [
+        "What evidence should we send to the service team about a missing model or feature?"
+      ],
+      "sources": [
+        "aws-sagemaker-recommender",
+        "aws-service-quotas",
+        "aws-support-case"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "4263ba49419e8749c845ac16ddd9d12bfbd11cd67dde6797b7f971f803542f0b"
+    },
+    {
+      "id": "verify-cleanup",
+      "title": "Verify cleanup and remaining charges",
+      "description": "Verify that inference trial resources were actually removed and identify retained assets or ongoing charges. Use when deletion was requested, a worker finished, a stack was removed or a project-history entry disappeared.",
+      "stage": "operate",
+      "tags": [
+        "cleanup",
+        "remove",
+        "delete",
+        "retained",
+        "worker termination",
+        "scratch volume",
+        "charges",
+        "endpoint"
+      ],
+      "questions": [
+        "How do I prove the model resources were removed and find what still costs money?"
+      ],
+      "sources": [
+        "aws-batch-compute",
+        "aws-cfn-delete",
+        "aws-sagemaker-delete"
+      ],
+      "reviewedOn": "2026-09-28",
+      "reviewAfter": "2026-10-28",
+      "sha256": "4018caae2d89ed202cd9a1eb0d0e6b607db1025328042ff49dd7358e4ba7760c"
+    }
+  ]
+}

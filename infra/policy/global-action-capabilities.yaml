@@ -1,0 +1,289 @@
+# Checked record of every `Resource: "*"` Allow statement EDDIE ships.
+#
+# SEC-03 permits an unscoped resource only for an action AWS does not authorize at
+# the resource level, and only with a record naming the exact role, statement,
+# actions, reason, owner and review date. `scripts/verify/iam_policy_audit.py`
+# rejects any global Allow in a rendered template that has no matching record here,
+# and rejects a record whose actions no longer match the template. Adding a
+# statement without adding a record fails the build.
+#
+# This file is not a waiver mechanism. It cannot authorise an unbounded principal,
+# `Action: "*"`, an administrative policy, or a mutation that could have been
+# scoped. Those are rejected outright regardless of what is recorded here.
+policyVersion: "2026-09-19.2"
+# Replace this placeholder with your team's review contact.
+owner: sample-maintainers@example.invalid
+reviewBy: "2026-12-15"
+
+records:
+  - id: EDDIE-GLOBAL-001
+    role: RuntimeRole
+    policy: EvidenceCollectionGlobal
+    sid: PriceListReadOnly
+    actions:
+      - pricing:GetProducts
+      - pricing:DescribeServices
+      - pricing:GetAttributeValues
+    reason: >
+      The AWS Price List Query API has no resource-level authorization: price data is
+      public reference information and is not an account-owned resource. Read-only;
+      it exposes no customer data and mutates nothing.
+    source: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awspricelist.html
+    mutates: false
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-002
+    role: RuntimeRole
+    policy: EvidenceCollectionGlobal
+    sid: ListOperationsWithoutResourceAuthorization
+    actions:
+      - bedrock:ListFoundationModels
+      - bedrock:ListImportedModels
+      - bedrock:ListInferenceProfiles
+    reason: >
+      Enumeration operations. A list call has no single resource to authorize against;
+      the resource-scopable Get equivalents are in EvidenceCollectionScoped and are
+      pinned to the public catalogue and this account's own imported models.
+      ListImportedModels returns only this account's models.
+      ListInferenceProfiles discovers supported request routes and their processing
+      Regions. The collector requests only system-defined profiles; it cannot create
+      profiles, grant model access or invoke a model.
+    source: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrock.html
+    mutates: false
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-003
+    role: RuntimeRole
+    policy: EvidenceCollectionGlobal
+    sid: ServiceQuotaReadOnly
+    actions:
+      - servicequotas:ListServiceQuotas
+    reason: >
+      Listing service quotas has no resource ARN. GetServiceQuota is separately
+      scoped to this account's named service quota resources. Read-only listing
+      discovers the applied quota codes used for feasibility checks.
+    source: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsservicequotas.html
+    mutates: false
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-004
+    role: RuntimeRole
+    policy: Observability
+    sid: TelemetryPublish
+    actions:
+      - xray:PutTraceSegments
+      - xray:PutTelemetryRecords
+      - cloudwatch:PutMetricData
+    reason: >
+      X-Ray segment submission and CloudWatch metric publication are not
+      resource-authorized; there is no ARN for a metric that does not yet exist.
+      Write-only telemetry into this account. Metric namespace is constrained in
+      application code, and SEC-06 forbids putting prompts or credentials in
+      telemetry.
+    source: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsx-ray.html
+    mutates: true
+    mutationJustification: >
+      Publishes observability data only. It cannot read, modify or delete any
+      application or customer resource.
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-005
+    role: RuntimeRole
+    policy: ContainerImagePull
+    sid: EcrAuthorizationToken
+    actions:
+      - ecr:GetAuthorizationToken
+    reason: >
+      Documented by AWS as requiring `Resource: "*"`: the token is account-scoped and
+      precedes any repository selection, so there is no repository ARN to name. It
+      grants no repository access on its own -- the actual pull actions
+      (BatchGetImage, GetDownloadUrlForLayer, BatchCheckLayerAvailability) are in the
+      same policy and pinned to the coordinator repository.
+    source: https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-push-iam.html
+    mutates: false
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-006
+    role: ReconcilerRole
+    policy: ReconcilerObservability
+    sid: PublishReconcilerHeartbeat
+    actions:
+      - cloudwatch:PutMetricData
+    reason: >
+      CloudWatch metric publication is not resource-authorized: there is no ARN for a
+      metric that does not yet exist. Constrained instead by a cloudwatch:namespace
+      condition to EDDIE/Reconciler, so this role can publish only the reconciler's own
+      health metrics and cannot write to application or customer namespaces. Write-only
+      into this account; it cannot read any metric or alarm.
+    source: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudwatch.html
+    mutates: true
+    mutationJustification: >
+      Publishes the reconciler's heartbeat and failure counts. The heartbeat is what
+      makes the loss of the reconciler itself detectable, so the grant exists to support
+      an alarm rather than to change any resource.
+    conditionsAvailable: cloudwatch:namespace
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-007
+    role: ReconcilerRole
+    policy: InferenceCleanup
+    sid: Ec2DescribeForConfirmation
+    actions:
+      - ec2:DescribeInstances
+    reason: >
+      EC2 describe actions do not support resource-level permissions: the request names
+      no ARN, so there is nothing to scope to. Read-only, and needed to *confirm* a
+      termination -- OPS-02 forbids treating an accepted delete as a completed one, so
+      the reconciler must be able to observe absence. The destructive counterpart,
+      ec2:TerminateInstances, is scoped by resource tag in the same policy and is what
+      actually limits what this role can affect.
+    source: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonec2.html
+    mutates: false
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-008
+    role: ReconcilerRole
+    policy: ReconcilerIdentity
+    sid: WhoAmI
+    actions:
+      - sts:GetCallerIdentity
+    reason: >
+      Returns the caller's own identity and takes no resource, so there is nothing to
+      scope. AWS grants it implicitly to any principal; naming it explicitly documents
+      that the worker validates which account it is operating in before deleting
+      anything, so a ledger entry naming a different account is refused.
+    source: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssecuritytokenservice.html
+    mutates: false
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-009
+    role: SageMakerExecutionRole
+    policy: PullServingImage
+    sid: EcrAuthorizationTokenForServing
+    actions:
+      - ecr:GetAuthorizationToken
+    reason: >
+      Same documented AWS constraint as EDDIE-GLOBAL-005: the token is account-scoped
+      and precedes repository selection, so there is no repository ARN to name. It
+      grants no repository access by itself -- the pull actions in the same policy are
+      scoped to this installation's single eddie-<environment>-serving repository.
+    source: https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-push-iam.html
+    mutates: false
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-010
+    role: SageMakerExecutionRole
+    policy: ServingMetrics
+    sid: PublishServingMetrics
+    actions:
+      - cloudwatch:PutMetricData
+    reason: >
+      CloudWatch metric publication is not resource-authorized. Constrained by a
+      cloudwatch:namespace condition to /aws/sagemaker/Endpoints, so the model container
+      can publish its own invocation and latency metrics and nothing else. Write-only;
+      it cannot read a metric or an alarm.
+    source: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudwatch.html
+    mutates: true
+    mutationJustification: >
+      Publishes serving telemetry only. SEC-06 forbids putting prompts or credentials in
+      telemetry, and this grant cannot reach any application or customer resource.
+    conditionsAvailable: cloudwatch:namespace
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-011
+    role: SageMakerExecutionRole
+    policy: PrivateServingInterfaces
+    sid: DescribePrivateNetwork
+    actions:
+      - ec2:DescribeVpcEndpoints
+      - ec2:DescribeDhcpOptions
+      - ec2:DescribeVpcs
+      - ec2:DescribeSubnets
+      - ec2:DescribeSecurityGroups
+      - ec2:DescribeNetworkInterfaces
+    reason: >
+      EC2 network Describe APIs have no resource-level authorization. Required by
+      SageMaker for a VPC model. Mutations are separately constrained to the serving
+      subnets/security group and the serving VPC's interfaces.
+    source: https://servicereference.us-east-1.amazonaws.com/v1/ec2/ec2.json
+    mutates: false
+    conditionsAvailable: ec2:Region
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-012
+    role: DeploymentControllerRole
+    policy: DeploymentPreflight
+    sid: HostingPriceRead
+    actions: [pricing:GetProducts]
+    reason: The public Price List Query API does not authorize individual price records by resource ARN.
+    source: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awspricelist.html
+    mutates: false
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
+  - id: EDDIE-GLOBAL-013
+    role: DeploymentControllerRole
+    policy: DeploymentPreflight
+    sid: NetworkEvidenceRead
+    actions: [ec2:DescribeSubnets, ec2:DescribeSecurityGroups, ec2:DescribeRouteTables]
+    reason: >
+      These EC2 reads cannot be scoped to resource ARNs. They verify actual subnet,
+      security-group and inherited main-route-table state before admitting a deployment.
+      The controller has no EC2 or SageMaker creation permissions.
+    source: https://servicereference.us-east-1.amazonaws.com/v1/ec2/ec2.json
+    mutates: false
+    conditionsAvailable: ec2:Region
+    reviewBy: "2026-12-15"
+
+
+  - id: EDDIE-GLOBAL-014
+    role: DeploymentControllerRole
+    policy: DeploymentPreflight
+    sid: CleanupHeartbeatRead
+    actions:
+      - cloudwatch:GetMetricData
+    reason: >
+      CloudWatch GetMetricData has no resource-level authorization. Read-only,
+      called for the EDDIE/Reconciler SweepCompleted metric to refuse new GPU
+      allocations when no cleanup heartbeat has completed in the last 12 minutes.
+    source: https://servicereference.us-east-1.amazonaws.com/v1/cloudwatch/cloudwatch.json
+    mutates: false
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
+# Statements deliberately exempt from the record requirement, with the reason the
+# exemption is sound. The verifier applies these by resource type, not by name.
+structuralExemptions:
+  - kind: s3-gateway-endpoint-exact-role
+    reason: >
+      AWS requires Principal "*" on gateway endpoints and specifies aws:PrincipalArn
+      as the supported identity restriction. The auditor accepts only an exact role
+      in ArnEquals/StringEquals, explicit S3 GetObject/ListBucket actions and named
+      buckets. It rejects missing/IfExists/wildcard identity conditions, other
+      resource types and writes. The serving endpoint names only the installed
+      SageMaker execution role and EDDIE artifact paths. This is not public access
+      and does not grant the role permissions beyond its separate IAM policy.
+    source: https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-access.html
+  - kind: kms-key-policy
+    reason: >
+      Inside a KMS key policy, AWS defines `Resource: "*"` as the key the policy is
+      attached to -- not every key in the account. Treating it as a global grant would
+      be a false positive. Principals and actions in those statements are still
+      checked, and the DataKey policy enumerates its actions and constrains the
+      CloudWatch Logs encryption context to EDDIE's own log groups.
+    source: https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-overview.html
+  - kind: kms-key-policy-account-root
+    reason: >
+      `Principal: {AWS: arn:aws:iam::ACCOUNT:root}` with `kms:*` in a key policy is
+      the documented lockout-avoidance path for key administration. Removing it can
+      make a customer-managed key permanently unmanageable, so it is preserved
+      deliberately. It delegates to the account's IAM, not to any EDDIE role.
+    source: https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html

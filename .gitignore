@@ -1,0 +1,43 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+dist/
+/build/
+.DS_Store
+config/local.yaml
+.env
+*.log
+cdk.out/
+.pytest_cache/
+release/manifest-*.json
+frontend/.vite/
+
+# Generated deployment packages and account-specific verification reports.
+/.build/
+
+# Private research inputs; retain locally, exclude from public source bundles.
+/artifacts/
+/Winning Open Weight Models.pdf
+/docs/internal/
+/docs/reviews/
+/docs/demo-evidence/
+/docs/design/
+
+# Installation-specific browser configuration stays local. deploy.sh writes the
+# deployed config from CloudFormation outputs; start from config.example.json.
+/frontend/public/config.json
+
+# Private review documents and publication policies stay outside public source.
+# Ignore Office lock files too; neither belongs in a release or source scan.
+/internal/
+/*-review/
+~$*
+*.tsbuildinfo
+test-results/
+playwright-report/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/

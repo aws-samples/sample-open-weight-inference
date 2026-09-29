@@ -1,0 +1,746 @@
+{
+  "outcome": "NO_QUALIFIED_PLACEMENT",
+  "requestHash": "818e7ec2949ead77fabf6cd8b15cd272e19f6ee91efaddedfe16ea15982d0f4b",
+  "snapshotHash": "160fe3d8d4aab3344ae5c7d4f34f07646d502c05e0b863dac40cdb692ac63b4e",
+  "solverVersion": "1.1.0+policy1.0.0",
+  "horizonHours": "720",
+  "assumptions": [
+    "Common comparison horizon: 720 hours",
+    "Latency is a feasibility gate, not a cost penalty",
+    "UNKNOWN evidence excludes a candidate from ranking",
+    "CMI billable presence assumed at 720 copy-hours; requires a billing-policy simulation to substantiate"
+  ],
+  "ranked": [],
+  "unresolved": [
+    {
+      "candidateId": "sagemaker-ml.g5.2xlarge",
+      "target": "SAGEMAKER_REALTIME",
+      "region": "us-east-1",
+      "modelRef": "Qwen2.5 7B Instruct",
+      "instanceType": "ml.g5.2xlarge",
+      "instanceCount": "1",
+      "cmusPerCopy": null,
+      "scaleToZero": false,
+      "prewarmed": false,
+      "opsBurden": "MANAGED_CONTAINER_ENDPOINT",
+      "blastRadius": "ISOLATED_DEPLOYMENT",
+      "recipeId": "sagemaker-tgi-v1",
+      "notes": "Continuously allocated real-time endpoint.",
+      "isFeasible": false,
+      "cost": {
+        "total": "1090.80",
+        "totalExact": "1090.8000000000",
+        "isComplete": true,
+        "unpriced": [],
+        "items": [
+          {
+            "label": "SageMaker hosting compute (continuous)",
+            "phase": "serving",
+            "quantity": "720",
+            "quantityUnit": "instance-hour",
+            "rate": {
+              "amount": "1.5150000000",
+              "unit": "USD/Hrs",
+              "currency": "USD",
+              "region": "us-east-1",
+              "sku": "BTQ8KZF3DKVFJY87",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "source": "AmazonSageMaker Price List, retrieved 2026-09-18T03:31:32.835986+00:00"
+            },
+            "amount": "1090.80",
+            "evidence": "PROJECTED",
+            "note": "Includes readiness and drain per the allocation plan."
+          }
+        ]
+      },
+      "gates": [
+        {
+          "name": "region",
+          "status": "PASS",
+          "reason": "us-east-1 permitted",
+          "evidenceRef": null
+        },
+        {
+          "name": "architecture",
+          "status": "PASS",
+          "reason": "No import allowlist applies",
+          "evidenceRef": null
+        },
+        {
+          "name": "modality",
+          "status": "PASS",
+          "reason": "TEXT supported",
+          "evidenceRef": null
+        },
+        {
+          "name": "weights_exportable",
+          "status": "PASS",
+          "reason": "Artifact availability consistent",
+          "evidenceRef": null
+        },
+        {
+          "name": "license",
+          "status": "UNKNOWN",
+          "reason": "License/entitlement not established",
+          "evidenceRef": null
+        },
+        {
+          "name": "recipe",
+          "status": "UNKNOWN",
+          "reason": "No qualified deployment recipe recorded",
+          "evidenceRef": null
+        },
+        {
+          "name": "quota",
+          "status": "UNKNOWN",
+          "reason": "Quota headroom not collected",
+          "evidenceRef": null
+        },
+        {
+          "name": "capacity",
+          "status": "UNKNOWN",
+          "reason": "Capacity evidence not collected",
+          "evidenceRef": null
+        },
+        {
+          "name": "latency",
+          "status": "UNKNOWN",
+          "reason": "No measured latency for this exact candidate key; benchmark required",
+          "evidenceRef": null
+        },
+        {
+          "name": "budget",
+          "status": "PASS",
+          "reason": "Within $2000 budget",
+          "evidenceRef": null
+        },
+        {
+          "name": "operations",
+          "status": "PASS",
+          "reason": "MANAGED_CONTAINER_ENDPOINT acceptable",
+          "evidenceRef": null
+        }
+      ],
+      "failureCount": 0,
+      "unknownCount": 5
+    },
+    {
+      "candidateId": "sagemaker-ml.g6.2xlarge",
+      "target": "SAGEMAKER_REALTIME",
+      "region": "us-east-1",
+      "modelRef": "Qwen2.5 7B Instruct",
+      "instanceType": "ml.g6.2xlarge",
+      "instanceCount": "1",
+      "cmusPerCopy": null,
+      "scaleToZero": false,
+      "prewarmed": false,
+      "opsBurden": "MANAGED_CONTAINER_ENDPOINT",
+      "blastRadius": "ISOLATED_DEPLOYMENT",
+      "recipeId": "sagemaker-tgi-v1",
+      "notes": "Continuously allocated real-time endpoint.",
+      "isFeasible": false,
+      "cost": {
+        "total": "879.84",
+        "totalExact": "879.8400000000",
+        "isComplete": true,
+        "unpriced": [],
+        "items": [
+          {
+            "label": "SageMaker hosting compute (continuous)",
+            "phase": "serving",
+            "quantity": "720",
+            "quantityUnit": "instance-hour",
+            "rate": {
+              "amount": "1.2220000000",
+              "unit": "USD/Hrs",
+              "currency": "USD",
+              "region": "us-east-1",
+              "sku": "NMVPBX35NXYVMXPM",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "source": "AmazonSageMaker Price List, retrieved 2026-09-18T03:31:32.857666+00:00"
+            },
+            "amount": "879.84",
+            "evidence": "PROJECTED",
+            "note": "Includes readiness and drain per the allocation plan."
+          }
+        ]
+      },
+      "gates": [
+        {
+          "name": "region",
+          "status": "PASS",
+          "reason": "us-east-1 permitted",
+          "evidenceRef": null
+        },
+        {
+          "name": "architecture",
+          "status": "PASS",
+          "reason": "No import allowlist applies",
+          "evidenceRef": null
+        },
+        {
+          "name": "modality",
+          "status": "PASS",
+          "reason": "TEXT supported",
+          "evidenceRef": null
+        },
+        {
+          "name": "weights_exportable",
+          "status": "PASS",
+          "reason": "Artifact availability consistent",
+          "evidenceRef": null
+        },
+        {
+          "name": "license",
+          "status": "UNKNOWN",
+          "reason": "License/entitlement not established",
+          "evidenceRef": null
+        },
+        {
+          "name": "recipe",
+          "status": "UNKNOWN",
+          "reason": "No qualified deployment recipe recorded",
+          "evidenceRef": null
+        },
+        {
+          "name": "quota",
+          "status": "UNKNOWN",
+          "reason": "Quota headroom not collected",
+          "evidenceRef": null
+        },
+        {
+          "name": "capacity",
+          "status": "UNKNOWN",
+          "reason": "Capacity evidence not collected",
+          "evidenceRef": null
+        },
+        {
+          "name": "latency",
+          "status": "UNKNOWN",
+          "reason": "No measured latency for this exact candidate key; benchmark required",
+          "evidenceRef": null
+        },
+        {
+          "name": "budget",
+          "status": "PASS",
+          "reason": "Within $2000 budget",
+          "evidenceRef": null
+        },
+        {
+          "name": "operations",
+          "status": "PASS",
+          "reason": "MANAGED_CONTAINER_ENDPOINT acceptable",
+          "evidenceRef": null
+        }
+      ],
+      "failureCount": 0,
+      "unknownCount": 5
+    }
+  ],
+  "excluded": [
+    {
+      "candidateId": "cmi-prewarmed",
+      "target": "BEDROCK_CMI",
+      "region": "us-east-1",
+      "modelRef": "Qwen2.5 7B Instruct",
+      "instanceType": null,
+      "instanceCount": "1",
+      "cmusPerCopy": "2",
+      "scaleToZero": false,
+      "prewarmed": true,
+      "opsBurden": "SERVICE_API",
+      "blastRadius": "SHARED_ACCOUNT_SERVICE",
+      "recipeId": "cmi-import-v1",
+      "notes": "Kept resident to reduce cold restorations rather than to remove them: a copy is still restored after a deployment, a scaling event or an eviction. Billable presence approaches 100%, removing most of the scale-to-zero saving. Assumed 2 Custom Model Units per copy. Amazon Bedrock decides the real number when the model is imported, from its architecture, parameter count and context length.",
+      "isFeasible": false,
+      "cost": {
+        "total": "4944.25",
+        "totalExact": "4944.2520000000",
+        "isComplete": true,
+        "unpriced": [],
+        "items": [
+          {
+            "label": "Bedrock CMI active copy compute",
+            "phase": "serving",
+            "quantity": "1440",
+            "quantityUnit": "CMU-hour",
+            "rate": {
+              "amount": "3.4308000000",
+              "unit": "USD/CMU-hour",
+              "currency": "USD",
+              "region": "us-east-1",
+              "sku": "ECZ5AXBK9FHPZU3X",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "source": "AmazonBedrock Price List, usagetype USE1-Qwen2-CustomModelImport-Inference-v1:0, retrieved 2026-09-18T03:31:32.339899+00:00"
+            },
+            "amount": "4940.35",
+            "evidence": "PROJECTED",
+            "note": "Billable five-minute windows from first successful invocation. Billable presence, not utilization."
+          },
+          {
+            "label": "Bedrock CMI model storage",
+            "phase": "serving",
+            "quantity": "2",
+            "quantityUnit": "CMU-month",
+            "rate": {
+              "amount": "1.9500000000",
+              "unit": "USD/Model/month",
+              "currency": "USD",
+              "region": "us-east-1",
+              "sku": "HBD5MEHQHPPES2J7",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "source": "AmazonBedrock Price List, usagetype USE1-Qwen2-CustomModelImport-Storage-v1:0, retrieved 2026-09-18T03:31:32.401013+00:00"
+            },
+            "amount": "3.90",
+            "evidence": "PROJECTED",
+            "note": "Full-month allowance; no partial-month proration asserted."
+          }
+        ]
+      },
+      "gates": [
+        {
+          "name": "region",
+          "status": "PASS",
+          "reason": "us-east-1 permitted",
+          "evidenceRef": null
+        },
+        {
+          "name": "architecture",
+          "status": "PASS",
+          "reason": "Qwen2ForCausalLM is import-eligible",
+          "evidenceRef": null
+        },
+        {
+          "name": "modality",
+          "status": "PASS",
+          "reason": "TEXT supported",
+          "evidenceRef": null
+        },
+        {
+          "name": "weights_exportable",
+          "status": "PASS",
+          "reason": "Artifact availability consistent",
+          "evidenceRef": null
+        },
+        {
+          "name": "license",
+          "status": "UNKNOWN",
+          "reason": "License/entitlement not established",
+          "evidenceRef": null
+        },
+        {
+          "name": "recipe",
+          "status": "UNKNOWN",
+          "reason": "No qualified deployment recipe recorded",
+          "evidenceRef": null
+        },
+        {
+          "name": "quota",
+          "status": "UNKNOWN",
+          "reason": "Quota headroom not collected",
+          "evidenceRef": null
+        },
+        {
+          "name": "capacity",
+          "status": "PASS",
+          "reason": "Provider-managed availability; no customer GPU reservation required",
+          "evidenceRef": null
+        },
+        {
+          "name": "latency",
+          "status": "UNKNOWN",
+          "reason": "No measured latency for this exact candidate key; benchmark required",
+          "evidenceRef": null
+        },
+        {
+          "name": "budget",
+          "status": "FAIL",
+          "reason": "Estimated $4944.25 exceeds budget $2000",
+          "evidenceRef": null
+        },
+        {
+          "name": "operations",
+          "status": "PASS",
+          "reason": "SERVICE_API acceptable",
+          "evidenceRef": null
+        }
+      ],
+      "failureCount": 1,
+      "unknownCount": 4
+    },
+    {
+      "candidateId": "cmi-scale-to-zero",
+      "target": "BEDROCK_CMI",
+      "region": "us-east-1",
+      "modelRef": "Qwen2.5 7B Instruct",
+      "instanceType": null,
+      "instanceCount": "1",
+      "cmusPerCopy": "2",
+      "scaleToZero": true,
+      "prewarmed": false,
+      "opsBurden": "SERVICE_API",
+      "blastRadius": "SHARED_ACCOUNT_SERVICE",
+      "recipeId": "cmi-import-v1",
+      "notes": "Releases capacity after 5 idle minutes, which is what makes it cheap for bursty traffic. The first request after idle waits for the model to be restored. That restoration has not been measured for this configuration, so its duration is unknown here -- it is the specific risk to test against a first-response objective. Assumed 2 Custom Model Units per copy. Amazon Bedrock decides the real number when the model is imported, from its architecture, parameter count and context length.",
+      "isFeasible": false,
+      "cost": {
+        "total": "4944.25",
+        "totalExact": "4944.2520000000",
+        "isComplete": true,
+        "unpriced": [],
+        "items": [
+          {
+            "label": "Bedrock CMI active copy compute",
+            "phase": "serving",
+            "quantity": "1440",
+            "quantityUnit": "CMU-hour",
+            "rate": {
+              "amount": "3.4308000000",
+              "unit": "USD/CMU-hour",
+              "currency": "USD",
+              "region": "us-east-1",
+              "sku": "ECZ5AXBK9FHPZU3X",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "source": "AmazonBedrock Price List, usagetype USE1-Qwen2-CustomModelImport-Inference-v1:0, retrieved 2026-09-18T03:31:32.339899+00:00"
+            },
+            "amount": "4940.35",
+            "evidence": "PROJECTED",
+            "note": "Billable five-minute windows from first successful invocation. Billable presence, not utilization."
+          },
+          {
+            "label": "Bedrock CMI model storage",
+            "phase": "serving",
+            "quantity": "2",
+            "quantityUnit": "CMU-month",
+            "rate": {
+              "amount": "1.9500000000",
+              "unit": "USD/Model/month",
+              "currency": "USD",
+              "region": "us-east-1",
+              "sku": "HBD5MEHQHPPES2J7",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "source": "AmazonBedrock Price List, usagetype USE1-Qwen2-CustomModelImport-Storage-v1:0, retrieved 2026-09-18T03:31:32.401013+00:00"
+            },
+            "amount": "3.90",
+            "evidence": "PROJECTED",
+            "note": "Full-month allowance; no partial-month proration asserted."
+          }
+        ]
+      },
+      "gates": [
+        {
+          "name": "region",
+          "status": "PASS",
+          "reason": "us-east-1 permitted",
+          "evidenceRef": null
+        },
+        {
+          "name": "architecture",
+          "status": "PASS",
+          "reason": "Qwen2ForCausalLM is import-eligible",
+          "evidenceRef": null
+        },
+        {
+          "name": "modality",
+          "status": "PASS",
+          "reason": "TEXT supported",
+          "evidenceRef": null
+        },
+        {
+          "name": "weights_exportable",
+          "status": "PASS",
+          "reason": "Artifact availability consistent",
+          "evidenceRef": null
+        },
+        {
+          "name": "license",
+          "status": "UNKNOWN",
+          "reason": "License/entitlement not established",
+          "evidenceRef": null
+        },
+        {
+          "name": "recipe",
+          "status": "UNKNOWN",
+          "reason": "No qualified deployment recipe recorded",
+          "evidenceRef": null
+        },
+        {
+          "name": "quota",
+          "status": "UNKNOWN",
+          "reason": "Quota headroom not collected",
+          "evidenceRef": null
+        },
+        {
+          "name": "capacity",
+          "status": "PASS",
+          "reason": "Provider-managed availability; no customer GPU reservation required",
+          "evidenceRef": null
+        },
+        {
+          "name": "latency",
+          "status": "UNKNOWN",
+          "reason": "No measured latency for this exact candidate key; benchmark required",
+          "evidenceRef": null
+        },
+        {
+          "name": "budget",
+          "status": "FAIL",
+          "reason": "Estimated $4944.25 exceeds budget $2000",
+          "evidenceRef": null
+        },
+        {
+          "name": "operations",
+          "status": "PASS",
+          "reason": "SERVICE_API acceptable",
+          "evidenceRef": null
+        }
+      ],
+      "failureCount": 1,
+      "unknownCount": 4
+    },
+    {
+      "candidateId": "sagemaker-ml.g5.12xlarge",
+      "target": "SAGEMAKER_REALTIME",
+      "region": "us-east-1",
+      "modelRef": "Qwen2.5 7B Instruct",
+      "instanceType": "ml.g5.12xlarge",
+      "instanceCount": "1",
+      "cmusPerCopy": null,
+      "scaleToZero": false,
+      "prewarmed": false,
+      "opsBurden": "MANAGED_CONTAINER_ENDPOINT",
+      "blastRadius": "ISOLATED_DEPLOYMENT",
+      "recipeId": "sagemaker-tgi-v1",
+      "notes": "Continuously allocated real-time endpoint.",
+      "isFeasible": false,
+      "cost": {
+        "total": "5104.80",
+        "totalExact": "5104.8000000000",
+        "isComplete": true,
+        "unpriced": [],
+        "items": [
+          {
+            "label": "SageMaker hosting compute (continuous)",
+            "phase": "serving",
+            "quantity": "720",
+            "quantityUnit": "instance-hour",
+            "rate": {
+              "amount": "7.0900000000",
+              "unit": "USD/Hrs",
+              "currency": "USD",
+              "region": "us-east-1",
+              "sku": "CK7489KKYTBH3ZDV",
+              "effectiveDate": "2026-09-01T00:00:00Z",
+              "source": "AmazonSageMaker Price List, retrieved 2026-09-18T03:31:32.862953+00:00"
+            },
+            "amount": "5104.80",
+            "evidence": "PROJECTED",
+            "note": "Includes readiness and drain per the allocation plan."
+          }
+        ]
+      },
+      "gates": [
+        {
+          "name": "region",
+          "status": "PASS",
+          "reason": "us-east-1 permitted",
+          "evidenceRef": null
+        },
+        {
+          "name": "architecture",
+          "status": "PASS",
+          "reason": "No import allowlist applies",
+          "evidenceRef": null
+        },
+        {
+          "name": "modality",
+          "status": "PASS",
+          "reason": "TEXT supported",
+          "evidenceRef": null
+        },
+        {
+          "name": "weights_exportable",
+          "status": "PASS",
+          "reason": "Artifact availability consistent",
+          "evidenceRef": null
+        },
+        {
+          "name": "license",
+          "status": "UNKNOWN",
+          "reason": "License/entitlement not established",
+          "evidenceRef": null
+        },
+        {
+          "name": "recipe",
+          "status": "UNKNOWN",
+          "reason": "No qualified deployment recipe recorded",
+          "evidenceRef": null
+        },
+        {
+          "name": "quota",
+          "status": "UNKNOWN",
+          "reason": "Quota headroom not collected",
+          "evidenceRef": null
+        },
+        {
+          "name": "capacity",
+          "status": "UNKNOWN",
+          "reason": "Capacity evidence not collected",
+          "evidenceRef": null
+        },
+        {
+          "name": "latency",
+          "status": "UNKNOWN",
+          "reason": "No measured latency for this exact candidate key; benchmark required",
+          "evidenceRef": null
+        },
+        {
+          "name": "budget",
+          "status": "FAIL",
+          "reason": "Estimated $5104.80 exceeds budget $2000",
+          "evidenceRef": null
+        },
+        {
+          "name": "operations",
+          "status": "PASS",
+          "reason": "MANAGED_CONTAINER_ENDPOINT acceptable",
+          "evidenceRef": null
+        }
+      ],
+      "failureCount": 1,
+      "unknownCount": 5
+    }
+  ],
+  "winner": null,
+  "breakeven": {
+    "breakevenDutyPercent": "17.73",
+    "cmiActiveHourly": "6.86",
+    "dedicatedHourly": "1.22",
+    "actualDutyPercent": "100.00",
+    "verdict": "STEADY_FAVOURS_DEDICATED",
+    "explanation": "Duty means billable presence, not GPU utilization. Below the breakeven the burst-priced import is cheaper; above it the continuously allocated endpoint is.",
+    "cmiComparedCandidate": "cmi-scale-to-zero",
+    "dedicatedComparedCandidate": "sagemaker-ml.g6.2xlarge"
+  },
+  "counts": {
+    "ranked": 0,
+    "unresolved": 2,
+    "excluded": 3
+  },
+  "qualification": {
+    "performanceMeasured": false,
+    "latencyStatus": "NOT_MEASURED",
+    "sloRequested": true,
+    "benchmarkRunIds": [],
+    "conditional": false,
+    "note": "A latency objective was requested but no applicable benchmark evidence exists, so no candidate can qualify on latency. Affected candidates are reported as unresolved with the experiment needed to resolve them."
+  },
+  "detail": null,
+  "blockedOnlyOnLatency": false,
+  "request": {
+    "caseId": "support-pilot-rehearsal",
+    "model": {
+      "name": "Qwen2.5 7B Instruct",
+      "architecture": "Qwen2ForCausalLM",
+      "modality": "TEXT",
+      "totalParamsB": "7.615616512",
+      "contextTokens": 32768,
+      "precision": "BF16",
+      "weightsGb": "14.19",
+      "weightsExportable": true,
+      "licenseId": "apache-2.0",
+      "hfRepo": "Qwen/Qwen2.5-7B-Instruct"
+    },
+    "workload": {
+      "horizonHours": "720",
+      "billableCopyHours": "720",
+      "dedicatedInstanceHours": null,
+      "scheduled": false,
+      "concurrency": 4,
+      "description": "Support-ticket assistant: classify incoming tickets and draft a reply for human review. A 30-day pilot available around the clock. Up to four requests at once."
+    },
+    "slos": [
+      {
+        "metric": "p99_latency_ms",
+        "thresholdMs": "5000",
+        "percentile": "99",
+        "includeCold": true,
+        "errorBudgetFraction": "0.01"
+      }
+    ],
+    "constraints": {
+      "permittedRegions": [
+        "us-east-1"
+      ],
+      "budgetUsd": "2000",
+      "requireHeldCapacity": false,
+      "maxOpsBurden": null
+    }
+  },
+  "priceFreshness": {
+    "sagemaker": "LIVE",
+    "cmi_minute": "LIVE",
+    "cmi_month": "LIVE",
+    "ml.g5.12xlarge": "LIVE",
+    "ml.g5.2xlarge": "LIVE",
+    "ml.g6.2xlarge": "LIVE"
+  },
+  "retrievedAt": "2026-09-18T03:31:32.724597+00:00",
+  "cmiFamily": "Qwen2",
+  "latencyEvidenceProvenance": "NONE",
+  "checksStipulated": false,
+  "evaluatedRequest": {
+    "caseId": "support-pilot-rehearsal",
+    "model": {
+      "name": "Qwen2.5 7B Instruct",
+      "architecture": "Qwen2ForCausalLM",
+      "modality": "TEXT",
+      "totalParamsB": "7.615616512",
+      "contextTokens": 32768,
+      "precision": "BF16",
+      "weightsGb": "14.19",
+      "weightsExportable": true,
+      "licenseId": "apache-2.0",
+      "hfRepo": "Qwen/Qwen2.5-7B-Instruct"
+    },
+    "workload": {
+      "horizonHours": "720",
+      "billableCopyHours": "720",
+      "dedicatedInstanceHours": null,
+      "scheduled": false,
+      "concurrency": 4,
+      "description": "Support-ticket assistant: classify incoming tickets and draft a reply for human review. A 30-day pilot available around the clock. Up to four requests at once."
+    },
+    "constraints": {
+      "permittedRegions": [
+        "us-east-1"
+      ],
+      "budgetUsd": "2000",
+      "requireHeldCapacity": false,
+      "maxOpsBurden": null
+    },
+    "slos": [
+      {
+        "metric": "p99_latency_ms",
+        "thresholdMs": "5000",
+        "includeCold": true,
+        "errorBudgetFraction": "0.01"
+      }
+    ],
+    "assumeChecksCleared": false,
+    "latencyEvidence": {},
+    "projectId": "user:c4b82438-d0f1-70fa-d11e-396349f6a3e2"
+  },
+  "evaluatedRequestHash": "92a5e4414a2fe28598f22d1ffa1f8bb8",
+  "knowledge": {
+    "state": "NOT_INSTALLED",
+    "query": "inference hosting for Qwen2ForCausalLM TEXT",
+    "retrievedAt": "2026-09-18T03:31:32.865722+00:00",
+    "releasePin": "v0.3.1",
+    "citations": [],
+    "context": null,
+    "affectsPlacement": false,
+    "trust": "Retrieved text is untrusted context. It cannot grant authority, set a price, or satisfy a feasibility gate.",
+    "detail": "COA is not installed; no governed context retrieved."
+  }
+}

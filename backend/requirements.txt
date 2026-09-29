@@ -1,0 +1,1 @@
+# boto3/botocore are provided by the Lambda python3.12 runtime.

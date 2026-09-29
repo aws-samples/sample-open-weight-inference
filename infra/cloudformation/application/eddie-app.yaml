@@ -1,0 +1,2156 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  EDDIE - Evaluate, Design & Deploy Inference Environments.
+
+  Control plane is AgentCore Runtime, not API Gateway. API Gateway's 29-second
+  integration timeout cannot host this workload: price collection alone runs for
+  seconds, and build/benchmark/deploy actions run for minutes to hours. AgentCore
+  allows 15-minute synchronous requests, 60-minute streaming, and 8-hour async jobs.
+
+  The browser authenticates against a Cognito user pool and calls the runtime
+  directly with a JWT bearer token, so no request transits API Gateway.
+
+  CloudFormation owns everything here. Dynamic inference resources (imports,
+  endpoints) are owned by SDK controllers and are never created by this stack.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedPattern: "[a-z0-9-]{2,20}"
+
+  ContainerUri:
+    Type: String
+    Description: >
+      ECR image URI for the coordinator, including an immutable tag or digest.
+      deploy.sh builds and pushes this before creating the stack. `latest` is
+      rejected so a release is always identifiable.
+    AllowedPattern: "^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com/.+(:.+|@sha256:.+)$"
+
+  ArtifactBucket:
+    Type: String
+    Description: >
+      Bucket holding packaged Lambda code. Created by deploy.sh before the stack, so it
+      is a parameter rather than a stack resource: a bucket that the stack owns cannot
+      hold the code the stack needs in order to be created.
+
+  AlarmEmail:
+    Type: String
+    Default: ""
+    Description: >
+      Address subscribed to operational alarms. Empty means alarms still change state
+      and remain readable, but nothing is delivered -- which is recorded as an
+      unresolved control rather than presented as monitoring.
+
+  FrontendDomainName:
+    Type: String
+    Default: ""
+    Description: Optional customer-owned DNS name. Required with FrontendCertificateArn to enforce a TLS 1.2 minimum.
+    AllowedPattern: "^$|[a-zA-Z0-9][a-zA-Z0-9.-]+\\.[a-zA-Z]{2,63}"
+
+  FrontendCertificateArn:
+    Type: String
+    Default: ""
+    Description: ACM certificate in us-east-1 covering FrontendDomainName. The CloudFront default certificate cannot enforce TLS 1.2.
+    AllowedPattern: "^$|arn:aws:acm:us-east-1:[0-9]{12}:certificate/[a-zA-Z0-9-]+$"
+
+  ReconcilerCodeKey:
+    Type: String
+    MinLength: 1
+    Description: >
+      S3 key of the packaged reconciliation worker in the artifact bucket. deploy.sh
+      builds and uploads this before creating the stack.
+
+  DeploymentCodeKey:
+    Type: String
+    Description: Packaged deployment services with pinned Python dependencies.
+
+  ServingImageUri:
+    Type: String
+    Default: ""
+    Description: Scanned image in this installation's private serving repository, pinned by digest. Empty disables test deployments.
+    AllowedPattern: "^$|^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com/eddie-[a-z0-9-]+-serving@sha256:[0-9a-f]{64}$"
+
+  S3PrefixListId:
+    Type: String
+    Description: AWS-managed S3 prefix list discovered in the deployment Region by deploy.sh.
+    AllowedPattern: "^pl-[a-z0-9]+$"
+
+  LogRetentionDays:
+    Type: Number
+    Default: 30
+    AllowedValues: [1, 3, 7, 14, 30, 60, 90, 180, 365]
+
+  AdvisorModelId:
+    Type: String
+    Default: us.anthropic.claude-sonnet-4-5-20250929-v1:0
+    Description: >
+      Advisor LLM for conversation and tool orchestration only. It never sets a
+      price or satisfies a feasibility gate.
+
+  AwsDocumentationEnabled:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+    Description: >
+      Read-only public AWS documentation through the pinned AWS Knowledge MCP.
+      Only predefined topic queries are sent, without credentials or project data.
+      Set false to disable this outbound connection; AWS guidance stays unverified.
+
+  CoaMcpEndpoint:
+    Type: String
+    Default: ""
+    Description: >
+      COA MCP endpoint. Empty means COA is not installed; knowledge tools then
+      report NOT_INSTALLED rather than fabricating governed context.
+
+  CoaNeptuneClusterId:
+    Type: String
+    Default: ""
+    Description: Neptune cluster to stop/start for demo sleep mode. Empty disables sleep.
+
+  CoaEcsCluster:
+    Type: String
+    Default: ""
+
+  CoaEcsServices:
+    Type: String
+    Default: ""
+    Description: Comma-separated ECS service names to scale to zero when sleeping.
+
+  EnableWaf:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+    Description: >
+      CloudFront WAF WebACL. Defaults on: the frontend is the only internet-facing
+      static delivery surface. Direct AgentCore API calls are separately authenticated
+      and are not covered by this WebACL. Requires us-east-1.
+
+  ProvisionUserGroups:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+    Description: >
+      Create the five application groups on a new installation. deploy.sh sets
+      false only when all five already exist outside this stack. Existing
+      memberships are never changed. Keep true for groups managed by this stack.
+
+Rules:
+  DomainAndCertificateTogether:
+    Assertions:
+      - Assert: !Or
+          - !And [!Equals [!Ref FrontendDomainName, ""], !Equals [!Ref FrontendCertificateArn, ""]]
+          - !And
+              - !Not [!Equals [!Ref FrontendDomainName, ""]]
+              - !Not [!Equals [!Ref FrontendCertificateArn, ""]]
+        AssertDescription: Supply both a custom domain and its us-east-1 ACM certificate, or leave both empty.
+
+Conditions:
+  WithWaf: !Equals [!Ref EnableWaf, "true"]
+  WithUserGroups: !Equals [!Ref ProvisionUserGroups, "true"]
+  WithAlarmDelivery: !Not [!Equals [!Ref AlarmEmail, ""]]
+  WithFrontendCertificate: !Not [!Equals [!Ref FrontendCertificateArn, ""]]
+  # COA's knowledge stack is not installed by default. Its sleep/wake grants are
+  # mutations (ecs:UpdateService, application-autoscaling:RegisterScalableTarget,
+  # aoss:UpdateCollection), so they are not attached at all unless COA is actually
+  # present. Granting them "just in case" gave the runtime role standing authority
+  # to alter any ECS service, scalable target or OpenSearch collection in the
+  # account, for a stack that does not exist.
+  WithCoa: !Not [!Equals [!Ref CoaMcpEndpoint, ""]]
+
+Resources:
+  # ------------------------------------------------------------------
+  # Encryption: one customer-managed key for application data at rest
+  # ------------------------------------------------------------------
+  DataKey:
+    Type: AWS::KMS::Key
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      Description: !Sub "EDDIE ${Environment} application data at rest"
+      EnableKeyRotation: true
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AccountRootAdministration
+            Effect: Allow
+            Principal: { AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root" }
+            Action: kms:*
+            Resource: "*"
+          # SEC-03. Actions enumerated rather than wildcarded, and the encryption
+          # context narrowed to EDDIE's own log groups.
+          #
+          # This previously granted kms:ReEncrypt*, kms:GenerateDataKey* and
+          # kms:Describe* with an encryption context matching `log-group:*` -- every
+          # log group in the account, so any CloudWatch group could have used this
+          # key. `Resource: "*"` is left as-is deliberately: in a *key policy* AWS
+          # defines it as the attached key, not every key in the account.
+          #
+          # AccountRootAdministration above is likewise retained deliberately. It is
+          # the documented lockout-avoidance path for key administration; removing it
+          # can render a CMK permanently unmanageable.
+          - Sid: AllowCloudWatchLogs
+            Effect: Allow
+            Principal: { Service: !Sub "logs.${AWS::Region}.amazonaws.com" }
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncryptFrom
+              - kms:ReEncryptTo
+              - kms:GenerateDataKey
+              - kms:GenerateDataKeyWithoutPlaintext
+              - kms:DescribeKey
+            Resource: "*"
+            Condition:
+              ArnLike:
+                kms:EncryptionContext:aws:logs:arn:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/bedrock-agentcore/eddie-${Environment}*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/eddie/${Environment}*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/sagemaker/Endpoints/eddie-${Environment}-*"
+
+  DataKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/eddie-${Environment}"
+      TargetKeyId: !Ref DataKey
+  # ------------------------------------------------------------------
+  # Identity: Cognito issues the JWT the browser presents to AgentCore
+  # ------------------------------------------------------------------
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "eddie-${Environment}"
+      AdminCreateUserConfig:
+        # Operators create users deliberately; this is not a public sign-up app.
+        AllowAdminCreateUserOnly: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          # How long an operator-issued temporary password stays usable. Cognito's
+          # default is 7 days, which is right for a self-service pool and wrong here:
+          # accounts are created deliberately, often ahead of a demo or a workshop, and
+          # an expired temporary password can only be cleared by an admin reset -- which
+          # emails the person. Six months means the window is not the reason somebody
+          # cannot get in, while the credential is still single-use: it is spent the
+          # moment they set their own password.
+          #
+          # Deliberately NOT paired with AdminCreateUserConfig.UnusedAccountValidityDays.
+          # That property is deprecated, takes precedence over this one for
+          # admin-created users, and would silently pin the window back to its own value.
+          TemporaryPasswordValidityDays: 180
+      AutoVerifiedAttributes: [email]
+      UsernameAttributes: [email]
+      MfaConfiguration: OPTIONAL
+      EnabledMfas: [SOFTWARE_TOKEN_MFA]
+      UserPoolAddOns:
+        AdvancedSecurityMode: AUDIT
+      DeletionProtection: ACTIVE
+      UserPoolTags:
+        Application: eddie
+        Environment: !Ref Environment
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "eddie-${Environment}-web"
+      UserPoolId: !Ref UserPool
+      # Public SPA client: no secret is issued, so none can leak in browser assets.
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 8
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: hours
+      PreventUserExistenceErrors: ENABLED
+      SupportedIdentityProviders: [COGNITO]
+
+  # ------------------------------------------------------------------
+  # Capability groups.
+  #
+  # The runtime resolves what a caller may do from `cognito:groups` on the verified
+  # token (GROUP_CAPABILITIES in backend/runtime/principal.py). Until now nothing
+  # created these groups, so a fresh installation had no way to grant anything: every
+  # signed-in user fell back to DEFAULT_CAPABILITIES (read and chat) and an operator
+  # had to create the groups by hand before anyone could deploy or approve.
+  #
+  # They are declared here, next to the pool, so the authorization model the code
+  # enforces is visible in the template that creates the pool rather than living only
+  # in Python. Precedence is ordered so that when a user is in more than one group the
+  # token lists the most privileged first; the runtime unions capabilities regardless,
+  # so precedence affects presentation, not the decision.
+  #
+  # Creating a group grants nobody anything. Membership is a deliberate act.
+  # ------------------------------------------------------------------
+  ReadersGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Condition: WithUserGroups
+    Properties:
+      UserPoolId: !Ref UserPool
+      GroupName: eddie-readers
+      Precedence: 50
+      Description: Read evidence, prices and saved projects. Cannot converse or deploy.
+
+  UsersGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Condition: WithUserGroups
+    Properties:
+      UserPoolId: !Ref UserPool
+      GroupName: eddie-users
+      Precedence: 40
+      Description: Read and use the advisor. Cannot deploy.
+
+  DeployersGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Condition: WithUserGroups
+    Properties:
+      UserPoolId: !Ref UserPool
+      GroupName: eddie-deployers
+      Precedence: 30
+      Description: Create plans and start approved deployments. Cannot approve their own.
+
+  ApproversGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Condition: WithUserGroups
+    Properties:
+      UserPoolId: !Ref UserPool
+      GroupName: eddie-approvers
+      Precedence: 20
+      Description: Authorise a plan for execution. Separate from creating one by design.
+
+  OperatorsGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Condition: WithUserGroups
+    Properties:
+      UserPoolId: !Ref UserPool
+      GroupName: eddie-operators
+      Precedence: 10
+      Description: Everything above, plus waking and sleeping EDDIE's own infrastructure.
+
+  # ------------------------------------------------------------------
+  # Durable state
+  # ------------------------------------------------------------------
+  CaseTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    Properties:
+      TableName: !Sub "eddie-${Environment}-cases"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: pk, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+        # Reconciliation index. The expiry and orphan reconciler has to sweep every
+        # project, and a project-partitioned table cannot be scanned by expiry
+        # without a full table scan. `reconcileClass` groups the rows a reconciler
+        # cares about (open jobs, billable resources) and `expiresAt` orders them, so
+        # the sweep is a bounded query rather than a scan.
+        - { AttributeName: reconcileClass, AttributeType: S }
+        - { AttributeName: expiresAt, AttributeType: S }
+      KeySchema:
+        - { AttributeName: pk, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      GlobalSecondaryIndexes:
+        - IndexName: reconcile-index
+          KeySchema:
+            - { AttributeName: reconcileClass, KeyType: HASH }
+            - { AttributeName: expiresAt, KeyType: RANGE }
+          Projection: { ProjectionType: ALL }
+      # Customer-managed key, not the AWS-owned default, so key use is auditable
+      # and revocable.
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref DataKey
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      DeletionProtectionEnabled: true
+      TimeToLiveSpecification: { AttributeName: expiresAt, Enabled: true }
+
+  # ------------------------------------------------------------------
+  # AgentCore Runtime
+  # ------------------------------------------------------------------
+  RuntimeLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/bedrock-agentcore/eddie-${Environment}"
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !GetAtt DataKey.Arn
+
+  RuntimeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "eddie-${Environment}-runtime"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: bedrock-agentcore.amazonaws.com }
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Policies:
+        # Read-only evidence collection. This role cannot create inference
+        # resources; that authority belongs to a separate deployment role.
+        # Read-only evidence collection, split so that resource-scopable reads are
+        # actually scoped. Previously every action here shared one `Resource: "*"`
+        # statement, which meant a grant that *could* have been pinned to public
+        # foundation models and this account's own imported models was instead
+        # unbounded.
+        #
+        # Each remaining global statement is matched against
+        # infra/policy/global-action-capabilities.yaml, which records why the action
+        # cannot be resource-scoped, its owner and its review deadline. The verifier
+        # rejects a `Resource: "*"` Allow with no matching record.
+        - PolicyName: EvidenceCollectionScoped
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # Public model metadata. Foundation-model ARNs carry no account id, so
+              # this is read access to the public catalogue, not anything owned.
+              - Sid: ReadPublicModelMetadata
+                Effect: Allow
+                Action: bedrock:GetFoundationModel
+                Resource: "arn:aws:bedrock:*::foundation-model/*"
+              # Imported models belong to this account, so they are scoped to it.
+              - Sid: ReadOwnImportedModels
+                Effect: Allow
+                Action: bedrock:GetImportedModel
+                Resource: !Sub "arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:imported-model/*"
+        - PolicyName: EvidenceCollectionGlobal
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # List and pricing operations that AWS does not authorize at the
+              # resource level. Recorded in global-action-capabilities.yaml as
+              # EDDIE-GLOBAL-001..003. All are read-only.
+              - Sid: PriceListReadOnly
+                Effect: Allow
+                Action:
+                  - pricing:GetProducts
+                  - pricing:DescribeServices
+                  - pricing:GetAttributeValues
+                Resource: "*"
+              - Sid: ListOperationsWithoutResourceAuthorization
+                Effect: Allow
+                Action:
+                  - bedrock:ListFoundationModels
+                  - bedrock:ListImportedModels
+                  - bedrock:ListInferenceProfiles
+                Resource: "*"
+              - Sid: ServiceQuotaReadOnly
+                Effect: Allow
+                Action: servicequotas:ListServiceQuotas
+                Resource: "*"
+              - Sid: NamedServiceQuotaRead
+                Effect: Allow
+                Action: servicequotas:GetServiceQuota
+                Resource:
+                  - !Sub "arn:aws:servicequotas:${AWS::Region}:${AWS::AccountId}:sagemaker/*"
+                  - !Sub "arn:aws:servicequotas:${AWS::Region}:${AWS::AccountId}:bedrock/*"
+                  - !Sub "arn:aws:servicequotas:${AWS::Region}:${AWS::AccountId}:ec2/*"
+        - PolicyName: AdvisorInvocation
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # A cross-region inference profile (the `us.` prefix) routes to any
+              # region in its geography, so the foundation-model resource cannot be
+              # pinned to the deployment region. Scoping it to us-east-1 produced an
+              # AccessDenied naming us-east-2 the first time the advisor ran.
+              # Foundation-model ARNs carry no account id, so this grants invoke on
+              # public models only -- it is not access to anything account-owned.
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource:
+                  - "arn:aws:bedrock:*::foundation-model/*"
+                  - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/*"
+                  - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:application-inference-profile/*"
+        - PolicyName: CaseState
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: CaseAndHistoricalState
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                # The table and its indexes. An index ARN is a child of the table,
+                # not a separate grant, and Query against an index is denied without
+                # it -- so the reconciliation index is named explicitly rather than
+                # widening the resource.
+                Resource:
+                  - !GetAtt CaseTable.Arn
+                  - !Sub "${CaseTable.Arn}/index/reconcile-index"
+                Condition:
+                  ForAllValues:StringEquals:
+                    dynamodb:LeadingKeys: [lifecycle]
+        - PolicyName: SavedProjects
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: PersonalProjectDrafts
+                Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:Query]
+                Resource: !GetAtt CaseTable.Arn
+                # These records cannot be deployment jobs, plans, approvals, or
+                # lifecycle controls. The runtime derives the personal suffix
+                # exclusively from its cryptographically verified principal.
+                Condition:
+                  ForAllValues:StringLike:
+                    dynamodb:LeadingKeys: ["saved-case#*"]
+        - PolicyName: AdvisorSessions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: FencedNativeSessionStorage
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:ConditionCheckItem
+                Resource: !GetAtt CaseTable.Arn
+                Condition:
+                  ForAllValues:StringLike:
+                    dynamodb:LeadingKeys: ["advisor#*"]
+        # Sleep/wake for the COA knowledge stack. Attached only when COA is
+        # actually installed, and every mutation is pinned to a tagged EDDIE
+        # resource in this account and region.
+        #
+        # Scoped to stop/start and scale only: this role can idle the knowledge
+        # stack but never delete it, because sleep must not be able to destroy
+        # reviewed ontology data.
+        - !If
+          - WithCoa
+          - PolicyName: DemoLifecycle
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Sid: NeptuneStopStart
+                  Effect: Allow
+                  Action:
+                    - rds:StartDBCluster
+                    - rds:StopDBCluster
+                  Resource: !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:cluster:eddie-${Environment}-*"
+                - Sid: ReadClusterState
+                  Effect: Allow
+                  Action: rds:DescribeDBClusters
+                  Resource: !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:cluster:eddie-${Environment}-*"
+                - Sid: EcsScaleToZero
+                  Effect: Allow
+                  Action:
+                    - ecs:DescribeServices
+                    - ecs:UpdateService
+                  Resource: !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:service/eddie-${Environment}-*/*"
+                  Condition:
+                    StringEquals:
+                      aws:ResourceTag/eddie:environment: !Ref Environment
+                - Sid: AutoscalingMinimums
+                  Effect: Allow
+                  Action:
+                    - application-autoscaling:DescribeScalableTargets
+                    - application-autoscaling:RegisterScalableTarget
+                  Resource: !Sub "arn:aws:application-autoscaling:${AWS::Region}:${AWS::AccountId}:scalable-target/*"
+                  Condition:
+                    StringEquals:
+                      application-autoscaling:service-namespace: ecs
+                - Sid: SearchCollectionScale
+                  Effect: Allow
+                  Action:
+                    - aoss:BatchGetCollection
+                    - aoss:UpdateCollection
+                  Resource: !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/*"
+                  Condition:
+                    StringEquals:
+                      aws:ResourceTag/eddie:environment: !Ref Environment
+          - !Ref AWS::NoValue
+        # Forward a user request to an independent verifier. The coordinator cannot
+        # assume the deployment role or write to the deployment authority table.
+        - PolicyName: DeploymentRequests
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: InvokeVerifiedDeploymentServices
+                Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource:
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-deployment-control"
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-test-inference"
+        - PolicyName: Observability
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                Resource: !Sub "${RuntimeLogGroup.Arn}:*"
+              - Sid: TelemetryPublish
+                Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                  - cloudwatch:PutMetricData
+                Resource: "*"
+        # AgentCore pulls the coordinator image using this role, so it needs read
+        # access scoped to this one repository -- not to every repository in the
+        # account.
+        - PolicyName: ContainerImagePull
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: EcrAuthorizationToken
+                Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchCheckLayerAvailability
+                Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-coordinator"
+        - PolicyName: DataKeyUse
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                  - kms:GenerateDataKey
+                Resource: !GetAtt DataKey.Arn
+
+  Coordinator:
+    Type: AWS::BedrockAgentCore::Runtime
+    Properties:
+      # Pattern allows letters and underscores only, so no hyphens here.
+      AgentRuntimeName: !Sub "eddie_${Environment}_coordinator"
+      Description: EDDIE coordinator - discovery, evidence, and deterministic placement
+      RoleArn: !GetAtt RuntimeRole.Arn
+      ProtocolConfiguration: HTTP
+      AgentRuntimeArtifact:
+        ContainerConfiguration:
+          ContainerUri: !Ref ContainerUri
+      NetworkConfiguration:
+        NetworkMode: PUBLIC
+      AuthorizerConfiguration:
+        CustomJWTAuthorizer:
+          DiscoveryUrl: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}/.well-known/openid-configuration"
+          AllowedClients:
+            - !Ref UserPoolClient
+      # AgentCore does not pass the Authorization header to the container unless it
+      # is allowlisted here. Without this the coordinator sees no token at all, so it
+      # cannot identify the caller, cannot authorize a project, and cannot act as the
+      # user against COA -- it can only trust that something upstream checked. The
+      # container re-verifies the token it receives (signature, issuer, client_id,
+      # token_use, expiry) rather than decoding it unverified, so an inbound
+      # misconfiguration cannot become anonymous access downstream.
+      RequestHeaderConfiguration:
+        RequestHeaderAllowlist:
+          - Authorization
+      EnvironmentVariables:
+        EDDIE_REGION: !Ref AWS::Region
+        EDDIE_ENVIRONMENT: !Ref Environment
+        CASE_TABLE: !Ref CaseTable
+        EDDIE_LIFECYCLE_TABLE: !Ref CaseTable
+        ADVISOR_MODEL_ID: !Ref AdvisorModelId
+        # SEC-01. The runtime verifies the caller's access token against this pool
+        # itself. Without these it refuses every request rather than trusting the
+        # authorizer in front of the container, because an inbound-mode
+        # misconfiguration upstream must not become anonymous access downstream.
+        #
+        # A pool id and a client id are public identifiers, not secrets: the browser
+        # already holds both to perform SRP sign-in.
+        EDDIE_USER_POOL_ID: !Ref UserPool
+        EDDIE_DEPLOYMENT_CONTROLLER: !GetAtt DeploymentController.Arn
+        EDDIE_INFERENCE_FUNCTION: !GetAtt InferenceFunction.Arn
+        EDDIE_USER_POOL_CLIENT_IDS: !Ref UserPoolClient
+        EDDIE_SAGEMAKER_EXECUTION_ROLE_ARN: !GetAtt SageMakerExecutionRole.Arn
+        EDDIE_ARTIFACT_BUCKET: !Ref ArtifactBucket
+        EDDIE_AWS_DOCS_ENABLED: !Ref AwsDocumentationEnabled
+        COA_MCP_ENDPOINT: !Ref CoaMcpEndpoint
+        COA_NEPTUNE_CLUSTER_ID: !Ref CoaNeptuneClusterId
+        COA_ECS_CLUSTER: !Ref CoaEcsCluster
+        COA_ECS_SERVICES: !Ref CoaEcsServices
+        LOG_LEVEL: INFO
+      Tags:
+        Application: eddie
+        Environment: !Ref Environment
+
+  # ------------------------------------------------------------------
+  # Frontend: private bucket, CloudFront-only via OAC
+  # ------------------------------------------------------------------
+  AccessLogBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "eddie-${Environment}-access-logs-${AWS::AccountId}"
+      # Legacy CloudFront log delivery uses a non-public canonical-user ACL.
+      # BucketOwnerEnforced disables that delivery contract. The frontend bucket
+      # remains BucketOwnerEnforced; this dedicated private destination does not.
+      OwnershipControls:
+        Rules: [{ ObjectOwnership: BucketOwnerPreferred }]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      VersioningConfiguration: { Status: Enabled }
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireAccessLogs
+            Status: Enabled
+            ExpirationInDays: 30
+            NoncurrentVersionExpiration: { NoncurrentDays: 30 }
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 1 }
+      Tags:
+        - { Key: Application, Value: EDDIE }
+        - { Key: eddie:environment, Value: !Ref Environment }
+
+  AccessLogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AccessLogBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: FrontendServerAccessLogs
+            Effect: Allow
+            Principal: { Service: logging.s3.amazonaws.com }
+            Action: s3:PutObject
+            Resource: !Sub "${AccessLogBucket.Arn}/s3/*"
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                aws:SourceArn: !Sub "arn:aws:s3:::eddie-${Environment}-frontend-${AWS::AccountId}"
+          - Sid: DenyInsecureLogTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource: [!GetAtt AccessLogBucket.Arn, !Sub "${AccessLogBucket.Arn}/*"]
+            Condition:
+              Bool: { aws:SecureTransport: false }
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub "eddie-${Environment}-frontend-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+            BucketKeyEnabled: true
+      VersioningConfiguration: { Status: Enabled }
+      LoggingConfiguration:
+        DestinationBucketName: !Ref AccessLogBucket
+        LogFilePrefix: s3/
+      OwnershipControls:
+        Rules: [{ ObjectOwnership: BucketOwnerEnforced }]
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontOacRead
+            Effect: Allow
+            Principal: { Service: cloudfront.amazonaws.com }
+            Action: s3:GetObject
+            Resource: !Sub "${FrontendBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+          # Only CloudFront may read objects. Everything else, including any IAM
+          # principal in this account, is denied at the resource.
+          - Sid: DenyEverythingExceptCloudFront
+            Effect: Deny
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "${FrontendBucket.Arn}/*"
+            Condition:
+              StringNotEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource:
+              - !GetAtt FrontendBucket.Arn
+              - !Sub "${FrontendBucket.Arn}/*"
+            Condition:
+              Bool: { aws:SecureTransport: false }
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "eddie-${Environment}-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  CachePolicyImmutable:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub "eddie-${Environment}-immutable"
+        DefaultTTL: 86400
+        MinTTL: 86400
+        MaxTTL: 31536000
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingGzip: true
+          EnableAcceptEncodingBrotli: true
+          CookiesConfig: { CookieBehavior: none }
+          HeadersConfig: { HeaderBehavior: none }
+          QueryStringsConfig: { QueryStringBehavior: none }
+
+  CachePolicyNoStore:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub "eddie-${Environment}-nostore"
+        DefaultTTL: 0
+        MinTTL: 0
+        MaxTTL: 1
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingGzip: true
+          EnableAcceptEncodingBrotli: true
+          CookiesConfig: { CookieBehavior: none }
+          HeadersConfig: { HeaderBehavior: none }
+          QueryStringsConfig: { QueryStringBehavior: none }
+
+  ResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "eddie-${Environment}-security-headers"
+        SecurityHeadersConfig:
+          ContentTypeOptions: { Override: true }
+          FrameOptions: { FrameOption: DENY, Override: true }
+          ReferrerPolicy:
+            ReferrerPolicy: strict-origin-when-cross-origin
+            Override: true
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: true
+            Override: true
+          XSSProtection: { Protection: true, ModeBlock: true, Override: true }
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub "EDDIE ${Environment}"
+        DefaultRootObject: index.html
+        PriceClass: PriceClass_100
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        Aliases: !If [WithFrontendCertificate, [!Ref FrontendDomainName], !Ref AWS::NoValue]
+        ViewerCertificate: !If
+          - WithFrontendCertificate
+          - AcmCertificateArn: !Ref FrontendCertificateArn
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          # AWS ignores MinimumProtocolVersion with its default certificate.
+          # Do not make a false TLS-floor claim for *.cloudfront.net.
+          - CloudFrontDefaultCertificate: true
+        Logging:
+          Bucket: !GetAtt AccessLogBucket.RegionalDomainName
+          Prefix: cloudfront/
+          IncludeCookies: false
+        WebACLId: !If [WithWaf, !GetAtt WebAcl.Arn, !Ref AWS::NoValue]
+        Origins:
+          - Id: FrontendS3
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig: { OriginAccessIdentity: "" }
+        DefaultCacheBehavior:
+          TargetOriginId: FrontendS3
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachePolicyId: !Ref CachePolicyNoStore
+          ResponseHeadersPolicyId: !Ref ResponseHeadersPolicy
+          Compress: true
+        CacheBehaviors:
+          - PathPattern: /assets/*
+            TargetOriginId: FrontendS3
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachePolicyId: !Ref CachePolicyImmutable
+            ResponseHeadersPolicyId: !Ref ResponseHeadersPolicy
+            Compress: true
+        CustomErrorResponses:
+          - { ErrorCode: 403, ResponseCode: 200, ResponsePagePath: /index.html, ErrorCachingMinTTL: 0 }
+          - { ErrorCode: 404, ResponseCode: 200, ResponsePagePath: /index.html, ErrorCachingMinTTL: 0 }
+
+  WebAcl:
+    Type: AWS::WAFv2::WebACL
+    Condition: WithWaf
+    Properties:
+      Name: !Sub "eddie-${Environment}-cf-acl"
+      Scope: CLOUDFRONT
+      DefaultAction: { Allow: {} }
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub "eddie-${Environment}-cf-acl"
+      Rules:
+        - Name: CommonRuleSet
+          Priority: 0
+          OverrideAction: { None: {} }
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: CommonRuleSet
+        - Name: RateLimit
+          Priority: 1
+          Action: { Block: {} }
+          Statement:
+            RateBasedStatement: { Limit: 2000, AggregateKeyType: IP }
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimit
+        - Name: KnownBadInputs
+          Priority: 2
+          OverrideAction: { None: {} }
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesKnownBadInputsRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: false
+            CloudWatchMetricsEnabled: true
+            MetricName: KnownBadInputs
+
+  # ------------------------------------------------------------------
+  # Inference deployment: two more bounded identities
+  # ------------------------------------------------------------------
+  #
+  # Three separate roles now exist, and the separation is the control:
+  #
+  #   RuntimeRole        reads evidence, invokes the advisor. Creates nothing.
+  #   DeploymentRole     creates and deletes SageMaker resources. Cannot invoke the
+  #                      advisor, cannot read the advisor's grants, cannot edit IAM.
+  #   ReconcilerRole     deletes and confirms. Creates nothing.
+  #   SageMakerExecutionRole  assumed by SageMaker itself to pull the image and weights.
+  #
+  # The advisor therefore cannot obtain deployment credentials: SEC-03 requires exactly
+  # that, and it is why deployment is not simply another RuntimeRole policy.
+
+  # What SageMaker assumes to run the model container. Deliberately minimal: read the
+  # staged weights, pull the serving image, write its own logs. It cannot call SageMaker,
+  # cannot read the case table, and cannot reach any other bucket.
+
+  DeploymentTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "eddie-${Environment}-deployments"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: pk, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+        - { AttributeName: reconcileClass, AttributeType: S }
+        - { AttributeName: expiresAt, AttributeType: S }
+      KeySchema:
+        - { AttributeName: pk, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      GlobalSecondaryIndexes:
+        - IndexName: reconcile-index
+          KeySchema:
+            - { AttributeName: reconcileClass, KeyType: HASH }
+            - { AttributeName: expiresAt, KeyType: RANGE }
+          Projection: { ProjectionType: ALL }
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !GetAtt DataKey.Arn
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      DeletionProtectionEnabled: true
+
+  ServingVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.78.0.0/22
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: [{Key: Name, Value: !Sub "eddie-${Environment}-private-serving"}]
+  ServingSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ServingVpc
+      CidrBlock: 10.78.0.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+  ServingSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ServingVpc
+      CidrBlock: 10.78.1.0/24
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+  ServingRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: {VpcId: !Ref ServingVpc}
+  ServingSubnetARoutes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref ServingSubnetA, RouteTableId: !Ref ServingRouteTable}
+  ServingSubnetBRoutes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref ServingSubnetB, RouteTableId: !Ref ServingRouteTable}
+  ServingSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: No inbound access. Staged artifacts through S3 only; model network isolation is also mandatory.
+      VpcId: !Ref ServingVpc
+      SecurityGroupIngress: []
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          Description: HTTPS access to staged model artifacts through the regional S3 endpoint.
+          FromPort: 443
+          ToPort: 443
+          DestinationPrefixListId: !Ref S3PrefixListId
+  ServingS3Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref ServingVpc
+      VpcEndpointType: Gateway
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      RouteTableIds: [!Ref ServingRouteTable]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            # S3 gateway endpoints require Principal "*" with an exact
+            # aws:PrincipalArn condition. A role in Principal is not supported.
+            # This filter permits only our serving role, not public access.
+            # https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-access.html
+            Principal: "*"
+            Action: [s3:GetObject, s3:ListBucket]
+            Resource:
+              - !Sub "arn:aws:s3:::${ArtifactBucket}"
+              - !Sub "arn:aws:s3:::${ArtifactBucket}/models/eddie-${Environment}/*"
+            Condition:
+              ArnEquals:
+                aws:PrincipalArn: !GetAtt SageMakerExecutionRole.Arn
+
+  DeploymentControllerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "eddie-${Environment}-deployment-control"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: lambda.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DeploymentPreflight
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: HostingPriceRead
+                Effect: Allow
+                Action: pricing:GetProducts
+                Resource: "*"
+              - Sid: NetworkEvidenceRead
+                Effect: Allow
+                Action: [ec2:DescribeSubnets, ec2:DescribeSecurityGroups, ec2:DescribeRouteTables]
+                Resource: "*"
+              - Sid: EndpointQuotaRead
+                Effect: Allow
+                Action: servicequotas:GetServiceQuota
+                Resource: !Sub "arn:aws:servicequotas:${AWS::Region}:${AWS::AccountId}:sagemaker/L-9614C779"
+              - Sid: ServingImageScanRead
+                Effect: Allow
+                Action: ecr:DescribeImageScanFindings
+                Resource:
+                  - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-serving"
+                  - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-kms-serving"
+              - Sid: VerifyCleanupSchedule
+                Effect: Allow
+                Action: [events:DescribeRule, events:ListTargetsByRule]
+                Resource: !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/eddie-${Environment}-reconcile"
+              - Sid: VerifyCleanupFunction
+                Effect: Allow
+                Action: lambda:GetFunctionConfiguration
+                Resource: !GetAtt Reconciler.Arn
+              - Sid: VerifyCleanupHealth
+                Effect: Allow
+                Action: cloudwatch:DescribeAlarms
+                Resource:
+                  - !Sub "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:eddie-${Environment}-reconciler-stopped"
+                  - !Sub "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:eddie-${Environment}-cleanup-incomplete"
+                  - !Sub "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:eddie-${Environment}-delete-unconfirmed"
+                  - !Sub "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:eddie-${Environment}-reconciler-errors"
+              - Sid: CleanupHeartbeatRead
+                Effect: Allow
+                Action: cloudwatch:GetMetricData
+                Resource: "*"
+        - PolicyName: NotifyDurableWorkers
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource:
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-deployment-worker"
+                  - !GetAtt Reconciler.Arn
+        - PolicyName: InspectPrivateCheckpoints
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadCheckpointMetadata
+                Effect: Allow
+                Action: [s3:GetObject, s3:GetObjectVersion]
+                Resource: !Sub "arn:aws:s3:::${ArtifactBucket}/checkpoints/eddie-${Environment}/*"
+              - Sid: ListCheckpointLibrary
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${ArtifactBucket}"
+                Condition:
+                  StringLike:
+                    s3:prefix: !Sub "checkpoints/eddie-${Environment}/*"
+
+  ArtifactStagerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "eddie-${Environment}-artifact-stager"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: lambda.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: WritePinnedArtifacts
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "arn:aws:s3:::${ArtifactBucket}/models/eddie-${Environment}/*"
+              - Sid: ReadPinnedCheckpointVersions
+                Effect: Allow
+                Action: s3:GetObjectVersion
+                Resource: !Sub "arn:aws:s3:::${ArtifactBucket}/checkpoints/eddie-${Environment}/*"
+
+  InferenceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "eddie-${Environment}-test-inference"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: lambda.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeOwnedTestEndpoints
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: sagemaker:InvokeEndpoint
+                Resource: !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint/eddie-${Environment}-job-*"
+
+  DeploymentRoleStatePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: DurableDeploymentState
+      Roles: [!Ref DeploymentRole]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ReadDeploymentState
+            Effect: Allow
+            Action: [dynamodb:GetItem, dynamodb:Query]
+            Resource:
+              - !GetAtt DeploymentTable.Arn
+              - !Sub "${DeploymentTable.Arn}/index/reconcile-index"
+          - Sid: AdvanceJobsWithoutApprovalAuthority
+            Effect: Allow
+            Action: [dynamodb:PutItem, dynamodb:UpdateItem]
+            Resource: !GetAtt DeploymentTable.Arn
+            Condition:
+              ForAllValues:StringLike:
+                dynamodb:LeadingKeys: ["project#*", "job#*", "worker-lock#*"]
+              "Null":
+                dynamodb:LeadingKeys: "false"
+          - Sid: ReleaseWorkerLocksOnly
+            Effect: Allow
+            Action: dynamodb:DeleteItem
+            Resource: !GetAtt DeploymentTable.Arn
+            Condition:
+              ForAllValues:StringLike:
+                dynamodb:LeadingKeys: ["worker-lock#*"]
+          - Sid: UseDeploymentDataKey
+            Effect: Allow
+            Action: [kms:Decrypt, kms:GenerateDataKey, kms:DescribeKey]
+            Resource: !GetAtt DataKey.Arn
+          - Sid: WriteServiceLogs
+            Effect: Allow
+            Action: [logs:CreateLogStream, logs:PutLogEvents]
+            Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/eddie/${Environment}/deployment-worker:*"
+
+  DeploymentControllerRoleStatePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: DurableDeploymentState
+      Roles: [!Ref DeploymentControllerRole]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ReadAndWriteDeploymentState
+            Effect: Allow
+            Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:Query, dynamodb:ConditionCheckItem]
+            Resource:
+              - !GetAtt DeploymentTable.Arn
+              - !Sub "${DeploymentTable.Arn}/index/reconcile-index"
+          - Sid: ReleaseWorkerLocksOnly
+            Effect: Allow
+            Action: dynamodb:DeleteItem
+            Resource: !GetAtt DeploymentTable.Arn
+            Condition:
+              ForAllValues:StringLike:
+                dynamodb:LeadingKeys: ["worker-lock#*"]
+          - Sid: UseDeploymentDataKey
+            Effect: Allow
+            Action: [kms:Decrypt, kms:GenerateDataKey]
+            Resource: !GetAtt DataKey.Arn
+          - Sid: WriteServiceLogs
+            Effect: Allow
+            Action: [logs:CreateLogStream, logs:PutLogEvents]
+            Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/eddie/${Environment}/deployment-control:*"
+
+  ArtifactStagerRoleStatePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: DurableDeploymentState
+      Roles: [!Ref ArtifactStagerRole]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ReadDeploymentState
+            Effect: Allow
+            Action: [dynamodb:GetItem, dynamodb:Query]
+            Resource:
+              - !GetAtt DeploymentTable.Arn
+              - !Sub "${DeploymentTable.Arn}/index/reconcile-index"
+          - Sid: AdvanceJobsWithoutApprovalAuthority
+            Effect: Allow
+            Action: [dynamodb:PutItem, dynamodb:UpdateItem]
+            Resource: !GetAtt DeploymentTable.Arn
+            Condition:
+              ForAllValues:StringLike:
+                dynamodb:LeadingKeys: ["project#*", "job#*", "worker-lock#*"]
+              "Null":
+                dynamodb:LeadingKeys: "false"
+          - Sid: ReleaseWorkerLocksOnly
+            Effect: Allow
+            Action: dynamodb:DeleteItem
+            Resource: !GetAtt DeploymentTable.Arn
+            Condition:
+              ForAllValues:StringLike:
+                dynamodb:LeadingKeys: ["worker-lock#*"]
+          - Sid: UseDeploymentDataKey
+            Effect: Allow
+            Action: [kms:Decrypt, kms:GenerateDataKey]
+            Resource: !GetAtt DataKey.Arn
+          - Sid: WriteServiceLogs
+            Effect: Allow
+            Action: [logs:CreateLogStream, logs:PutLogEvents]
+            Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/eddie/${Environment}/artifact-stager:*"
+
+  InferenceRoleStatePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: DurableDeploymentState
+      Roles: [!Ref InferenceRole]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ReadDeploymentState
+            Effect: Allow
+            Action: [dynamodb:GetItem, dynamodb:Query]
+            Resource:
+              - !GetAtt DeploymentTable.Arn
+              - !Sub "${DeploymentTable.Arn}/index/reconcile-index"
+          - Sid: AdvanceJobsWithoutApprovalAuthority
+            Effect: Allow
+            Action: [dynamodb:UpdateItem]
+            Resource: !GetAtt DeploymentTable.Arn
+            Condition:
+              ForAllValues:StringLike:
+                dynamodb:LeadingKeys: ["project#*", "worker-lock#*"]
+              "Null":
+                dynamodb:LeadingKeys: "false"
+          - Sid: ReleaseWorkerLocksOnly
+            Effect: Allow
+            Action: dynamodb:DeleteItem
+            Resource: !GetAtt DeploymentTable.Arn
+            Condition:
+              ForAllValues:StringLike:
+                dynamodb:LeadingKeys: ["worker-lock#*"]
+          - Sid: UseDeploymentDataKey
+            Effect: Allow
+            Action: [kms:Decrypt, kms:GenerateDataKey]
+            Resource: !GetAtt DataKey.Arn
+          - Sid: WriteServiceLogs
+            Effect: Allow
+            Action: [logs:CreateLogStream, logs:PutLogEvents]
+            Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/eddie/${Environment}/test-inference:*"
+
+  DeploymentControllerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/eddie/${Environment}/deployment-control"
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !GetAtt DataKey.Arn
+  DeploymentController:
+    Type: AWS::Lambda::Function
+    DependsOn: DeploymentControllerRoleStatePolicy
+    Properties:
+      FunctionName: !Sub "eddie-${Environment}-deployment-control"
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: deploy.service.handler
+      Role: !GetAtt DeploymentControllerRole.Arn
+      Timeout: 60
+      MemorySize: 512
+      ReservedConcurrentExecutions: 4
+      EphemeralStorage: {Size: 512}
+      LoggingConfig:
+        LogGroup: !Ref DeploymentControllerLogGroup
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref DeploymentCodeKey
+      Environment:
+        Variables:
+          EDDIE_ACCOUNT_ID: !Ref AWS::AccountId
+          EDDIE_REGION: !Ref AWS::Region
+          EDDIE_ENVIRONMENT: !Ref Environment
+          DEPLOYMENT_TABLE: !Ref DeploymentTable
+          EDDIE_ARTIFACT_BUCKET: !Ref ArtifactBucket
+          EDDIE_DATA_KEY: !GetAtt DataKey.Arn
+          EDDIE_SERVING_IMAGE: !Ref ServingImageUri
+          EDDIE_SAGEMAKER_EXECUTION_ROLE_ARN: !GetAtt SageMakerExecutionRole.Arn
+          EDDIE_SERVING_SUBNETS: !Join [",", [!Ref ServingSubnetA, !Ref ServingSubnetB]]
+          EDDIE_SERVING_SECURITY_GROUP: !Ref ServingSecurityGroup
+          EDDIE_DEPLOYMENT_WORKER: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-deployment-worker"
+          EDDIE_ARTIFACT_STAGER: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-artifact-stager"
+          EDDIE_INFERENCE_FUNCTION: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-test-inference"
+          EDDIE_RECONCILER_FUNCTION: !GetAtt Reconciler.Arn
+          EDDIE_USER_POOL_ID: !Ref UserPool
+          EDDIE_USER_POOL_CLIENT_IDS: !Ref UserPoolClient
+
+  DeploymentWorkerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/eddie/${Environment}/deployment-worker"
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !GetAtt DataKey.Arn
+  DeploymentWorker:
+    Type: AWS::Lambda::Function
+    DependsOn: DeploymentRoleStatePolicy
+    Properties:
+      FunctionName: !Sub "eddie-${Environment}-deployment-worker"
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: deploy.executor.handler
+      Role: !GetAtt DeploymentRole.Arn
+      Timeout: 300
+      MemorySize: 512
+      ReservedConcurrentExecutions: 2
+      EphemeralStorage: {Size: 512}
+      LoggingConfig:
+        LogGroup: !Ref DeploymentWorkerLogGroup
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref DeploymentCodeKey
+      Environment:
+        Variables:
+          EDDIE_ACCOUNT_ID: !Ref AWS::AccountId
+          EDDIE_REGION: !Ref AWS::Region
+          EDDIE_ENVIRONMENT: !Ref Environment
+          DEPLOYMENT_TABLE: !Ref DeploymentTable
+          EDDIE_ARTIFACT_BUCKET: !Ref ArtifactBucket
+          EDDIE_DATA_KEY: !GetAtt DataKey.Arn
+          EDDIE_SERVING_IMAGE: !Ref ServingImageUri
+          EDDIE_SAGEMAKER_EXECUTION_ROLE_ARN: !GetAtt SageMakerExecutionRole.Arn
+          EDDIE_SERVING_SUBNETS: !Join [",", [!Ref ServingSubnetA, !Ref ServingSubnetB]]
+          EDDIE_SERVING_SECURITY_GROUP: !Ref ServingSecurityGroup
+          EDDIE_DEPLOYMENT_WORKER: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-deployment-worker"
+          EDDIE_ARTIFACT_STAGER: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-artifact-stager"
+          EDDIE_INFERENCE_FUNCTION: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-test-inference"
+          EDDIE_RECONCILER_FUNCTION: !GetAtt Reconciler.Arn
+          EDDIE_USER_POOL_ID: !Ref UserPool
+          EDDIE_USER_POOL_CLIENT_IDS: !Ref UserPoolClient
+
+  ArtifactStagerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/eddie/${Environment}/artifact-stager"
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !GetAtt DataKey.Arn
+  ArtifactStager:
+    Type: AWS::Lambda::Function
+    DependsOn: ArtifactStagerRoleStatePolicy
+    Properties:
+      FunctionName: !Sub "eddie-${Environment}-artifact-stager"
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: deploy.staging.handler
+      Role: !GetAtt ArtifactStagerRole.Arn
+      Timeout: 600
+      MemorySize: 1024
+      ReservedConcurrentExecutions: 2
+      EphemeralStorage: {Size: 8192}
+      LoggingConfig:
+        LogGroup: !Ref ArtifactStagerLogGroup
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref DeploymentCodeKey
+      Environment:
+        Variables:
+          EDDIE_ACCOUNT_ID: !Ref AWS::AccountId
+          EDDIE_REGION: !Ref AWS::Region
+          EDDIE_ENVIRONMENT: !Ref Environment
+          DEPLOYMENT_TABLE: !Ref DeploymentTable
+          EDDIE_ARTIFACT_BUCKET: !Ref ArtifactBucket
+          EDDIE_DATA_KEY: !GetAtt DataKey.Arn
+          EDDIE_SERVING_IMAGE: !Ref ServingImageUri
+          EDDIE_SAGEMAKER_EXECUTION_ROLE_ARN: !GetAtt SageMakerExecutionRole.Arn
+          EDDIE_SERVING_SUBNETS: !Join [",", [!Ref ServingSubnetA, !Ref ServingSubnetB]]
+          EDDIE_SERVING_SECURITY_GROUP: !Ref ServingSecurityGroup
+          EDDIE_DEPLOYMENT_WORKER: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-deployment-worker"
+          EDDIE_ARTIFACT_STAGER: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-artifact-stager"
+          EDDIE_INFERENCE_FUNCTION: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-test-inference"
+          EDDIE_RECONCILER_FUNCTION: !GetAtt Reconciler.Arn
+          EDDIE_USER_POOL_ID: !Ref UserPool
+          EDDIE_USER_POOL_CLIENT_IDS: !Ref UserPoolClient
+
+  InferenceFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/eddie/${Environment}/test-inference"
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !GetAtt DataKey.Arn
+  InferenceFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: InferenceRoleStatePolicy
+    Properties:
+      FunctionName: !Sub "eddie-${Environment}-test-inference"
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: deploy.inference.handler
+      Role: !GetAtt InferenceRole.Arn
+      Timeout: 90
+      MemorySize: 512
+      ReservedConcurrentExecutions: 4
+      EphemeralStorage: {Size: 512}
+      LoggingConfig:
+        LogGroup: !Ref InferenceFunctionLogGroup
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref DeploymentCodeKey
+      Environment:
+        Variables:
+          EDDIE_ACCOUNT_ID: !Ref AWS::AccountId
+          EDDIE_REGION: !Ref AWS::Region
+          EDDIE_ENVIRONMENT: !Ref Environment
+          DEPLOYMENT_TABLE: !Ref DeploymentTable
+          EDDIE_ARTIFACT_BUCKET: !Ref ArtifactBucket
+          EDDIE_DATA_KEY: !GetAtt DataKey.Arn
+          EDDIE_SERVING_IMAGE: !Ref ServingImageUri
+          EDDIE_SAGEMAKER_EXECUTION_ROLE_ARN: !GetAtt SageMakerExecutionRole.Arn
+          EDDIE_SERVING_SUBNETS: !Join [",", [!Ref ServingSubnetA, !Ref ServingSubnetB]]
+          EDDIE_SERVING_SECURITY_GROUP: !Ref ServingSecurityGroup
+          EDDIE_DEPLOYMENT_WORKER: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-deployment-worker"
+          EDDIE_ARTIFACT_STAGER: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-artifact-stager"
+          EDDIE_INFERENCE_FUNCTION: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-test-inference"
+          EDDIE_RECONCILER_FUNCTION: !GetAtt Reconciler.Arn
+          EDDIE_USER_POOL_ID: !Ref UserPool
+          EDDIE_USER_POOL_CLIENT_IDS: !Ref UserPoolClient
+
+  DeploymentWorkerSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "eddie-${Environment}-advance-deployments"
+      Description: Recover and advance admitted deployment jobs independently of a browser or agent.
+      ScheduleExpression: "rate(1 minute)"
+      State: ENABLED
+      Targets:
+        - Id: deployment-worker
+          Arn: !GetAtt DeploymentWorker.Arn
+  DeploymentWorkerSchedulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt DeploymentWorker.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DeploymentWorkerSchedule.Arn
+      SourceAccount: !Ref AWS::AccountId
+
+  SageMakerExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "eddie-${Environment}-sagemaker-execution"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: sagemaker.amazonaws.com }
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Policies:
+        - PolicyName: ReadStagedArtifacts
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadStagedModelData
+                Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "arn:aws:s3:::${ArtifactBucket}/models/eddie-${Environment}/*"
+              - Sid: ListStagedModelData
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${ArtifactBucket}"
+                Condition:
+                  StringLike:
+                    s3:prefix: !Sub "models/eddie-${Environment}/*"
+        - PolicyName: PullServingImage
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: EcrAuthorizationTokenForServing
+                Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: "*"
+              # AWS Deep Learning Containers live in AWS-owned accounts, so the
+              # repository ARN is not in this account. Scoped to the DLC registry
+              # accounts rather than left open.
+              - Sid: PullDeepLearningContainer
+                Effect: Allow
+                Action:
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchCheckLayerAvailability
+                Resource:
+                  - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-serving"
+                  - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-kms-serving"
+        - PolicyName: ServingLogs
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: WriteEndpointLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                # The deployment worker creates the encrypted, tagged group first.
+                # A draining SageMaker log agent must not recreate it after cleanup.
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/sagemaker/Endpoints/eddie-${Environment}-job-*:*"
+        - PolicyName: ServingMetrics
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: PublishServingMetrics
+                Effect: Allow
+                Action: cloudwatch:PutMetricData
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    cloudwatch:namespace: "/aws/sagemaker/Endpoints"
+
+        - PolicyName: StagedModelKey
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [kms:Decrypt]
+                Resource: !GetAtt DataKey.Arn
+                Condition:
+                  StringEquals:
+                    kms:ViaService: !Sub "s3.${AWS::Region}.amazonaws.com"
+        - PolicyName: PrivateServingInterfaces
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: DescribePrivateNetwork
+                Effect: Allow
+                Action:
+                  - ec2:DescribeVpcEndpoints
+                  - ec2:DescribeDhcpOptions
+                  - ec2:DescribeVpcs
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeNetworkInterfaces
+                Resource: "*"
+              - Sid: CreateInterfacesInServingSubnets
+                Effect: Allow
+                Action: ec2:CreateNetworkInterface
+                Resource:
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:subnet/${ServingSubnetA}"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:subnet/${ServingSubnetB}"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:security-group/${ServingSecurityGroup}"
+              - Sid: ManageOnlyServingInterfaces
+                Effect: Allow
+                Action:
+                  - ec2:CreateNetworkInterfacePermission
+                  - ec2:DeleteNetworkInterfacePermission
+                  - ec2:DeleteNetworkInterface
+                Resource: !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*"
+                Condition:
+                  ArnEquals:
+                    ec2:Vpc: !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${ServingVpc}"
+
+  # Only the independent deployment worker has creation permission. It cannot
+  # approve a plan, invoke a model, accept a vendor agreement or create IAM roles.
+  DeploymentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "eddie-${Environment}-deployment"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CreateSageMakerInference
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: CreatePrivateModelOnly
+                Effect: Allow
+                Action: sagemaker:CreateModel
+                Resource: !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:model/eddie-${Environment}-job-*"
+                Condition:
+                  Bool: { "sagemaker:NetworkIsolation": "true" }
+                  "Null":
+                    sagemaker:VpcSubnets: "false"
+                    sagemaker:VpcSecurityGroupIds: "false"
+                  ForAllValues:StringEquals:
+                    sagemaker:VpcSubnets: [!Ref ServingSubnetA, !Ref ServingSubnetB]
+                    sagemaker:VpcSecurityGroupIds: [!Ref ServingSecurityGroup]
+                  StringEquals:
+                    aws:RequestTag/eddie:environment: !Ref Environment
+              - Sid: CreateBoundedEndpointConfiguration
+                Effect: Allow
+                Action: sagemaker:CreateEndpointConfig
+                Resource: !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint-config/eddie-${Environment}-job-*"
+                Condition:
+                  ForAllValues:StringEquals:
+                    sagemaker:InstanceTypes: [ml.g5.2xlarge]
+                  "Null":
+                    sagemaker:InstanceTypes: "false"
+                  StringEquals:
+                    aws:RequestTag/eddie:environment: !Ref Environment
+              - Sid: CreateOwnedEndpoint
+                Effect: Allow
+                Action: sagemaker:CreateEndpoint
+                Resource:
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint/eddie-${Environment}-job-*"
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint-config/eddie-${Environment}-job-*"
+              - Sid: DescribeAndTagOwnedResources
+                Effect: Allow
+                Action:
+                  - sagemaker:DescribeModel
+                  - sagemaker:DescribeEndpointConfig
+                  - sagemaker:DescribeEndpoint
+                  - sagemaker:AddTags
+                  - sagemaker:ListTags
+                Resource:
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:model/eddie-${Environment}-job-*"
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint-config/eddie-${Environment}-job-*"
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint/eddie-${Environment}-job-*"
+        - PolicyName: PassExecutionRoleOnly
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: PassSageMakerExecutionRole
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt SageMakerExecutionRole.Arn
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: sagemaker.amazonaws.com
+        - PolicyName: StartArtifactPreparation
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:eddie-${Environment}-artifact-stager"
+        - PolicyName: OwnEndpointLogs
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [logs:CreateLogGroup, logs:PutRetentionPolicy, logs:ListTagsLogGroup, logs:TagLogGroup, logs:TagResource]
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/sagemaker/Endpoints/eddie-${Environment}-job-*"
+
+
+  # ------------------------------------------------------------------
+  # Reconciliation worker: enforces expiry and cleanup on a schedule,
+  # independently of the coordinator, the browser and the advisor.
+  # ------------------------------------------------------------------
+  #
+  # A separate function and a separate role on purpose. The coordinator can read
+  # evidence and invoke the advisor but cannot delete anything; this worker can delete
+  # inference resources but cannot invoke a model or read the advisor's grants. An
+  # advisor compromise therefore cannot destroy a customer's endpoint, and a cleanup
+  # bug cannot reach the model catalogue.
+  ReconcilerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "eddie-${Environment}-reconciler"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Policies:
+        - PolicyName: LedgerAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadLedger
+                Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:Query]
+                Resource:
+                  - !GetAtt CaseTable.Arn
+                  - !Sub "${CaseTable.Arn}/index/reconcile-index"
+                  - !GetAtt DeploymentTable.Arn
+                  - !Sub "${DeploymentTable.Arn}/index/reconcile-index"
+              - Sid: UpdateCleanupWithoutApprovalAuthority
+                Effect: Allow
+                Action: [dynamodb:PutItem, dynamodb:UpdateItem]
+                Resource: [!GetAtt CaseTable.Arn, !GetAtt DeploymentTable.Arn]
+                Condition:
+                  ForAllValues:StringLike:
+                    dynamodb:LeadingKeys: ["project#*", "job#*", "admission", "worker-lock#*"]
+                  "Null":
+                    dynamodb:LeadingKeys: "false"
+              - Sid: ReleaseWorkerLocksOnly
+                Effect: Allow
+                Action: dynamodb:DeleteItem
+                Resource: [!GetAtt CaseTable.Arn, !GetAtt DeploymentTable.Arn]
+                Condition:
+                  ForAllValues:StringLike:
+                    dynamodb:LeadingKeys: ["worker-lock#*"]
+        - PolicyName: LedgerKeyUse
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: DecryptLedger
+                Effect: Allow
+                Action:
+                  - kms:Decrypt
+                  - kms:GenerateDataKey
+                Resource: !GetAtt DataKey.Arn
+        # Deletion authority, enumerated and scoped to resources EDDIE names. Only
+        # delete and describe: the reconciler can remove what EDDIE created and
+        # confirm it is gone, and can create nothing.
+        - PolicyName: InferenceCleanup
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: SageMakerCleanupRead
+                Effect: Allow
+                Action:
+                  - sagemaker:DescribeEndpoint
+                  - sagemaker:DescribeEndpointConfig
+                  - sagemaker:DescribeModel
+                  - sagemaker:ListTags
+                Resource:
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint/eddie-${Environment}-*"
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint-config/eddie-${Environment}-*"
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:model/eddie-${Environment}-*"
+              - Sid: SageMakerCleanupOwnedOnly
+                Effect: Allow
+                Action: [sagemaker:DeleteEndpoint, sagemaker:DeleteEndpointConfig, sagemaker:DeleteModel]
+                Resource:
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint/eddie-${Environment}-job-*"
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint-config/eddie-${Environment}-job-*"
+                  - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:model/eddie-${Environment}-job-*"
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/eddie:environment: !Ref Environment
+                  "Null":
+                    aws:ResourceTag/eddie:job: "false"
+              - Sid: BedrockImportCleanup
+                Effect: Allow
+                Action:
+                  - bedrock:DeleteImportedModel
+                  - bedrock:GetImportedModel
+                Resource: !Sub "arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:imported-model/*"
+              # EC2 terminate cannot be scoped by name, so it is scoped by tag: only
+              # instances this environment created carry the tag, and the condition is
+              # what prevents the reconciler reaching the unrelated instances that
+              # already exist in this account.
+              # Confirming a termination needs a describe, and EC2 describe actions do
+              # not support resource-level permissions -- there is no ARN to name in the
+              # request. Without this the reconciler terminated the instance and then
+              # could not verify it, correctly recording DELETE_UNCONFIRMED; found by
+              # running the real sweep rather than by review.
+              - Sid: Ec2DescribeForConfirmation
+                Effect: Allow
+                Action: ec2:DescribeInstances
+                Resource: "*"
+              - Sid: Ec2TerminateOwnedOnly
+                Effect: Allow
+                Action: ec2:TerminateInstances
+                Resource: !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/eddie:environment: !Ref Environment
+                    aws:ResourceTag/eddie:managed-by: eddie-reconciler
+        - PolicyName: ArtifactCleanup
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: RemoveStagedModelFiles
+                Effect: Allow
+                Action: [s3:DeleteObject, s3:DeleteObjectVersion]
+                Resource: !Sub "arn:aws:s3:::${ArtifactBucket}/models/eddie-${Environment}/*"
+              - Sid: ConfirmStagedModelFiles
+                Effect: Allow
+                Action: s3:ListBucketVersions
+                Resource: !Sub "arn:aws:s3:::${ArtifactBucket}"
+                Condition:
+                  StringLike:
+                    s3:prefix: !Sub "models/eddie-${Environment}/*"
+              - Sid: RemoveOwnedEndpointLogs
+                Effect: Allow
+                Action: [logs:DeleteLogGroup, logs:ListTagsLogGroup]
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/sagemaker/Endpoints/eddie-${Environment}-job-*"
+        # Scope validation: the worker confirms which account it is in before acting,
+        # so a ledger entry naming another account is refused rather than checked here.
+        # GetCallerIdentity requires no resource and grants nothing.
+        - PolicyName: ReconcilerIdentity
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: WhoAmI
+                Effect: Allow
+                Action: sts:GetCallerIdentity
+                Resource: "*"
+        - PolicyName: ReconcilerObservability
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: WriteOwnLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "${ReconcilerLogGroup.Arn}:*"
+              - Sid: PublishReconcilerHeartbeat
+                Effect: Allow
+                Action: cloudwatch:PutMetricData
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    cloudwatch:namespace: EDDIE/Reconciler
+
+  ReconcilerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/eddie/${Environment}/reconciler"
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !GetAtt DataKey.Arn
+
+  Reconciler:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "eddie-${Environment}-reconciler"
+      Description: >
+        Enforces deployment lifetimes and verifies cleanup. Runs on a schedule so a
+        deadline holds when no browser, job or advisor is running.
+      Runtime: python3.12
+      Handler: deploy.worker.handler
+      Role: !GetAtt ReconcilerRole.Arn
+      # Long enough to confirm several endpoint deletions, short enough that a hung
+      # sweep is replaced by the next scheduled one rather than overlapping it.
+      Timeout: 300
+      MemorySize: 512
+      LoggingConfig:
+        LogGroup: !Ref ReconcilerLogGroup
+      Environment:
+        Variables:
+          EDDIE_REGION: !Ref AWS::Region
+          EDDIE_ENVIRONMENT: !Ref Environment
+          CASE_TABLE: !Ref DeploymentTable
+          EDDIE_LEGACY_CLEANUP_TABLE: !Ref CaseTable
+          EDDIE_ARTIFACT_BUCKET: !Ref ArtifactBucket
+          # Regions this worker may clean up in. An entry outside this list is left
+          # unresolved rather than queried in the wrong Region.
+          EDDIE_CLEANUP_REGIONS: !Ref AWS::Region
+          LOG_LEVEL: INFO
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref ReconcilerCodeKey
+
+  ReconcilerSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "eddie-${Environment}-reconcile"
+      Description: Sweep expiries and verify cleanup
+      # Five minutes bounds how long an expired endpoint can keep charging. A
+      # 20-minute lifetime with an hourly sweep would be a 60-minute lifetime.
+      ScheduleExpression: "rate(5 minutes)"
+      State: ENABLED
+      Targets:
+        - Id: reconciler
+          Arn: !GetAtt Reconciler.Arn
+
+  ReconcilerSchedulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt Reconciler.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ReconcilerSchedule.Arn
+
+  # ---- alarm delivery (OPS-03) ------------------------------------------
+  #
+  # An alarm with no action changes colour and pages nobody. The topic is always
+  # created so the alarms have a stable target; the subscription is conditional,
+  # because a deployment without a configured address should not silently invent one.
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "eddie-${Environment}-alarms"
+      DisplayName: !Sub "EDDIE ${Environment} operations"
+      KmsMasterKeyId: !Ref DataKey
+
+  AlarmTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics: [!Ref AlarmTopic]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudWatchAlarmsInThisAccount
+            Effect: Allow
+            Principal: { Service: cloudwatch.amazonaws.com }
+            Action: sns:Publish
+            Resource: !Ref AlarmTopic
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+          # Protective deny: the topic carries operational detail, so it must not be
+          # publishable or subscribable over plaintext.
+          #
+          # Actions are enumerated because SNS rejects `sns:*` in a topic policy with
+          # "Policy statement action out of service scope" -- unlike an S3 bucket
+          # policy, where the wildcard form is accepted. Found by deploying it.
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - sns:Publish
+              - sns:Subscribe
+              - sns:GetTopicAttributes
+              - sns:SetTopicAttributes
+              - sns:AddPermission
+              - sns:RemovePermission
+              - sns:ListSubscriptionsByTopic
+              - sns:DeleteTopic
+            Resource: !Ref AlarmTopic
+            Condition:
+              Bool: { "aws:SecureTransport": "false" }
+
+  AlarmEmailSubscription:
+    Condition: WithAlarmDelivery
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AlarmTopic
+      Protocol: email
+      Endpoint: !Ref AlarmEmail
+
+  # ---- alarms (OPS-03) ---------------------------------------------------
+  #
+  # The heartbeat alarm is the important one. An error-count alarm cannot detect a
+  # reconciler that has stopped running, because a process that never runs reports no
+  # errors. `treatMissingData: breaching` is what turns silence into a page.
+  ReconcilerHeartbeatAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions: [!Ref AlarmTopic]
+      OKActions: [!Ref AlarmTopic]
+      AlarmName: !Sub "eddie-${Environment}-reconciler-stopped"
+      AlarmDescription: >
+        The reconciliation worker has not completed a sweep. Deployment lifetimes are
+        not being enforced while this is in alarm; expired endpoints may keep charging.
+        Runbook: check the reconciler function's recent invocations and log group.
+      Namespace: EDDIE/Reconciler
+      MetricName: SweepCompleted
+      Dimensions:
+        - { Name: Environment, Value: !Ref Environment }
+      Statistic: Sum
+      Period: 900
+      EvaluationPeriods: 2
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+
+  ReconcilerCleanupAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions: [!Ref AlarmTopic]
+      OKActions: [!Ref AlarmTopic]
+      AlarmName: !Sub "eddie-${Environment}-cleanup-incomplete"
+      AlarmDescription: >
+        Cleanup did not finish for at least one deployment, or a deletion could not be
+        confirmed. Resources may still be charging. Runbook: read the reconciler log
+        group for the needs-attention line, then reconcile the named job.
+      Namespace: EDDIE/Reconciler
+      MetricName: CleanupIncomplete
+      Dimensions:
+        - { Name: Environment, Value: !Ref Environment }
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  ReconcilerUnconfirmedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions: [!Ref AlarmTopic]
+      OKActions: [!Ref AlarmTopic]
+      AlarmName: !Sub "eddie-${Environment}-delete-unconfirmed"
+      AlarmDescription: >
+        A deletion was accepted but could not be verified, so billing may not have
+        stopped. Runbook: confirm the resource's absence directly, then update its
+        ledger entry.
+      Namespace: EDDIE/Reconciler
+      MetricName: DeleteUnconfirmed
+      Dimensions:
+        - { Name: Environment, Value: !Ref Environment }
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  ReconcilerErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions: [!Ref AlarmTopic]
+      OKActions: [!Ref AlarmTopic]
+      AlarmName: !Sub "eddie-${Environment}-reconciler-errors"
+      AlarmDescription: >
+        The reconciler is erroring. Sustained errors mean lifetimes are not being
+        enforced reliably. Runbook: read the reconciler log group.
+      Namespace: EDDIE/Reconciler
+      MetricName: SweepErrors
+      Dimensions:
+        - { Name: Environment, Value: !Ref Environment }
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 3
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+
+Outputs:
+  FrontendUrl:
+    Description: Application URL
+    Value: !If [WithFrontendCertificate, !Sub "https://${FrontendDomainName}", !Sub "https://${Distribution.DomainName}"]
+    Export: { Name: !Sub "eddie-${Environment}-frontend-url" }
+
+  FrontendTlsMinimum:
+    Description: Effective viewer certificate policy. Default CloudFront domains cannot enforce a TLS 1.2 floor.
+    Value: !If [WithFrontendCertificate, "TLSv1.2_2021", "AWS default certificate policy; custom domain required for TLS 1.2 minimum"]
+
+  AgentRuntimeArn:
+    Description: AgentCore Runtime ARN; the browser invokes this directly
+    Value: !GetAtt Coordinator.AgentRuntimeArn
+    Export: { Name: !Sub "eddie-${Environment}-runtime-arn" }
+
+  AgentRuntimeId:
+    Value: !GetAtt Coordinator.AgentRuntimeId
+
+  AgentRuntimeStatus:
+    Value: !GetAtt Coordinator.Status
+
+  UserPoolId:
+    Value: !Ref UserPool
+
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
+
+  CognitoDiscoveryUrl:
+    Value: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}/.well-known/openid-configuration"
+
+  FrontendBucketName:
+    Value: !Ref FrontendBucket
+
+  DistributionId:
+    Value: !Ref Distribution
+
+  CaseTableName:
+    Value: !Ref CaseTable
+
+  Region:
+    Value: !Ref AWS::Region
+
+  DeploymentStateTable:
+    Value: !Ref DeploymentTable
+  ServingVpcId:
+    Value: !Ref ServingVpc
+  DeploymentControllerArn:
+    Value: !GetAtt DeploymentController.Arn
+  ServingImage:
+    Value: !Ref ServingImageUri

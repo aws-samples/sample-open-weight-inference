@@ -1,0 +1,19 @@
+EDDIE — Evaluate, Design & Deploy Inference Environments
+Copyright 2026 Amazon.com, Inc. or its affiliates.
+
+This project's original source code is licensed under MIT No Attribution (MIT-0).
+
+Third-party components retain their own licenses. Dependency versions are recorded
+in backend/runtime-requirements.txt, backend/deployment-requirements.txt,
+requirements-dev.txt, requirements-security.txt and frontend/package-lock.json.
+Their licenses and notices must be retained when distributing built artifacts.
+
+AWS Architecture Icons in docs/images/aws-icons/ and the architecture diagram
+are AWS service artwork. Their use is subject to the AWS Architecture Icons and
+trademark guidelines: https://aws.amazon.com/architecture/icons/
+The source-code license does not grant rights to AWS trademarks or service artwork.
+
+Model identifiers and metadata are included for discovery and examples. Model
+weights, datasets, voice recordings and third-party container images are not
+distributed with this source. Obtain them from their owners under their respective
+terms. Referencing a model does not grant permission to use or redistribute it.

@@ -1,0 +1,4 @@
+# Development scanners only; never installed in serving/runtime images.
+bandit==1.9.4
+cfn-lint==1.57.0
+pip-audit==2.10.0

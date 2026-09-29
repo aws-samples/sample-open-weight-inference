@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: EDDIE reviewed serving images. No inference capacity is created by this stack.
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedPattern: "[a-z][a-z0-9-]{0,20}"
+Resources:
+  ServingImages:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      # ECR encryption cannot be changed in place. Use a new name and retain the
+      # previous repository so an existing pinned deployment image is not lost.
+      RepositoryName: !Sub "eddie-${Environment}-kms-serving"
+      ImageTagMutability: IMMUTABLE
+      EncryptionConfiguration:
+        EncryptionType: KMS
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      Tags:
+        - Key: Application
+          Value: EDDIE
+        - Key: eddie:environment
+          Value: !Ref Environment
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {"rules":[{"rulePriority":1,"description":"Remove untagged build layers after one day",
+          "selection":{"tagStatus":"untagged","countType":"sinceImagePushed","countUnit":"days","countNumber":1},
+          "action":{"type":"expire"}}]}
+Outputs:
+  ServingRepositoryUri:
+    Value: !GetAtt ServingImages.RepositoryUri

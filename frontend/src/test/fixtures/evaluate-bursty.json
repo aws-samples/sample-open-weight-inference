@@ -1,0 +1,375 @@
+{
+  "outcome": "QUALIFIED_PLACEMENT",
+  "requestHash": "req-11111111111111111111",
+  "snapshotHash": "snap-2222222222222222222",
+  "solverVersion": "1.1.0+policy1",
+  "horizonHours": "72",
+  "assumptions": [
+    "Billable copy hours are treated as the only active serving time.",
+    "No existing commitments or reservations were applied."
+  ],
+  "winner": {
+    "candidateId": "cmi-scale-to-zero",
+    "target": "BEDROCK_CMI",
+    "region": "us-east-1",
+    "modelRef": "synthetic-text-8b",
+    "instanceType": null,
+    "instanceCount": "1",
+    "cmusPerCopy": "2",
+    "scaleToZero": true,
+    "prewarmed": false,
+    "opsBurden": "SERVICE_API",
+    "blastRadius": "SERVICE_SHARED",
+    "recipeId": "recipe-cmi-text-v3",
+    "notes": "Burst-billed per active CMU-minute.",
+    "isFeasible": true,
+    "cost": {
+      "total": "41.16",
+      "totalExact": "41.1600000000",
+      "isComplete": true,
+      "unpriced": [],
+      "items": [
+        {
+          "label": "Active CMU-minutes",
+          "phase": "INFERENCE",
+          "quantity": "720",
+          "quantityUnit": "CMU-minute",
+          "rate": {
+            "amount": "0.0571666667",
+            "unit": "CMU-minute",
+            "currency": "USD",
+            "region": "us-east-1",
+            "sku": "SYNTH-CMI-MIN-0001",
+            "effectiveDate": "2026-08-01",
+            "source": "AWS Price List API"
+          },
+          "amount": "41.16",
+          "evidence": "PROJECTED",
+          "note": "6 active hours across a 72-hour horizon."
+        },
+        {
+          "label": "Model import storage",
+          "phase": "STANDING",
+          "quantity": "16",
+          "quantityUnit": "GiB-month",
+          "rate": null,
+          "amount": null,
+          "evidence": "UNKNOWN",
+          "note": "No published rate was retrieved for imported-model storage."
+        }
+      ]
+    },
+    "gates": [
+      {
+        "name": "artifact_compatibility",
+        "status": "PASS",
+        "reason": "Architecture is a supported CMI family.",
+        "evidenceRef": "cap-rule-cmi-llama-v7"
+      },
+      {
+        "name": "p99_latency_ms",
+        "status": "PASS",
+        "reason": "Supplied p99 500 ms is within the 800 ms threshold.",
+        "evidenceRef": "supplied:cmi-scale-to-zero"
+      },
+      {
+        "name": "budget",
+        "status": "PASS",
+        "reason": "No budget constraint was declared.",
+        "evidenceRef": null
+      }
+    ],
+    "failureCount": 0,
+    "unknownCount": 0
+  },
+  "ranked": [
+    {
+      "candidateId": "cmi-scale-to-zero",
+      "target": "BEDROCK_CMI",
+      "region": "us-east-1",
+      "modelRef": "synthetic-text-8b",
+      "instanceType": null,
+      "instanceCount": "1",
+      "cmusPerCopy": "2",
+      "scaleToZero": true,
+      "prewarmed": false,
+      "opsBurden": "SERVICE_API",
+      "blastRadius": "SERVICE_SHARED",
+      "recipeId": "recipe-cmi-text-v3",
+      "notes": "Burst-billed per active CMU-minute.",
+      "isFeasible": true,
+      "cost": {
+        "total": "41.16",
+        "totalExact": "41.1600000000",
+        "isComplete": true,
+        "unpriced": [],
+        "items": [
+          {
+            "label": "Active CMU-minutes",
+            "phase": "INFERENCE",
+            "quantity": "720",
+            "quantityUnit": "CMU-minute",
+            "rate": {
+              "amount": "0.0571666667",
+              "unit": "CMU-minute",
+              "currency": "USD",
+              "region": "us-east-1",
+              "sku": "SYNTH-CMI-MIN-0001",
+              "effectiveDate": "2026-08-01",
+              "source": "AWS Price List API"
+            },
+            "amount": "41.16",
+            "evidence": "PROJECTED",
+            "note": "6 active hours across a 72-hour horizon."
+          }
+        ]
+      },
+      "gates": [
+        {
+          "name": "artifact_compatibility",
+          "status": "PASS",
+          "reason": "Architecture is a supported CMI family.",
+          "evidenceRef": "cap-rule-cmi-llama-v7"
+        },
+        {
+          "name": "p99_latency_ms",
+          "status": "PASS",
+          "reason": "Supplied p99 500 ms is within the 800 ms threshold.",
+          "evidenceRef": "supplied:cmi-scale-to-zero"
+        }
+      ],
+      "failureCount": 0,
+      "unknownCount": 0
+    },
+    {
+      "candidateId": "sagemaker-dedicated-warm",
+      "target": "SAGEMAKER_REALTIME",
+      "region": "us-east-1",
+      "modelRef": "synthetic-text-8b",
+      "instanceType": "ml.g5.2xlarge",
+      "instanceCount": "1",
+      "cmusPerCopy": null,
+      "scaleToZero": false,
+      "prewarmed": true,
+      "opsBurden": "MANAGED_ENDPOINT",
+      "blastRadius": "ENDPOINT_ISOLATED",
+      "recipeId": "recipe-sm-realtime-v5",
+      "notes": "Continuously allocated for the whole horizon.",
+      "isFeasible": true,
+      "cost": {
+        "total": "87.84",
+        "totalExact": "87.8400000000",
+        "isComplete": true,
+        "unpriced": [],
+        "items": [
+          {
+            "label": "Instance hours",
+            "phase": "INFERENCE",
+            "quantity": "72",
+            "quantityUnit": "instance-hour",
+            "rate": {
+              "amount": "1.22",
+              "unit": "Hrs",
+              "currency": "USD",
+              "region": "us-east-1",
+              "sku": "SYNTH-SM-G52XL-0002",
+              "effectiveDate": "2026-08-01",
+              "source": "AWS Price List API"
+            },
+            "amount": "87.84",
+            "evidence": "PROJECTED",
+            "note": null
+          }
+        ]
+      },
+      "gates": [
+        {
+          "name": "artifact_compatibility",
+          "status": "PASS",
+          "reason": "Supported container and instance family.",
+          "evidenceRef": "cap-rule-sm-g5-v3"
+        },
+        {
+          "name": "p99_latency_ms",
+          "status": "PASS",
+          "reason": "Warm endpoint has no cold-start exposure.",
+          "evidenceRef": "supplied:sagemaker-dedicated-warm"
+        }
+      ],
+      "failureCount": 0,
+      "unknownCount": 0
+    }
+  ],
+  "unresolved": [
+    {
+      "candidateId": "cmi-prewarmed-scheduled",
+      "target": "BEDROCK_CMI",
+      "region": "us-east-1",
+      "modelRef": "synthetic-text-8b",
+      "instanceType": null,
+      "instanceCount": "1",
+      "cmusPerCopy": "2",
+      "scaleToZero": false,
+      "prewarmed": true,
+      "opsBurden": "SERVICE_API",
+      "blastRadius": "SERVICE_SHARED",
+      "recipeId": "recipe-cmi-text-v3",
+      "notes": "Prewarming is a distinct candidate and needs its own evidence.",
+      "isFeasible": false,
+      "cost": {
+        "total": null,
+        "totalExact": null,
+        "isComplete": false,
+        "unpriced": [
+          "prewarm_window"
+        ],
+        "items": [
+          {
+            "label": "Prewarm window CMU-minutes",
+            "phase": "STANDING",
+            "quantity": null,
+            "quantityUnit": "CMU-minute",
+            "rate": null,
+            "amount": null,
+            "evidence": "UNKNOWN",
+            "note": "The prewarm schedule was not declared."
+          }
+        ]
+      },
+      "gates": [
+        {
+          "name": "p99_latency_ms",
+          "status": "UNKNOWN",
+          "reason": "No latency evidence exists for this candidate key.",
+          "evidenceRef": null
+        }
+      ],
+      "failureCount": 0,
+      "unknownCount": 1
+    }
+  ],
+  "excluded": [
+    {
+      "candidateId": "sagemaker-scale-to-zero",
+      "target": "SAGEMAKER_REALTIME",
+      "region": "us-east-1",
+      "modelRef": "synthetic-text-8b",
+      "instanceType": "ml.g5.2xlarge",
+      "instanceCount": "1",
+      "cmusPerCopy": null,
+      "scaleToZero": true,
+      "prewarmed": false,
+      "opsBurden": "MANAGED_ENDPOINT",
+      "blastRadius": "ENDPOINT_ISOLATED",
+      "recipeId": "recipe-sm-ic-v2",
+      "notes": "Inference-component endpoint scaling to zero.",
+      "isFeasible": false,
+      "cost": {
+        "total": "12.20",
+        "totalExact": "12.2000000000",
+        "isComplete": true,
+        "unpriced": [],
+        "items": [
+          {
+            "label": "Instance hours",
+            "phase": "INFERENCE",
+            "quantity": "10",
+            "quantityUnit": "instance-hour",
+            "rate": {
+              "amount": "1.22",
+              "unit": "Hrs",
+              "currency": "USD",
+              "region": "us-east-1",
+              "sku": "SYNTH-SM-G52XL-0002",
+              "effectiveDate": "2026-08-01",
+              "source": "AWS Price List API"
+            },
+            "amount": "12.20",
+            "evidence": "PROJECTED",
+            "note": null
+          }
+        ]
+      },
+      "gates": [
+        {
+          "name": "p99_latency_ms",
+          "status": "FAIL",
+          "reason": "Cold restoration of 240000 ms exceeds the 800 ms threshold with cold requests included.",
+          "evidenceRef": "supplied:sagemaker-scale-to-zero"
+        }
+      ],
+      "failureCount": 1,
+      "unknownCount": 0
+    }
+  ],
+  "counts": {
+    "ranked": 2,
+    "unresolved": 1,
+    "excluded": 1
+  },
+  "breakeven": {
+    "breakevenDutyPercent": "17.02",
+    "cmiActiveHourly": "6.86",
+    "dedicatedHourly": "1.22",
+    "actualDutyPercent": "8.33",
+    "verdict": "BURST_FAVOURS_CMI",
+    "explanation": "An 8.33% duty cycle is below the 17.02% break-even, so paying per active minute is cheaper than holding an instance for 72 hours.",
+    "cmiComparedCandidate": "cmi-scale-to-zero",
+    "dedicatedComparedCandidate": "sagemaker-dedicated-warm"
+  },
+  "priceFreshness": {
+    "sagemaker": "LIVE",
+    "cmi_minute": "LIVE",
+    "cmi_month": "PINNED"
+  },
+  "retrievedAt": "2026-09-12T09:15:00Z",
+  "cmiFamily": "SyntheticText",
+  "checksStipulated": true,
+  "latencyEvidenceProvenance": "SUPPLIED",
+  "request": {
+    "caseId": "fixture-bursty"
+  },
+  "qualification": {
+    "performanceMeasured": false,
+    "latencyStatus": "SUPPLIED",
+    "sloRequested": true,
+    "benchmarkRunIds": [],
+    "conditional": true,
+    "note": "Latency figures were supplied with the request; EDDIE ran no benchmark."
+  },
+  "evaluatedRequest": {
+    "caseId": "case-001",
+    "model": {
+      "name": "Llama 3.1 8B",
+      "architecture": "LlamaForCausalLM",
+      "modality": "TEXT",
+      "totalParamsB": "8",
+      "contextTokens": 128000,
+      "precision": "BF16",
+      "weightsGb": "16",
+      "weightsExportable": true,
+      "licenseId": "llama-3.1-community",
+      "hfRepo": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "workload": {
+      "horizonHours": "72",
+      "billableCopyHours": "6",
+      "dedicatedInstanceHours": null,
+      "scheduled": false,
+      "concurrency": null,
+      "description": "3-day bursty event"
+    },
+    "slos": [],
+    "constraints": {
+      "permittedRegions": [
+        "us-east-1"
+      ],
+      "budgetUsd": null,
+      "requireHeldCapacity": false,
+      "maxOpsBurden": null
+    },
+    "assumeChecksCleared": true,
+    "latencyEvidence": null
+  },
+  "evaluatedRequestHash": "2092506796e1c5f0f2ee9552accbf8ab"
+}

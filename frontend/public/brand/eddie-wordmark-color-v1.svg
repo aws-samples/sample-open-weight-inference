@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3254 708" width="3254" height="708" fill="none" role="img" aria-label="EDDIE">
+  <defs>
+    <linearGradient id="eddie-spectrum" gradientUnits="userSpaceOnUse" x1="0" y1="708" x2="3254" y2="0">
+      <stop offset="0" stop-color="#24b8c8" />
+      <stop offset="0.24" stop-color="#3c98e7" />
+      <stop offset="0.5" stop-color="#a868f9" />
+      <stop offset="0.74" stop-color="#f061be" />
+      <stop offset="1" stop-color="#ff7242" />
+    </linearGradient>
+  </defs>
+  <path fill="url(#eddie-spectrum)" fill-rule="evenodd" d="M66 0H553V198H290V259H537V444H290V510H570V708H66Z" />
+  <path fill="url(#eddie-spectrum)" fill-rule="evenodd" d="M689 708V0H953Q1037 0 1113.5 16.5Q1190 33 1248.5 73.5Q1307 114 1342 181Q1377 248 1377 350Q1377 443 1343.5 511Q1310 579 1254 622.5Q1198 666 1125 687Q1052 708 973 708ZM918 202V504H962Q1046 504 1091 467.5Q1136 431 1136 348Q1136 279 1091 240.5Q1046 202 971 202Z" />
+  <path fill="url(#eddie-spectrum)" fill-rule="evenodd" d="M2153 708V0H1889Q1805 0 1728.5 16.5Q1652 33 1593.5 73.5Q1535 114 1500 181Q1465 248 1465 350Q1465 443 1498.5 511Q1532 579 1588 622.5Q1644 666 1717 687Q1790 708 1869 708ZM1924 202V504H1880Q1796 504 1751 467.5Q1706 431 1706 348Q1706 279 1751 240.5Q1796 202 1871 202Z" />
+  <path fill="url(#eddie-spectrum)" fill-rule="evenodd" d="M2305 0H2545V708H2305Z" />
+  <path fill="url(#eddie-spectrum)" fill-rule="evenodd" d="M2697 0H3184V198H2921V259H3168V444H2921V510H3201V708H2697Z" />
+</svg>

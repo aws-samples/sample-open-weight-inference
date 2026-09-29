@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="EDDIE">
+  <title>EDDIE Relay</title>
+  <defs>
+    <linearGradient id="eddie-relay-spectrum" gradientUnits="userSpaceOnUse" x1="32" y1="12" x2="64" y2="82">
+      <stop offset="0" stop-color="#25bbc3"/>
+      <stop offset=".25" stop-color="#4992ea"/>
+      <stop offset=".5" stop-color="#a868f9"/>
+      <stop offset=".75" stop-color="#f061be"/>
+      <stop offset="1" stop-color="#ff7242"/>
+    </linearGradient>
+  </defs>
+  <path d="M12 27L36 11L75 34L59 50L35 37L12 51ZM21 62L37 46L61 60L84 47V71L60 86Z" fill="url(#eddie-relay-spectrum)"/>
+</svg>

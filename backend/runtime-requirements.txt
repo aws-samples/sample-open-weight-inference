@@ -1,0 +1,13 @@
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+boto3==1.43.93
+strands-agents==1.56.0
+# Explicit pins for the supported Streamable HTTP MCP interface used by AWS docs.
+# Already transitive Strands dependencies; no local MCP server or subprocess.
+mcp==2.1.1
+httpx2==2.13.1
+# Token verification (SEC-01). The runtime validates the Cognito access token itself
+# rather than relying on the authorizer in front of it, so it needs a JWT library and
+# the RSA backend PyJWT uses for RS256.
+PyJWT==2.14.0
+cryptography==50.0.1

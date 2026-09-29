@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      .ico first for older browsers that ignore type and take the last icon they
+      understand. Both are absolute because the app is served from the CloudFront
+      root; a sub-path deployment would need the prefix adjusted.
+    -->
+    <link rel="icon" href="/brand/eddie-relay-v1.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" type="image/svg+xml" href="/brand/eddie-relay-v1.svg" />
+    <meta
+      name="description"
+      content="EDDIE — Evaluate, Design & Deploy Inference Environments. Decide where to host an AI inference workload on AWS."
+    />
+    <!--
+      The third letter is U+A4F7 LISU LETTER TSA, used as a mirrored D so the tab
+      reads EDꓷIE.
+
+      Chosen by measurement, not preference. A tab title is plain text, so the
+      inverted D has to be a real character, and no reversed-D letter exists in the
+      macOS system UI font (SF Pro) — every candidate is substituted from another
+      family, which is what makes it look the wrong size. Of the candidates:
+
+        U+15E1 ᗡ  Carrier Tha  substitutes Euphemia UCAS: visibly smaller and low.
+        U+0500 Ԁ  Komi De      substitutes Helvetica: small and misaligned.
+        U+A4F7 ꓷ  Lisu Tsa     substitutes Geneva: advance 0.701em against D's
+                               0.701em, full cap height — the only one that matches.
+
+      On a platform whose fallback lacks U+A4F7 this degrades to a missing-glyph box.
+      The favicon is the Relay symbol. In application text, BrandName mirrors an
+      ordinary D in CSS, preserving the current font's exact size and baseline.
+    -->
+    <title>EDꓷIE — Evaluate, Design &amp; Deploy Inference Environments</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

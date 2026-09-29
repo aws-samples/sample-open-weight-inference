@@ -1,0 +1,490 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  EDDIE Workshop Studio bootstrap. Builds the reviewed source release with deploy.sh,
+  publishes the application and teaching checkpoint, and creates a participant login.
+  Intended only for disposable workshop accounts.
+
+Parameters:
+  MyAssetsBucketName:
+    Type: String
+    Default: ""
+    Description: Workshop Studio AssetsBucketName magic variable.
+  MyAssetsBucketPrefix:
+    Type: String
+    Default: ""
+    Description: Workshop Studio AssetsBucketPrefix magic variable, including trailing slash.
+  SourceZipS3Uri:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/.+\\.zip$"
+    Description: Optional override; otherwise use eddie-solution.zip from workshop S3 assets.
+  SourceZipSha256:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^[0-9a-f]{64}$"
+    Description: Required release checksum. make-assets.sh populates this in the workshop copy.
+  CheckpointZipS3Uri:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/.+\\.zip$"
+    Description: Optional override; otherwise acme-catalog-checkpoint.zip from workshop S3 assets.
+  CheckpointZipSha256:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^[0-9a-f]{64}$"
+    Description: Required when loading Acme's actual fine-tuned teaching checkpoint.
+  ParticipantEmail:
+    Type: String
+    Default: "participant@example.com"
+    AllowedPattern: "[a-zA-Z0-9._+%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+    Description: Per-account application username. No email delivery is required.
+  ParticipantGroup:
+    Type: String
+    Default: eddie-approvers
+    AllowedValues: [eddie-users, eddie-deployers, eddie-approvers, eddie-operators]
+    Description: EDDIE application capability; separate from the participant's AWS administrator role.
+  EddieEnvironment:
+    Type: String
+    Default: lab
+    AllowedPattern: "[a-z0-9-]{2,20}"
+  LoadTeachingCheckpoint:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+  EnableInferenceTrials:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: Prepare the serving image for approved trials. Does not start an endpoint.
+  AlarmEmail:
+    Type: String
+    Default: ""
+    Description: Required for enabled trials. The recipient must confirm the SNS subscription.
+  BuildTimeoutMinutes:
+    Type: Number
+    Default: 45
+    MinValue: 20
+    MaxValue: 45
+    Description: Build ceiling, not a measured installation duration. Leaves time for failure callbacks.
+
+Rules:
+  RequireRelease:
+    Assertions:
+      - Assert: !Not [!Equals [!Ref SourceZipSha256, ""]]
+        AssertDescription: Build the workshop assets before provisioning; a release checksum is required.
+      - Assert: !Or
+          - !Not [!Equals [!Ref SourceZipS3Uri, ""]]
+          - !Not [!Equals [!Ref MyAssetsBucketName, ""]]
+        AssertDescription: Provide workshop S3 assets or an explicit source ZIP URI.
+  RequireCheckpoint:
+    RuleCondition: !Equals [!Ref LoadTeachingCheckpoint, "true"]
+    Assertions:
+      - Assert: !Not [!Equals [!Ref CheckpointZipSha256, ""]]
+        AssertDescription: The teaching checkpoint is required; missing files must fail provisioning.
+      - Assert: !Or
+          - !Not [!Equals [!Ref CheckpointZipS3Uri, ""]]
+          - !Not [!Equals [!Ref MyAssetsBucketName, ""]]
+        AssertDescription: Provide workshop S3 assets or an explicit checkpoint ZIP URI.
+  TrialNotificationOwner:
+    RuleCondition: !Equals [!Ref EnableInferenceTrials, "true"]
+    Assertions:
+      - Assert: !Not [!Equals [!Ref AlarmEmail, ""]]
+        AssertDescription: Enabled trials require a notification owner.
+
+Conditions:
+  UseSourceAssets: !Equals [!Ref SourceZipS3Uri, ""]
+  UseCheckpointAssets: !Equals [!Ref CheckpointZipS3Uri, ""]
+
+Resources:
+  ParticipantSecretKey:
+    Type: AWS::KMS::Key
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      Description: !Sub "EDDIE ${EddieEnvironment} workshop participant password"
+      EnableKeyRotation: true
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      PendingWindowInDays: 7
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          # Delegate this key's permissions to this account's IAM policies.
+          # The installer and lab administrators already have KMS permissions.
+          # In a key policy, Resource "*" denotes only the attached key.
+          - Sid: EnableAccountPermissions
+            Effect: Allow
+            Principal: { AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root" }
+            Action: kms:*
+            Resource: "*"
+      Tags:
+        - { Key: Application, Value: EDDIE }
+        - { Key: eddie:environment, Value: !Ref EddieEnvironment }
+
+  ParticipantSecret:
+    Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      Name: !Sub "eddie-${EddieEnvironment}-participant-${AWS::AccountId}"
+      Description: Initial EDDIE participant password. First sign-in requires a password change.
+      KmsKeyId: !GetAtt ParticipantSecretKey.Arn
+      GenerateSecretString:
+        PasswordLength: 32
+        RequireEachIncludedType: true
+
+  InstallerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "eddie-${EddieEnvironment}-workshop-installer"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: codebuild.amazonaws.com }
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnEquals:
+                aws:SourceArn: !Sub "arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:project/eddie-${EddieEnvironment}-workshop-installer"
+      # Deliberate workshop choice, authorized by the event owner. Administrator
+      # access is not technically required for all installers. Application roles
+      # still come from the product's separately audited template.
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess"
+
+  InstallerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/codebuild/eddie-${EddieEnvironment}-workshop-installer"
+      RetentionInDays: 7
+
+  Installer:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "eddie-${EddieEnvironment}-workshop-installer"
+      Description: Builds and installs EDDIE before workshop participants arrive.
+      ServiceRole: !GetAtt InstallerRole.Arn
+      TimeoutInMinutes: !Ref BuildTimeoutMinutes
+      QueuedTimeoutInMinutes: 5
+      ConcurrentBuildLimit: 1
+      Artifacts: { Type: NO_ARTIFACTS }
+      LogsConfig:
+        CloudWatchLogs: { Status: ENABLED, GroupName: !Ref InstallerLogGroup }
+      Environment:
+        Type: ARM_CONTAINER
+        ComputeType: BUILD_GENERAL1_LARGE
+        Image: aws/codebuild/amazonlinux-aarch64-standard:3.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - { Name: EDDIE_ENVIRONMENT, Value: !Ref EddieEnvironment }
+          - { Name: EDDIE_REGION, Value: !Ref AWS::Region }
+          - { Name: EDDIE_EXPECTED_ACCOUNT, Value: !Ref AWS::AccountId }
+          - { Name: PARTICIPANT_EMAIL, Value: !Ref ParticipantEmail }
+          - { Name: PARTICIPANT_GROUP, Value: !Ref ParticipantGroup }
+          - { Name: PARTICIPANT_SECRET_ARN, Value: !Ref ParticipantSecret }
+          - { Name: LOAD_CHECKPOINT, Value: !Ref LoadTeachingCheckpoint }
+          - { Name: EDDIE_ENABLE_INFERENCE, Value: !Ref EnableInferenceTrials }
+          - { Name: EDDIE_ALARM_EMAIL, Value: !Ref AlarmEmail }
+          - { Name: SOURCE_SHA256, Value: !Ref SourceZipSha256 }
+          - { Name: CHECKPOINT_SHA256, Value: !Ref CheckpointZipSha256 }
+          - Name: SOURCE_ZIP
+            Value: !If
+              - UseSourceAssets
+              - !Sub "s3://${MyAssetsBucketName}/${MyAssetsBucketPrefix}eddie-solution.zip"
+              - !Ref SourceZipS3Uri
+          - Name: CHECKPOINT_ZIP
+            Value: !If
+              - UseCheckpointAssets
+              - !Sub "s3://${MyAssetsBucketName}/${MyAssetsBucketPrefix}acme-catalog-checkpoint.zip"
+              - !Ref CheckpointZipS3Uri
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          env:
+            shell: bash
+          phases:
+            install:
+              runtime-versions:
+                python: 3.12
+                nodejs: 24
+              commands:
+                - set -euo pipefail
+                - python3 --version
+                - node --version
+                - docker info >/dev/null
+                - export EDDIE_RELEASE_ROOT=/tmp/eddie-source/eddie
+            pre_build:
+              commands:
+                - |
+                  set -euo pipefail
+                  echo "1/5 Download and verify the pinned source release"
+                  aws s3 cp "$SOURCE_ZIP" /tmp/eddie-source.zip --only-show-errors
+                  python3 - <<'PY'
+                  import hashlib, os, pathlib, stat, zipfile
+                  archive = pathlib.Path("/tmp/eddie-source.zip")
+                  if archive.stat().st_size > 128 * 1024**2:
+                      raise SystemExit("Source archive exceeds 128 MiB")
+                  if hashlib.sha256(archive.read_bytes()).hexdigest() != os.environ["SOURCE_SHA256"]:
+                      raise SystemExit("Source archive checksum mismatch")
+                  with zipfile.ZipFile(archive) as z:
+                      members = z.infolist()
+                      if len(members) > 20000 or sum(m.file_size for m in members) > 512 * 1024**2:
+                          raise SystemExit("Source archive expands beyond its limit")
+                      names = set()
+                      for m in members:
+                          parts = m.filename.rstrip("/").split("/")
+                          mode = m.external_attr >> 16
+                          if (not m.filename.startswith("eddie/") or "\\" in m.filename
+                              or any(p in ("", ".", "..") for p in parts)
+                              or any(ord(c) < 32 for c in m.filename) or m.filename in names
+                              or stat.S_IFMT(mode) not in (0, stat.S_IFREG, stat.S_IFDIR)
+                              or m.flag_bits & 1):
+                              raise SystemExit("Unsafe source archive entry")
+                          names.add(m.filename)
+                      z.extractall("/tmp/eddie-source")
+                  PY
+                  test -f "$EDDIE_RELEASE_ROOT/scripts/workshop/bootstrap.py"
+                - |
+                  set -euo pipefail
+                  echo "2/5 Install the pinned build dependencies"
+                  cd "$EDDIE_RELEASE_ROOT"
+                  python3 -m venv .venv
+                  .venv/bin/python -m pip install --disable-pip-version-check -r requirements-dev.txt
+                  npm --prefix frontend ci --no-audit --no-fund
+            build:
+              commands:
+                - |
+                  set -euo pipefail
+                  echo "3/5 Run EDDIE's application installer and verification gates"
+                  cd "$EDDIE_RELEASE_ROOT"
+                  export EDDIE_IMAGE_TAG="ws-${CODEBUILD_BUILD_NUMBER}-$(date -u +%Y%m%dT%H%M%SZ)"
+                  bash ./deploy.sh --yes --environment "$EDDIE_ENVIRONMENT" \
+                    --region "$EDDIE_REGION" --expect-account "$EDDIE_EXPECTED_ACCOUNT"
+                - |
+                  set -euo pipefail
+                  echo "4/5 Publish the checkpoint and configure participant sign-in"
+                  cd "$EDDIE_RELEASE_ROOT"
+                  .venv/bin/python scripts/workshop/bootstrap.py finish
+            post_build:
+              commands:
+                - |
+                  set -euo pipefail
+                  echo "5/5 Report the installation result"
+                  # If fetching source or installing dependencies failed, the
+                  # EventBridge failure watcher supplies the FAILED response.
+                  test -f "$EDDIE_RELEASE_ROOT/scripts/workshop/bootstrap.py"
+                  python3 "$EDDIE_RELEASE_ROOT/scripts/workshop/bootstrap.py" respond
+
+  ControllerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/eddie-${EddieEnvironment}-workshop-controller"
+      RetentionInDays: 7
+
+  ControllerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StartAndObserveWorkshopBuild
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: codebuild:StartBuild
+                Resource: !GetAtt Installer.Arn
+              - Effect: Allow
+                Action: codebuild:BatchGetBuilds
+                Resource: !Sub "arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:build/eddie-${EddieEnvironment}-workshop-installer:*"
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub "${ControllerLogGroup.Arn}:*"
+
+  Controller:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "eddie-${EddieEnvironment}-workshop-controller"
+      Handler: index.handler
+      Runtime: python3.12
+      Timeout: 60
+      Role: !GetAtt ControllerRole.Arn
+      LoggingConfig: { LogGroup: !Ref ControllerLogGroup }
+      Environment:
+        Variables:
+          PROJECT: !Ref Installer
+          EXPECTED_ACCOUNT: !Ref AWS::AccountId
+          ENVIRONMENT: !Ref EddieEnvironment
+      Code:
+        ZipFile: |
+          import hashlib, http.client, json, os
+          from urllib.parse import urlsplit
+          import boto3
+
+          TERMINAL_FAILURES = {"FAILED", "FAULT", "TIMED_OUT", "STOPPED"}
+
+          def respond(event, status, reason, physical=None, data=None):
+              url = urlsplit(event["ResponseURL"])
+              host = url.hostname or ""
+              if (url.scheme != "https" or url.port not in (None, 443)
+                  or url.username or url.password or url.fragment
+                  or not host.startswith("cloudformation-custom-resource-response-")
+                  or not (host.endswith(".s3.amazonaws.com")
+                          or host.endswith(".s3.us-east-1.amazonaws.com"))):
+                  raise ValueError("Unexpected callback destination")
+              body = json.dumps({
+                  "Status": status, "Reason": reason,
+                  "PhysicalResourceId": physical or event.get("PhysicalResourceId", "eddie-workshop"),
+                  "StackId": event["StackId"], "RequestId": event["RequestId"],
+                  "LogicalResourceId": event["LogicalResourceId"], "Data": data or {},
+              }).encode()
+              connection = http.client.HTTPSConnection(host, timeout=20)
+              try:
+                  connection.request("PUT", url.path + "?" + url.query, body=body,
+                      headers={"content-type": "", "content-length": str(len(body))})
+                  response = connection.getresponse()
+                  response.read()
+                  if not 200 <= response.status < 300:
+                      raise RuntimeError("CloudFormation callback was not accepted")
+              finally:
+                  connection.close()
+
+          def failed_build(event):
+              # This catches timeouts/container failures that never reach post_build.
+              if (event.get("source") != "aws.codebuild"
+                  or event.get("account") != os.environ["EXPECTED_ACCOUNT"]):
+                  return
+              detail = event.get("detail", {})
+              if (detail.get("project-name") != os.environ["PROJECT"]
+                  or detail.get("build-status") not in TERMINAL_FAILURES):
+                  return
+              builds = boto3.client("codebuild").batch_get_builds(ids=[detail["build-id"]])["builds"]
+              if not builds or builds[0].get("projectName") != os.environ["PROJECT"]:
+                  return
+              build = builds[0]
+              if build.get("buildStatus") not in TERMINAL_FAILURES:
+                  return
+              values = {row["name"]: row["value"]
+                        for row in build.get("environment", {}).get("environmentVariables", [])}
+              fields = {
+                  "ResponseURL": "CFN_RESPONSE_URL", "StackId": "CFN_STACK_ID",
+                  "RequestId": "CFN_REQUEST_ID", "LogicalResourceId": "CFN_LOGICAL_ID",
+                  "PhysicalResourceId": "CFN_PHYSICAL_ID",
+              }
+              if not all(values.get(name) for name in fields.values()):
+                  return  # Not a CloudFormation-started build.
+              request = {key: values[name] for key, name in fields.items()}
+              respond(request, "FAILED",
+                      "Workshop installer " + build["buildStatus"] + ". CodeBuild run: " + build["id"])
+
+          def handler(event, context):
+              if "RequestType" not in event:
+                  return failed_build(event)
+              kind = event["RequestType"]
+              props = event["ResourceProperties"]
+              physical = event.get("PhysicalResourceId") or (
+                  "eddie-workshop-" + hashlib.sha256(event["StackId"].encode()).hexdigest()[:20])
+              if kind == "Delete":
+                  # deploy.sh creates a sibling application stack. Event account
+                  # reclamation owns its final cleanup. This is explicit retention,
+                  # not a claim that model/application resources have been removed.
+                  respond(event, "SUCCESS",
+                          "Bootstrap removed. Application retained for Workshop Studio account cleanup.",
+                          physical, {"RetainedApplicationStack": "eddie-" + os.environ["ENVIRONMENT"]})
+                  return
+              old = event.get("OldResourceProperties", {})
+              if kind == "Update" and any(
+                  old.get(key) != props.get(key) for key in ("Environment", "Participant")):
+                  respond(event, "FAILED", "Use a new sandbox to change the environment or participant identity.", physical)
+                  return
+              overrides = {
+                  "CFN_RESPONSE_URL": event["ResponseURL"], "CFN_STACK_ID": event["StackId"],
+                  "CFN_REQUEST_ID": event["RequestId"], "CFN_LOGICAL_ID": event["LogicalResourceId"],
+                  "CFN_PHYSICAL_ID": physical,
+              }
+              try:
+                  result = boto3.client("codebuild").start_build(
+                      projectName=os.environ["PROJECT"],
+                      idempotencyToken=hashlib.sha256(event["RequestId"].encode()).hexdigest(),
+                      environmentVariablesOverride=[
+                          {"name": key, "value": value, "type": "PLAINTEXT"}
+                          for key, value in overrides.items()],
+                  )
+                  print("Started workshop installation", result["build"]["id"])
+                  # The running build sends the response; this Lambda never waits.
+              except Exception as error:
+                  respond(event, "FAILED", "Could not start installer: " + type(error).__name__, physical)
+
+  BuildFailureRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source: [aws.codebuild]
+        detail-type: [CodeBuild Build State Change]
+        account: [!Ref AWS::AccountId]
+        detail:
+          project-name: [!Ref Installer]
+          build-status: [FAILED, FAULT, TIMED_OUT, STOPPED]
+      Targets:
+        - Id: WorkshopController
+          Arn: !GetAtt Controller.Arn
+          RetryPolicy: { MaximumRetryAttempts: 10, MaximumEventAgeInSeconds: 3600 }
+
+  BuildFailurePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Controller
+      Principal: events.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !GetAtt BuildFailureRule.Arn
+
+  EddieInstallation:
+    Type: AWS::CloudFormation::CustomResource
+    DependsOn: [BuildFailureRule, BuildFailurePermission]
+    Properties:
+      ServiceToken: !GetAtt Controller.Arn
+      ServiceTimeout: 3600
+      Environment: !Ref EddieEnvironment
+      Participant: !Ref ParticipantEmail
+      Group: !Ref ParticipantGroup
+      ReleaseSha256: !Ref SourceZipSha256
+      Source: !Ref SourceZipS3Uri
+      AssetsBucket: !Ref MyAssetsBucketName
+      AssetsPrefix: !Ref MyAssetsBucketPrefix
+      CheckpointSha256: !Ref CheckpointZipSha256
+      CheckpointSource: !Ref CheckpointZipS3Uri
+      LoadCheckpoint: !Ref LoadTeachingCheckpoint
+      EnableTrials: !Ref EnableInferenceTrials
+      AlarmEmail: !Ref AlarmEmail
+
+Outputs:
+  EddieUrl:
+    Description: Participant application URL; sign-in is required.
+    Value: !GetAtt EddieInstallation.Url
+  ParticipantUsername:
+    Description: EDDIE sign-in username.
+    Value: !Ref ParticipantEmail
+  ParticipantPasswordSecret:
+    Description: Open Secrets Manager and retrieve this initial password. Change it at first sign-in.
+    Value: !Ref ParticipantSecret
+  ParticipantPasswordConsoleUrl:
+    Description: Open this in your lab AWS console and choose Retrieve secret value.
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/secretsmanager/secret?name=${ParticipantSecret}&region=${AWS::Region}"
+  ApplicationStack:
+    Description: Sibling application stack installed by deploy.sh. Workshop Studio account cleanup owns final teardown.
+    Value: !GetAtt EddieInstallation.ApplicationStack
+  TeachingCheckpoint:
+    Description: Published indicates model files are in the private library; no model quality or inference was tested.
+    Value: !GetAtt EddieInstallation.CheckpointStatus
+  ReleaseSha256:
+    Value: !Ref SourceZipSha256
+  InstallerLogGroup:
+    Value: !Ref InstallerLogGroup

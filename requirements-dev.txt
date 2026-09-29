@@ -1,0 +1,9 @@
+-r backend/runtime-requirements.txt
+pytest==9.1.1
+moto[dynamodb]==5.1.22
+httpx==0.28.1
+PyYAML==6.0.3
+installer==1.0.1
+packaging==26.3
+# The install verifier authenticates through Cognito SRP, like the browser.
+pycognito==2024.5.1

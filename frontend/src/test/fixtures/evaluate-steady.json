@@ -1,0 +1,202 @@
+{
+  "outcome": "QUALIFIED_PLACEMENT",
+  "requestHash": "req-33333333333333333333",
+  "snapshotHash": "snap-4444444444444444444",
+  "solverVersion": "1.1.0+policy1",
+  "horizonHours": "720",
+  "assumptions": [
+    "The endpoint is allocated for the whole 720-hour horizon."
+  ],
+  "winner": {
+    "candidateId": "sagemaker-dedicated-warm",
+    "target": "SAGEMAKER_REALTIME",
+    "region": "us-east-1",
+    "modelRef": "synthetic-text-8b",
+    "instanceType": "ml.g5.2xlarge",
+    "instanceCount": "1",
+    "cmusPerCopy": null,
+    "scaleToZero": false,
+    "prewarmed": true,
+    "opsBurden": "MANAGED_ENDPOINT",
+    "blastRadius": "ENDPOINT_ISOLATED",
+    "recipeId": "recipe-sm-realtime-v5",
+    "notes": "Continuously allocated for the whole horizon.",
+    "isFeasible": true,
+    "cost": {
+      "total": "878.40",
+      "totalExact": "878.4000000000",
+      "isComplete": true,
+      "unpriced": [],
+      "items": [
+        {
+          "label": "Instance hours",
+          "phase": "INFERENCE",
+          "quantity": "720",
+          "quantityUnit": "instance-hour",
+          "rate": {
+            "amount": "1.22",
+            "unit": "Hrs",
+            "currency": "USD",
+            "region": "us-east-1",
+            "sku": "SYNTH-SM-G52XL-0002",
+            "effectiveDate": "2026-08-01",
+            "source": "AWS Price List API"
+          },
+          "amount": "878.40",
+          "evidence": "PROJECTED",
+          "note": null
+        }
+      ]
+    },
+    "gates": [
+      {
+        "name": "p99_latency_ms",
+        "status": "PASS",
+        "reason": "Warm endpoint has no cold-start exposure.",
+        "evidenceRef": "supplied:sagemaker-dedicated-warm"
+      }
+    ],
+    "failureCount": 0,
+    "unknownCount": 0
+  },
+  "ranked": [
+    {
+      "candidateId": "sagemaker-dedicated-warm",
+      "target": "SAGEMAKER_REALTIME",
+      "region": "us-east-1",
+      "modelRef": "synthetic-text-8b",
+      "instanceType": "ml.g5.2xlarge",
+      "instanceCount": "1",
+      "cmusPerCopy": null,
+      "scaleToZero": false,
+      "prewarmed": true,
+      "opsBurden": "MANAGED_ENDPOINT",
+      "blastRadius": "ENDPOINT_ISOLATED",
+      "recipeId": "recipe-sm-realtime-v5",
+      "notes": "Continuously allocated for the whole horizon.",
+      "isFeasible": true,
+      "cost": {
+        "total": "878.40",
+        "totalExact": "878.4000000000",
+        "isComplete": true,
+        "unpriced": [],
+        "items": []
+      },
+      "gates": [
+        {
+          "name": "p99_latency_ms",
+          "status": "PASS",
+          "reason": "Warm endpoint has no cold-start exposure.",
+          "evidenceRef": "supplied:sagemaker-dedicated-warm"
+        }
+      ],
+      "failureCount": 0,
+      "unknownCount": 0
+    },
+    {
+      "candidateId": "cmi-scale-to-zero",
+      "target": "BEDROCK_CMI",
+      "region": "us-east-1",
+      "modelRef": "synthetic-text-8b",
+      "instanceType": null,
+      "instanceCount": "1",
+      "cmusPerCopy": "2",
+      "scaleToZero": true,
+      "prewarmed": false,
+      "opsBurden": "SERVICE_API",
+      "blastRadius": "SERVICE_SHARED",
+      "recipeId": "recipe-cmi-text-v3",
+      "notes": "Burst-billed per active CMU-minute for all 720 hours.",
+      "isFeasible": true,
+      "cost": {
+        "total": "4939.20",
+        "totalExact": "4939.2000000000",
+        "isComplete": true,
+        "unpriced": [],
+        "items": []
+      },
+      "gates": [
+        {
+          "name": "p99_latency_ms",
+          "status": "PASS",
+          "reason": "Supplied p99 500 ms is within the 800 ms threshold.",
+          "evidenceRef": "supplied:cmi-scale-to-zero"
+        }
+      ],
+      "failureCount": 0,
+      "unknownCount": 0
+    }
+  ],
+  "unresolved": [],
+  "excluded": [],
+  "counts": {
+    "ranked": 2,
+    "unresolved": 0,
+    "excluded": 0
+  },
+  "breakeven": {
+    "breakevenDutyPercent": "17.02",
+    "cmiActiveHourly": "6.86",
+    "dedicatedHourly": "1.22",
+    "actualDutyPercent": "100.00",
+    "verdict": "STEADY_FAVOURS_DEDICATED",
+    "explanation": "A 100% duty cycle is far above the 17.02% break-even, so a continuously allocated endpoint is cheaper than burst pricing.",
+    "cmiComparedCandidate": "cmi-scale-to-zero",
+    "dedicatedComparedCandidate": "sagemaker-dedicated-warm"
+  },
+  "priceFreshness": {
+    "sagemaker": "LIVE",
+    "cmi_minute": "LIVE",
+    "cmi_month": "LIVE"
+  },
+  "retrievedAt": "2026-09-12T09:20:00Z",
+  "cmiFamily": "SyntheticText",
+  "checksStipulated": false,
+  "latencyEvidenceProvenance": "NONE",
+  "request": {
+    "caseId": "fixture-steady"
+  },
+  "qualification": {
+    "performanceMeasured": false,
+    "latencyStatus": "NOT_REQUESTED",
+    "sloRequested": false,
+    "benchmarkRunIds": [],
+    "conditional": true,
+    "note": "No benchmark was run for this evaluation."
+  },
+  "evaluatedRequest": {
+    "caseId": "case-001",
+    "model": {
+      "name": "Llama 3.1 8B",
+      "architecture": "LlamaForCausalLM",
+      "modality": "TEXT",
+      "totalParamsB": "8",
+      "contextTokens": 128000,
+      "precision": "BF16",
+      "weightsGb": "16",
+      "weightsExportable": true,
+      "licenseId": "llama-3.1-community",
+      "hfRepo": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "workload": {
+      "horizonHours": "720",
+      "billableCopyHours": "720",
+      "dedicatedInstanceHours": "720",
+      "scheduled": false,
+      "concurrency": null,
+      "description": "Always-on 30-day service"
+    },
+    "slos": [],
+    "constraints": {
+      "permittedRegions": [
+        "us-east-1"
+      ],
+      "budgetUsd": null,
+      "requireHeldCapacity": false,
+      "maxOpsBurden": null
+    },
+    "assumeChecksCleared": true,
+    "latencyEvidence": null
+  },
+  "evaluatedRequestHash": "31cabe3f7997f5c5e5ca74ef634bdb6a"
+}

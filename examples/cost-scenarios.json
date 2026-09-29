@@ -1,0 +1,89 @@
+{
+  "document_type": "illustrative_cost_arithmetic",
+  "as_of": "2026-09-12",
+  "currency": "USD",
+  "region": "us-east-1",
+  "performance_measured": false,
+  "capacity_verified": false,
+  "qualified_recommendation": false,
+  "price_evidence": "../docs/evidence/prices-2026-09-12.json",
+  "model_assumptions": {
+    "model": "Llama 3.1 8B",
+    "same_artifact_across_targets": true,
+    "artifact_digest": null,
+    "cmi_units_per_copy": 2,
+    "cmi_units_source": "Conditional assumption using AWS reference example; no import performed",
+    "cmi_version": "v1.0",
+    "sagemaker_instance": "ml.g5.2xlarge",
+    "copy_count_when_active": 1,
+    "sagemaker_instance_count": 1,
+    "input_tokens_per_request": 1024,
+    "output_tokens_per_request": 128,
+    "token_mix_status": "Illustrative only; not used to infer latency or throughput",
+    "required_concurrency": null,
+    "slo": null
+  },
+  "rates": {
+    "cmi_usd_per_cmu_minute": "0.05718",
+    "cmi_inference_sku": "8EJKXB49YY4SMCKM",
+    "cmi_storage_usd_per_cmu_month": "1.95",
+    "cmi_storage_sku": "YQSJA22BPUVEWDW3",
+    "sagemaker_usd_per_instance_hour": "1.515",
+    "sagemaker_sku": "BTQ8KZF3DKVFJY87"
+  },
+  "derived_rates": {
+    "cmi_usd_per_active_copy_hour": "6.86160",
+    "compute_only_breakeven_fraction": "0.220793983910458",
+    "compute_only_breakeven_exact_rational": "2525/11436",
+    "compute_only_breakeven_display_percent": "22.08"
+  },
+  "scenarios": [
+    {
+      "id": "three_day_event",
+      "horizon_hours": 72,
+      "cmi_billing_assumption": "36 distinct allocation episodes with 10 billable minutes each, including billing-window/idle/prewarming effects; not derived from a measured request trace",
+      "cmi_billable_episodes": 36,
+      "cmi_billable_minutes_per_episode": 10,
+      "cmi_billable_copy_hours": "6",
+      "cmi_billable_duty_fraction": "0.0833333333333333",
+      "sagemaker_billed_instance_hours": "72",
+      "cmi_compute_usd": "41.16960",
+      "cmi_full_month_storage_budget_usd": "3.90",
+      "cmi_compute_plus_storage_budget_usd": "45.06960",
+      "sagemaker_compute_usd": "109.080",
+      "arithmetic_preference": "CMI under the stated billing/allocation assumptions"
+    },
+    {
+      "id": "always_on_thirty_days",
+      "horizon_hours": 720,
+      "cmi_billable_copy_hours": "720",
+      "cmi_billable_duty_fraction": "1",
+      "sagemaker_billed_instance_hours": "720",
+      "cmi_compute_usd": "4940.35200",
+      "cmi_full_month_storage_budget_usd": "3.90",
+      "cmi_compute_plus_storage_budget_usd": "4944.25200",
+      "sagemaker_compute_usd": "1090.800",
+      "arithmetic_preference": "SageMaker under the stated billing/allocation assumptions"
+    },
+    {
+      "id": "event_scheduled_sagemaker_counterexample",
+      "horizon_hours": 72,
+      "sagemaker_billed_instance_hours": "21",
+      "allocation_assumption": "Three predictable seven-hour allocations; startup, readiness, and drain must fit inside 21 billed hours or be added",
+      "sagemaker_compute_usd": "31.815",
+      "arithmetic_preference": "Scheduled SageMaker compute below the first event's CMI compute",
+      "eligibility_warning": "Readiness and capacity for each allocation are unverified"
+    }
+  ],
+  "excluded_unprovided_costs": [
+    "network and data transfer",
+    "SageMaker endpoint disk and other storage",
+    "logs, metrics, traces and security services",
+    "publisher and voice license charges",
+    "tax and support",
+    "customer discounts",
+    "unmodeled setup and teardown time beyond stated allocation assumptions"
+  ],
+  "storage_note": "A full-month budget allowance is used; no partial-month proration rule is asserted.",
+  "decision_note": "These are reproducible billing illustrations using live rates. No candidate can pass feasibility without the missing artifact, quality, quota, capacity and performance evidence."
+}
