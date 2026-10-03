@@ -37,6 +37,7 @@ export type AgentAction =
   | 'health'
   | 'inspect_model'
   | 'sizing.estimate'
+  | 'tokenomics.compare'
   | 'checkpoint.list'
   | 'checkpoint.inspect'
   | 'connectors'
@@ -692,12 +693,16 @@ export interface ModelInspectionResult {
     name: string;
     revision: string;
     manifestVersionId: string;
-    artifactFormat: 'full-checkpoint' | 'merged-checkpoint';
-    customization: 'fine-tuned';
+    /** A fine-tuned Safetensors checkpoint, or the reviewed published speech bundle. */
+    artifactFormat: 'full-checkpoint' | 'merged-checkpoint' | 'gguf-speech-bundle';
+    customization: 'fine-tuned' | 'published';
     baseModel: { source: string; revision: string };
-    lineage: { trainingRun: string; trainingDataSha256: string };
-    lineageStatus: 'SUPPLIED';
+    lineage: { trainingRun: string; trainingDataSha256: string } | null;
+    lineageStatus: 'SUPPLIED' | 'NOT_APPLICABLE';
     fullContentVerified: boolean;
+    upstream?: { role: string; source: string; revision: string; url: string }[];
+    runtime?: { name: string; repository: string; revision: string; ggmlRevision: string; completionPatchSha256: string; reportedVersion: string };
+    componentBytes?: Record<string, number>;
   };
 }
 
@@ -750,6 +755,9 @@ export interface DeploymentView {
   kind?: string;
   performanceQualified?: boolean;
   invocationReceipt?: InvocationReceipt | null;
+  /** The reviewed recipe and instance this trial runs; set by the deployment service. */
+  recipeId?: string;
+  instanceType?: string;
   jobId: string;
   planId: string;
   projectId: string;
@@ -788,7 +796,12 @@ export interface DeploymentCapability {
     id: string; version: string; available: boolean;
     maximumModelGiB: number; architectures: string[]; targets: string[]; note: string;
   };
-  recipes?: { id: string; version: string; models: string[]; region: string; instanceType: string; maximumLifetimeMinutes: number }[];
+  /** The reviewed Magpie CPU speech recipe; executes only the library's speech bundle. */
+  speechRecipe?: {
+    id: string; version: string; available: boolean; bundle: string;
+    instanceType: string; maximumLifetimeMinutes: number; targets: string[]; note: string;
+  };
+  recipes?: { id: string; version: string; available?: boolean; models: string[]; region: string; instanceType: string; maximumLifetimeMinutes: number }[];
   note: string;
 }
 
@@ -843,7 +856,7 @@ export interface DeploymentPlan {
 
 export interface DeploymentPlanReview {
   plan: DeploymentPlan;
-  model: { source: string; revision: string; license: string; licenseUrl: string; bytes: number };
+  model: { source: string; name?: string; revision: string; license: string; licenseUrl: string; bytes: number };
   cost: {
     hostingEstimateUsd: string;
     hourlyUsd: string;
@@ -877,9 +890,22 @@ export interface InvocationReceipt {
   qualityQualified: boolean;
   promptStored: boolean;
   outputStored: boolean;
+  /** Speech recipe only: the server decoded the returned audio completely. */
+  decoded?: boolean;
+  audioSeconds?: string;
+  synthesisSeconds?: string;
+  peakRssMiB?: string;
+  sampleRateHz?: number;
+  speaker?: string;
+  inputSha256?: string;
+  outputSha256?: string;
+  instanceType?: string;
 }
 
 export interface TestInvocationResponse {
-  output: string;
+  output?: string;
+  /** Base64 WAV from the speech recipe; never stored by the service. */
+  audio?: string;
+  format?: string;
   receipt: InvocationReceipt;
 }

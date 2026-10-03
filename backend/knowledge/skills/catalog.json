@@ -1,8 +1,8 @@
 {
   "format": 1,
-  "version": "2026-09-29.1",
+  "version": "2026-10-03.1",
   "purpose": "Public inference decision guidance; never price, gate or deployment authority.",
-  "contractSha256": "e52e86fe0a17d7359c651b26e3c054d67938eb782bc48237ebd64edf6462f5ce",
+  "contractSha256": "344406dba2b18814f8d7929b1a4ea7e18bb96ec8bb122f506be6e44e806c8571",
   "runbooks": [
     {
       "id": "qualify-inference-workload",
@@ -299,30 +299,30 @@
     {
       "id": "evaluate-speech-generation",
       "title": "Evaluate speech generation",
-      "description": "Evaluate offline or streaming text-to-speech with listening criteria, audio duration, whole-pipeline memory and completion time. Use for Qwen3-TTS, podcast generation and CPU feasibility questions.",
+      "description": "Evaluate offline or streaming text-to-speech with functional acceptance, audio duration, whole-pipeline memory and completion time. Use for bring-your-own speech models such as Magpie TTS, GGUF speech runtimes and CPU feasibility questions.",
       "stage": "evaluate",
       "tags": [
-        "Qwen3-TTS",
-        "12Hz",
-        "1.7B",
-        "Base",
-        "CustomVoice",
-        "podcast",
+        "Magpie",
+        "TTS",
+        "GGUF",
+        "NeMo-Speech.cpp",
+        "speech",
         "audio",
+        "functional check",
         "RTF",
-        "Polly"
+        "bring your own model"
       ],
       "questions": [
-        "What does the recorded Qwen podcast CPU benchmark prove?"
+        "How do I check that a bring-your-own speech model really works?"
       ],
       "sources": [
         "aws-batch-compute",
-        "mlcommons-inference",
-        "qwen-tts"
+        "magpie-tts",
+        "mlcommons-inference"
       ],
-      "reviewedOn": "2026-09-28",
-      "reviewAfter": "2026-12-27",
-      "sha256": "b989c86ba67da96c8f5c95cfe00773f111c8b6129fd92798013495edfd66ec62"
+      "reviewedOn": "2026-10-03",
+      "reviewAfter": "2027-01-01",
+      "sha256": "eb77cd5f0d9dc6510f5fe7cf1fc8ed3667f8dc4d56bf7892dc0a5c2908126e04"
     },
     {
       "id": "evaluate-code-tool-use",
@@ -651,32 +651,31 @@
     {
       "id": "route-cpu-batch",
       "title": "Consider CPU for offline inference",
-      "description": "Consider CPU EC2 or AWS Batch for offline open-weight inference before assuming a GPU. Use for Qwen3-TTS podcasts, embeddings, classification, reranking and low-concurrency work with completion deadlines.",
+      "description": "Consider CPU EC2 or AWS Batch for offline open-weight inference before assuming a GPU. Use for speech generation such as Magpie TTS, embeddings, classification, reranking and low-concurrency work with completion deadlines.",
       "stage": "route",
       "tags": [
         "CPU",
         "AWS Batch",
         "EC2",
-        "Qwen3-TTS",
-        "12Hz",
-        "1.7B",
-        "podcast",
+        "speech",
+        "Magpie",
+        "GGUF",
         "offline",
         "no latency target",
         "deadline"
       ],
       "questions": [
-        "Why is there no CPU option for Qwen3-TTS with no latency target?"
+        "Why is there no CPU option for a speech model with no latency target?"
       ],
       "sources": [
         "aws-batch-compute",
         "aws-batch-retry",
-        "qwen-tts",
+        "magpie-tts",
         "vllm-cpu"
       ],
-      "reviewedOn": "2026-09-28",
-      "reviewAfter": "2026-10-28",
-      "sha256": "6973b112fa7823efb953b697c3b340dac3ea630d6f3e06ce89267ce33bd0d5da"
+      "reviewedOn": "2026-10-03",
+      "reviewAfter": "2026-11-02",
+      "sha256": "d8edced64d299d8057885906a05decb8cd943238be1b9b431ad15c8e568b2247"
     },
     {
       "id": "route-cpu-serverless",
@@ -848,7 +847,7 @@
     {
       "id": "size-cpu-inference",
       "title": "Size a CPU inference worker",
-      "description": "Size a CPU inference worker using measured peak RAM, thread scaling, NUMA, job duration and concurrency. Use for Qwen3-TTS, embeddings, rerankers, Graviton comparisons and requests for a universal CPU model-size threshold.",
+      "description": "Size a CPU inference worker using measured peak RAM, thread scaling, NUMA, job duration and concurrency. Use for speech models such as Magpie TTS, embeddings, rerankers, Graviton comparisons and requests for a universal CPU model-size threshold.",
       "stage": "size",
       "tags": [
         "CPU",
@@ -857,8 +856,8 @@
         "NUMA",
         "Graviton",
         "peak memory",
-        "1.7B",
-        "podcast",
+        "0.3B",
+        "speech",
         "threshold"
       ],
       "questions": [
@@ -869,9 +868,9 @@
         "aws-graviton",
         "vllm-cpu"
       ],
-      "reviewedOn": "2026-09-28",
+      "reviewedOn": "2026-10-03",
       "reviewAfter": "2026-12-27",
-      "sha256": "f758d1b0a6aa16669bbff78fdfbca8db297500ac76d6c2124a8bfb89d3710e88"
+      "sha256": "83c829967c41221baa97c596778e753d0e90c02def32e0235c024e011452cf2c"
     },
     {
       "id": "size-gpu-fleet",
@@ -1061,6 +1060,42 @@
       "sha256": "5297aa3f7e8b263ef2a6c362898ad920d8f209957d134cf4a3ff811690989a45"
     },
     {
+      "id": "analyze-tokenomics",
+      "title": "Analyze inference Tokenomics",
+      "description": "Analyze inference cost per successful task across model calls, agent loops, context, tools, caching, retries and allocated compute. Use when token prices alone do not explain the bill or when comparing model and harness changes before buying capacity.",
+      "stage": "cost",
+      "tags": [
+        "tokenomics",
+        "agent",
+        "harness",
+        "context",
+        "repeated history",
+        "tool results",
+        "compaction",
+        "caching",
+        "retries",
+        "fallback",
+        "cost per task",
+        "successful outcome"
+      ],
+      "questions": [
+        "What drives inference cost per successful task?",
+        "Why is our agent bill high despite a cheap model?",
+        "How do context, caching, tools and retries change application cost?",
+        "Should we change the model or its harness before buying capacity?"
+      ],
+      "sources": [
+        "anthropic-context-engineering",
+        "anthropic-effective-agents",
+        "aws-bedrock-cache",
+        "aws-bedrock-quota-accounting",
+        "aws-bedrock-pricing"
+      ],
+      "reviewedOn": "2026-10-03",
+      "reviewAfter": "2026-11-02",
+      "sha256": "449e521ed5241f48b0e766bebbac63aec9dd487828230c9050588f2147df7a0e"
+    },
+    {
       "id": "compare-like-for-like-cost",
       "title": "Compare equivalent inference costs",
       "description": "Normalize inference alternatives to the same workload, quality, deadline, operating schedule and cost period. Use when a CPU job, Bedrock token estimate and monthly GPU endpoint quote appear in one comparison.",
@@ -1193,9 +1228,9 @@
         "aws-price-api",
         "aws-savings-plans"
       ],
-      "reviewedOn": "2026-09-28",
-      "reviewAfter": "2026-10-28",
-      "sha256": "933ce88b9e404c059eed886e61ae9f11b768b922d7d787841b096390b964af07"
+      "reviewedOn": "2026-10-03",
+      "reviewAfter": "2026-11-02",
+      "sha256": "e59bedfe9ac15980678ea278f9aa0e204c2b2d15c0648c7ea88f7c93519371d7"
     },
     {
       "id": "verify-quota-and-capacity",

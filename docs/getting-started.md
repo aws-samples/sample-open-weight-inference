@@ -35,9 +35,7 @@ before the CloudFormation confirmation: container repositories, image storage
 and artifact publication are part of the build.
 
 Start in `us-east-1`: the current installer creates CloudFront's WAF there.
-Add `--enable-inference` to prepare the supported GPU trial path; starting a trial
-still requires approval in the app. COA knowledge integration is optional and
-installed separately.
+COA knowledge integration is optional and installed separately.
 
 The Advisor's default Bedrock model is configured through `EDDIE_ADVISOR_MODEL_ID`;
 your account must have access to the selected model and its permitted inference
@@ -94,24 +92,20 @@ not a deployment workflow.
 
 ## Enable a SageMaker trial
 
-Re-run the installer with:
+Choose an [included deployment recipe](adding-a-deployment-recipe.md#enable-an-included-recipe)
+and re-run the installation command with its GPU or CPU flag.
 
-```bash
-./deploy.sh --region us-east-1 --expect-account YOUR_ACCOUNT_ID --enable-inference
-```
-
-This prepares the reviewed serving image and trial prerequisites; it does not
-create a GPU endpoint. Image and artifact storage can still incur charges.
+This prepares the serving image and trial prerequisites; it does not create an
+inference endpoint. Image and artifact storage can still incur charges.
 
 Before approving a trial, configure a notification recipient, confirm the SNS
 subscription and grant the intended user the necessary approval capability.
 The review must show the supported model, Region, price estimate, budget and
 expiry. Available quota does not guarantee capacity at creation time.
 
-The current recipe is a small Qwen model on one `ml.g5.2xlarge` instance in
-`us-east-1`, for 30–60 minutes. It is a test environment, not a production serving
-configuration. The review is authoritative about the exact supported revision
-and limits in your installation.
+Recipes define trial configurations, not production sizing recommendations.
+The in-app review is authoritative about the supported model revision, instance,
+Region and limits in your installation.
 
 Follow **Deploy & monitor** for setup, authenticated test requests and removal.
 Treat **Removal confirmed** as the end of the trial's running resources; a closed

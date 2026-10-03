@@ -71,6 +71,12 @@ Parameters:
     Description: Scanned image in this installation's private serving repository, pinned by digest. Empty disables test deployments.
     AllowedPattern: "^$|^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com/eddie-[a-z0-9-]+-serving@sha256:[0-9a-f]{64}$"
 
+  SpeechImageUri:
+    Type: String
+    Default: ""
+    Description: Scanned Magpie-only CPU image in this installation's speech repository, pinned by digest. Empty disables speech trials.
+    AllowedPattern: "^$|^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com/eddie-[a-z0-9-]+-speech@sha256:[0-9a-f]{64}$"
+
   S3PrefixListId:
     Type: String
     Description: AWS-managed S3 prefix list discovered in the deployment Region by deploy.sh.
@@ -441,6 +447,10 @@ Resources:
                   - pricing:GetProducts
                   - pricing:DescribeServices
                   - pricing:GetAttributeValues
+                Resource: "*"
+              - Sid: PublicSavingsPlanRatesRead
+                Effect: Allow
+                Action: savingsplans:DescribeSavingsPlansOfferingRates
                 Resource: "*"
               - Sid: ListOperationsWithoutResourceAuthorization
                 Effect: Allow
@@ -1096,13 +1106,17 @@ Resources:
               - Sid: EndpointQuotaRead
                 Effect: Allow
                 Action: servicequotas:GetServiceQuota
-                Resource: !Sub "arn:aws:servicequotas:${AWS::Region}:${AWS::AccountId}:sagemaker/L-9614C779"
+                Resource:
+                  - !Sub "arn:aws:servicequotas:${AWS::Region}:${AWS::AccountId}:sagemaker/L-9614C779"
+                  # ml.m6g.xlarge for endpoint usage: the Magpie CPU speech recipe.
+                  - !Sub "arn:aws:servicequotas:${AWS::Region}:${AWS::AccountId}:sagemaker/L-2D2AAC6C"
               - Sid: ServingImageScanRead
                 Effect: Allow
                 Action: ecr:DescribeImageScanFindings
                 Resource:
                   - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-serving"
                   - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-kms-serving"
+                  - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-speech"
               - Sid: VerifyCleanupSchedule
                 Effect: Allow
                 Action: [events:DescribeRule, events:ListTargetsByRule]
@@ -1370,6 +1384,7 @@ Resources:
           EDDIE_ARTIFACT_BUCKET: !Ref ArtifactBucket
           EDDIE_DATA_KEY: !GetAtt DataKey.Arn
           EDDIE_SERVING_IMAGE: !Ref ServingImageUri
+          EDDIE_SPEECH_IMAGE: !Ref SpeechImageUri
           EDDIE_SAGEMAKER_EXECUTION_ROLE_ARN: !GetAtt SageMakerExecutionRole.Arn
           EDDIE_SERVING_SUBNETS: !Join [",", [!Ref ServingSubnetA, !Ref ServingSubnetB]]
           EDDIE_SERVING_SECURITY_GROUP: !Ref ServingSecurityGroup
@@ -1413,6 +1428,7 @@ Resources:
           EDDIE_ARTIFACT_BUCKET: !Ref ArtifactBucket
           EDDIE_DATA_KEY: !GetAtt DataKey.Arn
           EDDIE_SERVING_IMAGE: !Ref ServingImageUri
+          EDDIE_SPEECH_IMAGE: !Ref SpeechImageUri
           EDDIE_SAGEMAKER_EXECUTION_ROLE_ARN: !GetAtt SageMakerExecutionRole.Arn
           EDDIE_SERVING_SUBNETS: !Join [",", [!Ref ServingSubnetA, !Ref ServingSubnetB]]
           EDDIE_SERVING_SECURITY_GROUP: !Ref ServingSecurityGroup
@@ -1456,6 +1472,7 @@ Resources:
           EDDIE_ARTIFACT_BUCKET: !Ref ArtifactBucket
           EDDIE_DATA_KEY: !GetAtt DataKey.Arn
           EDDIE_SERVING_IMAGE: !Ref ServingImageUri
+          EDDIE_SPEECH_IMAGE: !Ref SpeechImageUri
           EDDIE_SAGEMAKER_EXECUTION_ROLE_ARN: !GetAtt SageMakerExecutionRole.Arn
           EDDIE_SERVING_SUBNETS: !Join [",", [!Ref ServingSubnetA, !Ref ServingSubnetB]]
           EDDIE_SERVING_SECURITY_GROUP: !Ref ServingSecurityGroup
@@ -1499,6 +1516,7 @@ Resources:
           EDDIE_ARTIFACT_BUCKET: !Ref ArtifactBucket
           EDDIE_DATA_KEY: !GetAtt DataKey.Arn
           EDDIE_SERVING_IMAGE: !Ref ServingImageUri
+          EDDIE_SPEECH_IMAGE: !Ref SpeechImageUri
           EDDIE_SAGEMAKER_EXECUTION_ROLE_ARN: !GetAtt SageMakerExecutionRole.Arn
           EDDIE_SERVING_SUBNETS: !Join [",", [!Ref ServingSubnetA, !Ref ServingSubnetB]]
           EDDIE_SERVING_SECURITY_GROUP: !Ref ServingSecurityGroup
@@ -1577,6 +1595,7 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-serving"
                   - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-kms-serving"
+                  - !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/eddie-${Environment}-speech"
         - PolicyName: ServingLogs
           PolicyDocument:
             Version: "2012-10-17"
@@ -1682,7 +1701,7 @@ Resources:
                 Resource: !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:endpoint-config/eddie-${Environment}-job-*"
                 Condition:
                   ForAllValues:StringEquals:
-                    sagemaker:InstanceTypes: [ml.g5.2xlarge]
+                    sagemaker:InstanceTypes: [ml.g5.2xlarge, ml.m6g.xlarge]
                   "Null":
                     sagemaker:InstanceTypes: "false"
                   StringEquals:
@@ -2154,3 +2173,5 @@ Outputs:
     Value: !GetAtt DeploymentController.Arn
   ServingImage:
     Value: !Ref ServingImageUri
+  SpeechImage:
+    Value: !Ref SpeechImageUri

@@ -14,7 +14,7 @@ import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import StatusIndicator from '@cloudscape-design/components/status-indicator';
 import Tabs from '@cloudscape-design/components/tabs';
-import type { FactBasis, PodcastExample, SizingMetric, SizingReport, SizingSettings } from '../api/sizing';
+import type { FactBasis, SpeechExample, SizingMetric, SizingReport, SizingSettings } from '../api/sizing';
 import { useApp } from '../state/AppContext';
 import { useCase } from '../state/CaseContext';
 import { toEvaluateRequest } from '../state/caseForm';
@@ -28,7 +28,7 @@ const BASIS: Record<FactBasis, string> = {
 };
 const WORKLOADS = [
   ['general', 'Choose the workload'], ['chat', 'Interactive text'], ['rag', 'Questions over documents'],
-  ['code', 'Code generation'], ['batch', 'Offline text processing'], ['tts', 'Batch speech / podcast'],
+  ['code', 'Code generation'], ['batch', 'Offline text processing'], ['tts', 'Batch speech'],
   ['voice', 'Live voice'], ['embeddings', 'Embeddings / reranking'], ['classification', 'Classification'],
   ['multimodal', 'Images, audio and text'],
 ];
@@ -75,30 +75,45 @@ function MetricGroup({ metrics }: { metrics: SizingMetric[] }) {
   </SpaceBetween>;
 }
 
-function PodcastEvidence({ example }: { example: PodcastExample }) {
-  return <Container header={<Header variant="h3" description="A recorded experiment from the podcast application. These results do not qualify the current project.">Real example: speech on CPU</Header>}>
+function SpeechEvidence({ example }: { example: SpeechExample }) {
+  // Saved projects can contain the earlier Qwen example. Do not reinterpret it
+  // as a Magpie measurement or crash while restoring an otherwise valid project.
+  if (!Number.isFinite(example.synthesisSeconds) || !Number.isFinite(example.requestSeconds)
+    || !example.cleanup || !Array.isArray(example.limitations)) {
+    return <Container header={<Header variant="h3">Saved recorded example</Header>}>
+      <SpaceBetween size="s">
+        <Box>{example.model ?? 'This saved example'}{example.instance ? ` · ${example.instance}` : ''}</Box>
+        <StatusIndicator type="info">This example uses an earlier report format.</StatusIndicator>
+        <Box>Rebuild the sizing sheet to view the current recorded example. Your saved project
+          and supplied measurements have been kept. The new example does not replace evidence
+          measured for your workload.</Box>
+      </SpaceBetween>
+    </Container>;
+  }
+  return <Container header={<Header variant="h3" description="One recorded run of the reviewed speech recipe. These results do not qualify the current project.">Recorded example: speech on CPU</Header>}>
     <SpaceBetween size="m">
-      <div className="eddie-sizing-example-label"><Icon name="audio-full" /> Recorded example · {example.recordedAt.slice(0, 10)} · one run</div>
-      <Box>{example.model} · AWS Batch · {example.instance} · {example.dtype} · {example.threads} CPU threads</Box>
+      <div className="eddie-sizing-example-label"><Icon name="audio-full" /> Recorded example · {example.recordedAt.slice(0, 10)} · one request</div>
+      <Box>{example.model} · {example.hosting} · {example.instance} · {example.threads} CPU threads</Box>
       <div className="eddie-sizing-highlights">
         {[
           [example.audioSeconds.toFixed(1), 'seconds of audio'],
-          [example.generationSeconds.toFixed(1), 'seconds generating'],
-          [(example.endToEndSeconds / 60).toFixed(1), 'minutes end to end'],
-          [(example.peakProcessMiB / 1024).toFixed(1), 'GiB peak process memory'],
+          [example.synthesisSeconds.toFixed(1), 'seconds synthesizing'],
+          [example.requestSeconds.toFixed(1), 'seconds for the request'],
+          [(example.peakProcessMiB / 1024).toFixed(2), 'GiB peak process memory'],
         ].map(([value, label]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}
       </div>
-      <Box>Generation took {example.realTimeFactor} seconds per second of audio. This supports an offline experiment;
-        it does not demonstrate live voice. Startup took {example.startupSeconds.toFixed(1)} seconds and
-        preparing model files took {example.assetLoadSeconds.toFixed(1)} seconds.</Box>
-      <ExpandableSection headerText="What this proves—and what it does not">
+      <Box>Synthesis took {example.realTimeFactor} seconds per second of audio for {example.inputCharacters} characters of supplied text.
+        {example.startupSeconds !== null ? ` The endpoint took ${Math.round(example.startupSeconds / 60)} minutes to become ready.` : ''}
+        {example.trialCostUsd !== null ? ` The trial's hosting cost was about $${example.trialCostUsd} at $${example.hourlyUsd}/hour.` : ''}</Box>
+      <ExpandableSection headerText="What this proves and what it does not">
         <ul className="eddie-sizing-list">{example.limitations.map((text) => <li key={text}>{text}</li>)}</ul>
       </ExpandableSection>
       <ExpandableSection headerText="Reproduction details">
         <SpaceBetween size="s">
-          <Box>{example.region} · {example.vcpus} virtual CPUs · {example.memoryGiB} GiB RAM · {example.interopThreads} interop threads</Box>
+          <Box>{example.region} · {example.vcpus} virtual CPUs · {example.memoryGiB} GiB RAM · {example.cpuArchitecture} · {example.runtime}</Box>
           <Box>{Object.entries(example.versions).map(([name, version]) => `${name} ${version}`).join(' · ')}</Box>
           {Object.entries(example.artifactHashes).map(([name, hash]) => <Box key={name} variant="small"><b>{name} SHA-256:</b> <span className="eddie-sizing-hash">{hash}</span></Box>)}
+          <Box variant="small">Cleanup: {example.cleanup.scope}</Box>
           <SourceLink url={example.modelSource} />
         </SpaceBetween>
       </ExpandableSection>
@@ -214,6 +229,7 @@ export function InferenceSizing({ onAsk }: { onAsk?: (prompt: string) => void })
           <SpaceBetween size="m">
             {select('cpuInstance', 'CPU instance to test', (report?.cpuChoices ?? [
               { instance: 'c7i.8xlarge', architecture: 'x86_64' }, { instance: 'c7g.8xlarge', architecture: 'ARM64 / Graviton' },
+              { instance: 'm6g.xlarge', architecture: 'ARM64 / Graviton2' },
               { instance: 'm7i.2xlarge', architecture: 'x86_64' }, { instance: 'm7g.2xlarge', architecture: 'ARM64 / Graviton' },
               { instance: 'r7i.2xlarge', architecture: 'x86_64' }, { instance: 'r7g.2xlarge', architecture: 'ARM64 / Graviton' },
             ]).map((item) => [item.instance, `${item.instance} · ${item.architecture}`]),
@@ -298,7 +314,7 @@ export function InferenceSizing({ onAsk }: { onAsk?: (prompt: string) => void })
               <SourceLink url={report.benchmark.sourceUrl} />
             </ExpandableSection>
           </SpaceBetween> },
-          { id: 'example', label: 'Podcast example', content: <PodcastEvidence example={report.guidance.example} /> },
+          ...(report.guidance.example ? [{ id: 'example', label: 'Recorded example', content: <SpeechEvidence example={report.guidance.example} /> }] : []),
         ]} />
         <ExpandableSection headerText="Assumptions and limits">
           <ul className="eddie-sizing-list">{report.limitations.map((text) => <li key={text}>{text}</li>)}</ul>

@@ -1,6 +1,6 @@
 ---
 name: route-cpu-batch
-description: Consider CPU EC2 or AWS Batch for offline open-weight inference before assuming a GPU. Use for Qwen3-TTS podcasts, embeddings, classification, reranking and low-concurrency work with completion deadlines.
+description: Consider CPU EC2 or AWS Batch for offline open-weight inference before assuming a GPU. Use for speech generation such as Magpie TTS, embeddings, classification, reranking and low-concurrency work with completion deadlines.
 ---
 # Consider CPU for offline inference
 
@@ -25,7 +25,7 @@ Check thread count, physical cores, NUMA placement and memory headroom. Extra pr
 
 AWS Batch provides queueing and compute-environment selection; EC2 workers offer direct control. Specify instance families, resource requirements, retry policy and whether workers may scale to zero. A scheduler accepting a job does not prove it can place or finish it.
 
-Read the [recorded CPU experiment](../../../catalog/podcast_example.json) through `estimate_inference` for a concrete illustration. Its observations belong to that exact configuration. They can inform an offline test, but do not establish that another model, processor or production load meets its deadline.
+Read the [recorded speech example](../../../catalog/speech_example.json) through `estimate_inference` as a concrete illustration. Its observations belong to that exact configuration. They can inform an offline test, but do not establish that another model, processor or production load meets its deadline.
 
 ## Decide and compare
 
@@ -38,4 +38,4 @@ Compare both workers over the same workload and schedule, including startup, idl
 - [AWS Batch compute environments](https://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html)
 - [Batch retry behavior](https://docs.aws.amazon.com/batch/latest/userguide/job_retries.html)
 - [CPU runtime and tuning considerations](https://docs.vllm.ai/en/latest/getting_started/installation/cpu.html)
-- [Qwen3-TTS exact model and interfaces](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base)
+- [Magpie TTS exact model and runtime files](https://huggingface.co/nvidia/magpie_tts_multilingual_357m)

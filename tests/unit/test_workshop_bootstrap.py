@@ -75,12 +75,12 @@ def test_download_rejects_mismatched_asset_and_closes_stream(tmp_path):
     assert not target.exists()
 
 
-def test_missing_checkpoint_is_a_failure_not_a_base_model_substitution(monkeypatch):
-    monkeypatch.delenv("CHECKPOINT_ZIP", raising=False)
-    monkeypatch.delenv("CHECKPOINT_SHA256", raising=False)
+def test_missing_speech_bundle_is_a_failure_not_a_silent_skip(monkeypatch):
+    monkeypatch.delenv("SPEECH_MODEL_ARCHIVE", raising=False)
+    monkeypatch.delenv("SPEECH_MODEL_SHA256", raising=False)
     session = Mock()
     with pytest.raises(ValueError, match="has not been packaged"):
-        bootstrap.load_checkpoint(
+        bootstrap.load_speech_model(
             session, account="123456789012", region="us-east-1", environment="lab")
     session.client.assert_not_called()
 

@@ -232,6 +232,9 @@ class Candidate:
     processing_regions: tuple[str, ...] = ()
     routing_verified: bool = False
     routing_issue: Optional[str] = None
+    compute_type: Optional[str] = None
+    memory_gib: Optional[Decimal] = None
+    hardware_source_url: Optional[str] = None
 
     @property
     def may_serve_cold_requests(self) -> bool:

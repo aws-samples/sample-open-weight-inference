@@ -1,3 +1,4 @@
+import { modelLabel } from '../components/DeploymentDetails';
 import { BrandName } from '../components/BrandName';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Alert from '@cloudscape-design/components/alert';
@@ -123,10 +124,10 @@ export function DeploymentsPage({ embedded = false }: { embedded?: boolean }) {
           selectedItems={selected ? [selected] : []}
           onSelectionChange={({ detail }) => setSelectedId(detail.selectedItems[0]?.jobId ?? null)}
           ariaLabels={{ tableLabel: 'Your test deployments', selectionGroupLabel: 'Select a deployment',
-            itemSelectionLabel: (_, item) => `Open ${item.modelRef ?? item.jobId}, started ${new Date(item.createdAt).toLocaleString()}` }}
+            itemSelectionLabel: (_, item) => `Open ${item.modelRef ? modelLabel(item.modelRef) : item.jobId}, started ${new Date(item.createdAt).toLocaleString()}` }}
           header={<Header variant={embedded ? 'h3' : 'h2'} counter={`(${deployments.length})`}>Your tests</Header>}
           columnDefinitions={[
-            { id: 'model', header: 'Model', cell: (item) => item.modelRef ?? targetLabel(item.target) },
+            { id: 'model', header: 'Model', cell: (item) => item.modelRef ? modelLabel(item.modelRef) : targetLabel(item.target) },
             { id: 'state', header: 'Status', cell: (item) => stateIndicator(item.state) },
             { id: 'started', header: 'Started', cell: (item) => new Date(item.createdAt).toLocaleString() },
             { id: 'where', header: 'Where', cell: (item) => `${targetLabel(item.target)} · ${item.region ?? 'See details'}` },

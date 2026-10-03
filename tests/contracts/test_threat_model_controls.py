@@ -131,7 +131,8 @@ def test_the_instance_type_ceiling_is_an_iam_condition_too(template):
     for statement in configs:
         condition = statement.get("Condition", {})
         allowed = condition.get("ForAllValues:StringEquals", {}).get("sagemaker:InstanceTypes")
-        assert allowed == ["ml.g5.2xlarge"], f"unexpected instance allow-list: {allowed}"
+        # One GPU size for the reviewed text recipes, one Graviton CPU size for speech.
+        assert allowed == ["ml.g5.2xlarge", "ml.m6g.xlarge"], f"unexpected instance allow-list: {allowed}"
         assert condition.get("Null", {}).get("sagemaker:InstanceTypes") == "false", (
             "without the Null check, a request omitting the key satisfies ForAllValues"
         )
@@ -172,6 +173,9 @@ def test_no_advisor_tool_can_create_approve_delete_or_spend():
     assert names == {
         "propose_case_patch", "evaluate_placement", "get_rates",
         "get_catalog", "inspect_model", "calculate_usage", "estimate_inference",
+        # Public Price List / offering-rate reads only. No owned plans, billing
+        # records or purchasing operations. Covered by test_tokenomics.py.
+        "compare_gpu_commitments",
         # Bundled guidance only: bounded queries, catalogue IDs, no network or
         # project/solver/deployment writes. Runtime authorization stays READ.
         "find_runbooks", "read_runbooks",

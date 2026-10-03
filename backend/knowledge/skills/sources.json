@@ -59,10 +59,10 @@
     "visibility": "public",
     "supports": "Prompt-cache eligibility, lifecycle and billing distinctions.",
     "limitations": "Verify current service support and account configuration; documentation is not workload evidence.",
-    "reviewedOn": "2026-09-28",
-    "reviewAfter": "2026-10-28",
-    "retrievedOn": "2026-09-28",
-    "retrievedContentSha256": "fd38389c4cf9daefcd7fda1f64179c027aaa5ab01c87798d47ab1709b68f0d7a"
+    "reviewedOn": "2026-10-03",
+    "reviewAfter": "2026-11-02",
+    "retrievedOn": "2026-10-03",
+    "retrievedContentSha256": "498dbca19180295c3e62e2628ef444ed6ed23c4121b60f4ed4b37853db0c8f29"
   },
   "aws-bedrock-catalog": {
     "title": "Models at a glance - Amazon Bedrock",
@@ -818,19 +818,6 @@
     "retrievedOn": "2026-09-28",
     "retrievedContentSha256": "de9353854db4e16af0c63f73502f7e463f03bdc4f3c98f3fcd377fe1c625ed08"
   },
-  "qwen-tts": {
-    "title": "Qwen/Qwen3-TTS-12Hz-1.7B-Base · Hugging Face",
-    "url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base",
-    "publisher": "Qwen",
-    "kind": "model-card",
-    "visibility": "public",
-    "supports": "Exact Qwen3-TTS Base identity and speech-generation interfaces.",
-    "limitations": "A model card is not a CPU performance benchmark or a comparative voice-quality study.",
-    "reviewedOn": "2026-09-28",
-    "reviewAfter": "2026-12-27",
-    "retrievedOn": "2026-09-28",
-    "retrievedContentSha256": "a0012ea706bf41d1ba14be6ea53c9e4b4972bf3dbc3ee4eec6d54553a98afacb"
-  },
   "sglang-paper": {
     "title": "[2312.07104] SGLang: Efficient Execution of Structured Language Model Programs",
     "url": "https://arxiv.org/abs/2312.07104",
@@ -1038,5 +1025,57 @@
     "reviewAfter": "2026-10-28",
     "retrievedOn": "2026-09-28",
     "retrievedContentSha256": "238a0cf5913ea3f86bafb37f1bca4b8719926ab2bc7b30fd686d0ad5adf2a77a"
+  },
+  "magpie-tts": {
+    "title": "nvidia/magpie_tts_multilingual_357m · Hugging Face",
+    "url": "https://huggingface.co/nvidia/magpie_tts_multilingual_357m",
+    "publisher": "NVIDIA",
+    "kind": "model-card",
+    "visibility": "public",
+    "supports": "Exact Magpie TTS identity, GGUF and .nemo artifacts, licence and the NeMo-Speech.cpp runtime path.",
+    "limitations": "A model card is not a CPU performance benchmark, a deployment recipe or a voice-quality study.",
+    "reviewedOn": "2026-10-03",
+    "reviewAfter": "2027-01-01",
+    "retrievedOn": "2026-10-03",
+    "retrievedContentSha256": "d656926127fbc7e6d802750fbe50e9586538aea1f1a1a98c57abcd3624d89cbc"
+  },
+  "anthropic-context-engineering": {
+    "title": "Effective context engineering for AI agents",
+    "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+    "publisher": "Anthropic",
+    "kind": "engineering-guidance",
+    "visibility": "public",
+    "supports": "Context selection, tool design, compaction and delegation tradeoffs for multi-turn agents.",
+    "limitations": "Design guidance, not a universal savings or quality result. Count every model call and evaluate the complete workload; provider-specific features need current documentation.",
+    "reviewedOn": "2026-10-03",
+    "reviewAfter": "2026-11-02",
+    "retrievedOn": "2026-10-03",
+    "retrievedContentSha256": "16972f795bbb1d0028af6141c577e3baba8c5b0a2886aaec60400f4f55d483ae"
+  },
+  "anthropic-effective-agents": {
+    "title": "Building effective agents",
+    "url": "https://www.anthropic.com/engineering/building-effective-agents",
+    "publisher": "Anthropic",
+    "kind": "engineering-guidance",
+    "visibility": "public",
+    "supports": "Evaluating workflows, routing, parallelism, stopping conditions and model/tool interactions against task success.",
+    "limitations": "Use architectural principles only. The article flags changing tooling; its examples do not establish cost or quality for another model or harness.",
+    "reviewedOn": "2026-10-03",
+    "reviewAfter": "2026-11-02",
+    "retrievedOn": "2026-10-03",
+    "retrievedContentSha256": "89b7651bd1b735884921eb0f88338476e53fd0a1b1be15be6d9a477f7d4719f7"
+  },
+  "aws-bedrock-quota-accounting": {
+    "title": "How tokens are counted in Amazon Bedrock",
+    "url": "https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-token-burndown.html",
+    "publisher": "AWS",
+    "kind": "service-documentation",
+    "visibility": "public",
+    "supports": "Distinguishing actual billed usage, token quota accounting and output-limit admission reservations.",
+    "limitations": "Model and endpoint scope matter. Verify current factors, API semantics and account quotas. Quota examples do not establish request concurrency or dollar cost.",
+    "reviewedOn": "2026-10-03",
+    "reviewAfter": "2026-11-02",
+    "retrievedOn": "2026-10-03",
+    "retrievedContentSha256": "7140398c164b1bb35d51ebce3b6f9f3bafb2b7547e76042183680b0cd3ac3e0c"
   }
 }

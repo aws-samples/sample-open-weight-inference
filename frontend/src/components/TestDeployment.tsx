@@ -64,7 +64,7 @@ export function TestDeployment({ capability, onStarted }: {
   onStarted: (job: DeploymentView) => void;
 }) {
   const { client } = useApp();
-  const { form, changeModel, inspectModel, inspecting } = useCase();
+  const { form, changeModel, inspectModel, inspecting, inspection } = useCase();
   const navigate = useNavigate();
   const [minutes, setMinutes] = useState('45');
   const [ceiling, setCeiling] = useState('5');
@@ -76,13 +76,19 @@ export function TestDeployment({ capability, onStarted }: {
   const [costAccepted, setCostAccepted] = useState(false);
   const recipe = capability.recipes?.[0];
   const isCheckpoint = form.sourceKind === 'checkpoint';
+  // The library manifest, not the model name, decides which reviewed recipe applies.
+  const speech = isCheckpoint && inspection?.checkpoint?.artifactFormat === 'gguf-speech-bundle'
+    && inspection.checkpoint.source === form.sourceLocation;
   const source = isCheckpoint ? (form.sourceLocation ?? '').trim() :
     form.hfRepo.trim().replace(/^https:\/\/huggingface.co\//, '').replace(/\/$/, '');
   const regions = form.permittedRegions.split(',').map((r) => r.trim()).filter(Boolean);
   const region = regions.length === 1 ? regions[0] : recipe?.region ?? '';
-  const supported = isCheckpoint
+  const supported = speech
+    ? !!form.artifactDigest && !!capability.speechRecipe?.available
+    : isCheckpoint
     ? !!form.artifactDigest && !!capability.checkpointRecipe?.available
-    : recipe?.models.includes(source) ?? false;
+    : !!recipe?.models.includes(source)
+      && (recipe.available ?? capability.checkpointRecipe?.available ?? false);
   const regionAllowed = !!recipe && regions.includes(recipe.region) && region === recipe.region;
   const formKey = canonical(form as unknown as Record<string, unknown>);
   const keyRef = useRef(formKey);
@@ -185,12 +191,16 @@ export function TestDeployment({ capability, onStarted }: {
                 {source ? `The model you selected (${source}) is not available for deployment in this installation yet.` : 'Choose a model to try.'}
               </Box>
               <Box variant="small" color="text-body-secondary">
-                This installation can run short tests of Qwen2.5 0.5B and 1.5B Instruct.
-                {capability.checkpointRecipe?.available ? ' It also accepts inspected, complete Qwen2.5 fine-tuned checkpoints from your private library.' : ''}
-                {' '}Answer quality still needs evaluation.
+                {[
+                  capability.checkpointRecipe?.available
+                    ? 'This installation can run short tests of Qwen2.5 0.5B and 1.5B Instruct, and of complete Qwen2.5 fine-tuned checkpoints from your private library.' : '',
+                  capability.speechRecipe?.available
+                    ? 'It can run a short CPU test of the reviewed Magpie speech bundle from your model library.' : '',
+                ].filter(Boolean).join(' ') || 'No reviewed test recipe is configured in this installation.'}
+                {' '}Quality still needs evaluation.
               </Box>
               <SpaceBetween direction="horizontal" size="xs">
-                {form.modelStage !== 'fine-tuned' ? <Button onClick={selectSmallModel} loading={inspecting}>Choose Qwen2.5 0.5B for this project</Button> : null}
+                {form.modelStage !== 'fine-tuned' && capability.checkpointRecipe?.available ? <Button onClick={selectSmallModel} loading={inspecting}>Choose Qwen2.5 0.5B for this project</Button> : null}
                 <Button onClick={() => navigate(`/requirements?case=${encodeURIComponent(form.caseId)}&view=models${form.modelStage === 'fine-tuned' ? '&source=company' : ''}`)}>
                   {form.modelStage === 'fine-tuned' ? 'Choose your fine-tuned checkpoint' : 'Explore models'}
                 </Button>
@@ -199,14 +209,16 @@ export function TestDeployment({ capability, onStarted }: {
           ) : (
             <>
               <Box fontWeight="bold">{isCheckpoint ? form.modelName : source}</Box>
-              {isCheckpoint ? <Box variant="small">This test uses the inspected fine-tuned checkpoint. Its base model will not be substituted.</Box> : null}
+              {speech ? <Box variant="small">This test uses the inspected speech bundle unchanged: model, codec and tokenizer files at their approved versions.</Box>
+                : isCheckpoint ? <Box variant="small">This test uses the inspected fine-tuned checkpoint. Its base model will not be substituted.</Box> : null}
               {!regionAllowed ? (
                 <Alert type="info" header="This Region is not available for deployment here"
                   action={<Button onClick={() => navigate('/requirements?view=needs')}>Review your Region</Button>}>
                   Your project permits {regions.join(', ') || 'no Region yet'}. This installation deploys in {recipe?.region}.{' '}
                   <BrandName /> will not change your Region automatically.
                 </Alert>
-              ) : <Box variant="small" color="text-body-secondary">Amazon SageMaker · {region} · one GPU instance</Box>}
+              ) : <Box variant="small" color="text-body-secondary">Amazon SageMaker · {region} · {speech
+                ? `one CPU instance (${capability.speechRecipe?.instanceType ?? 'Graviton'})` : 'one GPU instance'}</Box>}
               <ColumnLayout columns={2}>
                 <FormField label="How long should the test last?" description="Includes preparation time. Removal starts at the end of this period.">
                   <Select ariaLabel="Test duration" selectedOption={PERIODS.find((p) => p.value === minutes) ?? null}
@@ -250,7 +262,9 @@ export function TestDeployment({ capability, onStarted }: {
                 <Box variant="small">Private model network · sign-in required to invoke</Box></div>
             </ColumnLayout>
             <Box>
-              Model: <strong>{review.model.source}</strong>. This creates a trial; it does not certify answer quality or response-time targets.
+              Model: <strong>{review.model.name ?? review.model.source}</strong>. {speech
+                ? 'This creates a trial that checks the model loads and returns complete audio; it does not evaluate speech quality or throughput.'
+                : 'This creates a trial; it does not certify answer quality or response-time targets.'}
             </Box>
             {plan!.blockers.length ? (
               <Alert type="warning" header="Resolve these checks before starting">

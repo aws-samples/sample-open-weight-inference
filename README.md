@@ -19,15 +19,23 @@ into one workspace.
 - **Understand:** open the decision map to see costs, exclusions and missing
   evidence. An optional Advisor helps when you get stuck.
 - **Size:** explore CPU or GPU experiments with model memory, traffic units,
-  explicit assumptions and a recorded CPU podcast example.
+  explicit assumptions and a recorded CPU speech example.
+- **Tokenomics:** compare public On-Demand and 1-year/3-year Savings Plan costs
+  for GPU pools, including upfront payments and the full commitment.
 - **Evaluate:** score supplied example answers and keep performance evidence
   separate from estimates.
 - **Try and remove:** approve a supported, budget- and time-limited SageMaker
   trial, send authenticated requests, and track resource removal.
 
 Saved projects let you move freely between these steps. Missing measurements stay
-**unverified**. Deployment currently supports a bounded SageMaker recipe;
-broader deployment recipes and automated performance benchmarks are still in progress.
+**unverified**.
+
+A **deployment recipe** is the code and configuration that packages a model,
+starts its serving software, and runs an inference trial with a budget and time
+limit. Included recipes support small Qwen2.5 text models, compatible fine-tuned
+Qwen2 checkpoints, and Magpie speech on CPU. Inspecting a model does not
+automatically make it deployable. See [Deployment recipes](docs/adding-a-deployment-recipe.md)
+to enable an included recipe or add support for another model.
 
 The Advisor uses [skill files](backend/knowledge/skills/) for decision methods and
 [AWS Knowledge MCP](docs/advisor-knowledge.md) for current AWS documentation. Prices
@@ -75,7 +83,8 @@ authenticated API requests go directly to AgentCore.
 | Deploy, sign in, or remove the application | [Getting started](docs/getting-started.md) |
 | Understand hosting paths and deployment decisions | [Architecture](docs/architecture-overview.md), [decision map](docs/decision-map.md) |
 | Bring your own fine-tuned model | [Fine-tuned checkpoints](docs/fine-tuned-checkpoints.md) |
-| Size compute and compare hosting costs | [CPU and GPU planning](docs/compute-planning.md), [cost model](docs/cost-model.md) |
+| Enable trials or support another model | [Deployment recipes](docs/adding-a-deployment-recipe.md) |
+| Size compute and compare hosting costs | [CPU and GPU planning](docs/compute-planning.md), [cost model](docs/cost-model.md), [Tokenomics](docs/tokenomics.md) |
 | Understand Advisor sources and decision methods | [AWS documentation MCP](docs/advisor-knowledge.md), [inference skills](docs/inference-runbooks.md) |
 | Review access controls and security settings | [Security considerations](docs/security-posture.md) |
 | Develop locally, test, or contribute | [Contributing](CONTRIBUTING.md) |

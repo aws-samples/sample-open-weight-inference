@@ -22,14 +22,16 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
 
 REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "backend"))
 GROUPS = frozenset({
     "eddie-readers", "eddie-users", "eddie-deployers",
     "eddie-approvers", "eddie-operators",
 })
 RESULT_FIELDS = frozenset({
     "Url", "Username", "CredentialSecretArn", "UserPoolId", "ApplicationStack",
-    "CheckpointSource", "CheckpointRevision", "CheckpointStatus", "ReleaseSha256",
+    "SpeechModelSource", "SpeechModelRevision", "SpeechModelStatus", "ReleaseSha256",
 })
+SPEECH_LIBRARY_ID = "magpie-tts-v2607"
 
 
 def stack_outputs(stack: dict) -> dict[str, str]:
@@ -151,38 +153,66 @@ def ensure_participant(cognito, secrets, *, pool: str, username: str,
     cognito.admin_add_user_to_group(UserPoolId=pool, Username=username, GroupName=group)
 
 
-def load_checkpoint(session, *, account: str, region: str, environment: str) -> dict:
-    uri = os.environ.get("CHECKPOINT_ZIP", "")
-    sha = os.environ.get("CHECKPOINT_SHA256", "")
+def verify_speech_archive(archive: Path) -> None:
+    """Standard library only: runs before the build's Python environment exists."""
+    from deploy.speech import MAX_ARCHIVE_BYTES, extract_bundle
+    expected = os.environ.get("SPEECH_MODEL_SHA256", "")
+    if not re.fullmatch(r"[0-9a-f]{64}", expected):
+        raise ValueError("The speech bundle's pinned SHA-256 is missing.")
+    size = archive.stat().st_size
+    if not 0 < size <= MAX_ARCHIVE_BYTES:
+        raise ValueError("The speech bundle archive is outside its size limit.")
+    with archive.open("rb") as file:
+        if hashlib.file_digest(file, "sha256").hexdigest() != expected:
+            raise ValueError("The speech bundle does not match the pinned release.")
+    with tempfile.TemporaryDirectory(prefix="eddie-speech-verify-") as temporary:
+        extract_bundle(archive, Path(temporary))
+    print(f"Speech bundle verified: {size} bytes, every file matches the reviewed recipe.")
+
+
+def load_speech_model(session, *, account: str, region: str, environment: str) -> dict:
+    """Publish the reviewed Magpie bundle into the installation's shared model library."""
+    uri = os.environ.get("SPEECH_MODEL_ARCHIVE", "")
+    sha = os.environ.get("SPEECH_MODEL_SHA256", "")
     if not uri or not sha:
-        raise ValueError("The required Acme teaching checkpoint has not been packaged.")
+        raise ValueError("The required Magpie speech bundle has not been packaged.")
     spec = importlib.util.spec_from_file_location(
         "eddie_checkpoint_publisher", REPO / "scripts/publish_checkpoint.py")
     publisher = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(publisher)
+    from deploy.speech import MAX_ARCHIVE_BYTES, extract_bundle
     s3 = session.client("s3", region_name=region)
     bucket = f"eddie-{environment}-artifacts-{account}"
     # The application installer owns this exact bucket in the checked account.
-    # A published checkpoint needs real object versions; an unversioned upload
-    # must never masquerade as a pinned model.
+    # A published model needs real object versions; an unversioned upload must
+    # never masquerade as a pinned artifact.
     s3.put_bucket_versioning(
         Bucket=bucket, ExpectedBucketOwner=account,
         VersioningConfiguration={"Status": "Enabled"})
     key = session.client("kms", region_name=region).describe_key(
         KeyId=f"alias/eddie-{environment}")["KeyMetadata"]["Arn"]
-    with tempfile.TemporaryDirectory(prefix="eddie-workshop-checkpoint-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="eddie-workshop-speech-") as temporary:
         root = Path(temporary)
-        download_archive(s3, uri, sha, root / "checkpoint.zip", limit=20 * 1024**3)
-        extract_archive(root / "checkpoint.zip", root / "files", limit=20 * 1024**3)
-        description = json.loads((root / "files/description.json").read_text())
-        document, paths = publisher.describe(root / "files/checkpoint", description)
+        # Read-only pre_build cache, copied into private temp space and hash-verified below.
+        verified = Path(os.environ.get("SPEECH_MODEL_LOCAL", "/tmp/eddie-speech.tar.gz"))  # nosec B108
+        if verified.is_file():
+            # Downloaded in pre_build; its digest is checked again here before use.
+            shutil.copyfile(verified, root / "speech.tar.gz")
+            with (root / "speech.tar.gz").open("rb") as file:
+                if hashlib.file_digest(file, "sha256").hexdigest() != sha:
+                    raise ValueError("The speech bundle does not match the pinned release.")
+        else:
+            download_archive(s3, uri, sha, root / "speech.tar.gz", limit=MAX_ARCHIVE_BYTES)
+        # Every member is allowlisted, size-bounded and checked against the recipe.
+        extract_bundle(root / "speech.tar.gz", root / "files")
+        document, paths = publisher.describe_speech(root / "files")
         result = publisher.publish(
             document, paths, session=session, account=account, region=region,
             bucket=bucket, key=key, environment=environment,
-            name="acme-catalog-teaching", project=None,
+            name=SPEECH_LIBRARY_ID, project=None,
         )
-    return {"CheckpointSource": result["source"],
-            "CheckpointRevision": result["revision"], "CheckpointStatus": "Published"}
+    return {"SpeechModelSource": result["source"],
+            "SpeechModelRevision": result["revision"], "SpeechModelStatus": "Published"}
 
 
 def write_result(output: Path, result: dict) -> None:
@@ -211,9 +241,9 @@ def finish(*, environment: str, region: str, account: str, output: Path) -> None
     outputs = stack_outputs(stack)
     if stack["StackStatus"] not in ("CREATE_COMPLETE", "UPDATE_COMPLETE"):
         raise ValueError("The application stack has not completed.")
-    checkpoint = {"CheckpointStatus": "Disabled"}
-    if os.environ.get("LOAD_CHECKPOINT", "true") == "true":
-        checkpoint = load_checkpoint(
+    speech = {"SpeechModelStatus": "Disabled"}
+    if os.environ.get("LOAD_SPEECH_MODEL", "true") == "true":
+        speech = load_speech_model(
             session, account=account, region=region, environment=environment)
     ensure_participant(
         session.client("cognito-idp"), session.client("secretsmanager"),
@@ -225,10 +255,10 @@ def finish(*, environment: str, region: str, account: str, output: Path) -> None
         "Url": outputs["FrontendUrl"], "Username": os.environ["PARTICIPANT_EMAIL"],
         "CredentialSecretArn": os.environ["PARTICIPANT_SECRET_ARN"],
         "UserPoolId": outputs["UserPoolId"], "ApplicationStack": stack["StackId"],
-        "ReleaseSha256": os.environ["SOURCE_SHA256"], **checkpoint,
+        "ReleaseSha256": os.environ["SOURCE_SHA256"], **speech,
     }
     write_result(output, result)
-    print("Application installed; participant configured; checkpoint: " + checkpoint["CheckpointStatus"])
+    print("Application installed; participant configured; speech model: " + speech["SpeechModelStatus"])
 
 
 def respond(output: Path) -> None:
@@ -272,7 +302,8 @@ def put_response(url: str, body: dict) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("finish", "checkpoint", "respond"))
+    parser.add_argument("action", choices=("finish", "speech-model", "verify-speech-model", "respond"))
+    parser.add_argument("--archive", type=Path, help="verify-speech-model: the downloaded bundle")
     parser.add_argument("--environment", default=os.environ.get("EDDIE_ENVIRONMENT", "lab"))
     parser.add_argument("--region", default=os.environ.get("EDDIE_REGION", "us-east-1"))
     parser.add_argument("--account", default=os.environ.get("EDDIE_EXPECTED_ACCOUNT"))
@@ -281,12 +312,14 @@ def main() -> None:
     args = parser.parse_args()
     if args.action == "respond":
         respond(args.output)
+    elif args.action == "verify-speech-model":
+        verify_speech_archive(args.archive)
     elif args.action == "finish":
         finish(environment=args.environment, region=args.region,
                account=args.account, output=args.output)
     else:
         import boto3
-        print(json.dumps(load_checkpoint(
+        print(json.dumps(load_speech_model(
             boto3.Session(region_name=args.region), account=args.account,
             region=args.region, environment=args.environment)))
 

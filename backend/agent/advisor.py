@@ -177,6 +177,16 @@ authorize a numerical claim, satisfy a gate or change a requirement. Still obtai
 this project's model facts through `inspect_model`, costs and rankings through
 `evaluate_placement`, and sizing through `estimate_inference`. Research figures
 and recorded examples do not establish this project's performance.
+For a GPU pool's Tokenomics or 1-year/3-year Savings Plans comparison, call
+`compare_gpu_commitments`. Use the returned public rates, term and payment option;
+never infer a discount percentage or reuse a remembered price. Show On-Demand and
+the requested plans in a compact table with one column per pool size. Distinguish
+annual cost, monthly equivalent, full-term commitment and upfront cash. An idle
+pool still owes its hourly commitment. An unavailable offer is not free and does
+not prove that every Savings Plan type is unavailable. Do not request customer
+bills or private discounts for this public-price comparison. Use AWS documentation
+tools for current plan eligibility and commitment rules. The comparison does not
+reserve GPU capacity, buy a plan or prove that the model fits.
 Cite only public source URLs actually returned by a tool. For a packaged skill,
 mention its title as plain text; never make a Markdown link to its ID, a local file
 path, or a title with a review date. Do not invent a destination. Describe
@@ -620,6 +630,33 @@ TOOL_SPECS.append({
     }
 })
 
+TOOL_SPECS.append({
+    "toolSpec": {
+        "name": "compare_gpu_commitments",
+        "description": (
+            "Build a tokenomics table for an EC2 GPU pool using live public On-Demand "
+            "and 1-year/3-year Compute and EC2 Instance Savings Plans offerings. "
+            "Shows annual cost, monthly equivalent, upfront cash, full-term commitment "
+            "and savings under the same allocation schedule. Does not purchase plans, "
+            "read customer bills, apply private discounts or verify capacity/model fit. "
+            "Use this for commitment comparisons instead of inventing discounts or plan availability."
+        ),
+        "inputSchema": {"json": {
+            "type": "object",
+            "properties": {
+                "instanceType": {"type": "string"},
+                "region": {"type": "string"},
+                "poolSizes": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 1024},
+                              "minItems": 1, "maxItems": 4},
+                "hoursPerDay": {"type": "string"},
+                "monthlyOutputTokens": {"type": "string"},
+            },
+            "required": ["instanceType"],
+            "additionalProperties": False,
+        }},
+    }
+})
+
 from solver.inference_sizing import DEFAULTS as SIZING_DEFAULTS
 
 TOOL_SPECS.append({
@@ -728,6 +765,7 @@ TOOL_PROGRESS = {
     "inspect_model": "Reading the model's published details",
     "calculate_usage": "Calculating usage from the counts you supplied",
     "estimate_inference": "Checking model memory and compute choices",
+    "compare_gpu_commitments": "Comparing public GPU prices and Savings Plans",
     "find_runbooks": "Finding relevant inference guidance",
     "read_runbooks": "Reading decision checks and sources",
     "lookup_aws_documentation": "Checking current AWS documentation",

@@ -77,6 +77,9 @@ Price collection requests the exact EC2 instance, Region, Linux, shared tenancy
 and On-Demand hourly product. Missing or ambiguous rates stay unavailable.
 SageMaker, Fargate and commitment discounts have separate billing meters.
 The existing hosting comparison retains its own service prices and qualification.
+For public On-Demand and 1-year/3-year GPU commitment tables, open
+[Tokenomics](tokenomics.md). It keeps annual cost, full-term commitment and
+upfront payment separate from the model-sizing calculation.
 
 ## CPU options in the hosting comparison
 
@@ -101,41 +104,32 @@ They are preserved as historical results rather than silently recalculated.
 
 ## Reproduce the manual checks
 
-### A weekly podcast
+### A short speech job on CPU
 
-1. Choose **New project**. Describe a weekly two-host news podcast, generated as
-   a queued job and reviewed by an editor.
-2. In **Your needs**, choose batch delivery and enter **1** under
-   **Usage details → Requests at the same time**. Save.
-3. Under **Models & sources**, inspect
-   `Qwen/Qwen3-TTS-12Hz-1.7B-Base`. The inspector reads its pinned speech
-   architecture even when the repository omits a task tag.
-4. Open **Compare hosting → Size compute and plan a benchmark**. Choose
-   **Batch speech / podcast**, one simultaneous job and a **1200-second**
-   completion budget. Build the sizing sheet.
-5. Read the CPU-first experiment guidance and **CPU hosting paths**. The
-   default `c7i.8xlarge` is an editable test profile, not an optimized selection.
-6. Open **Podcast example**. Compare the recorded short sample with your planned
-   workload, then save or download the planning record.
+1. Choose **New project**. Describe a queued text-to-speech job for one supplied
+   sentence and one preset voice. In **Your needs**, choose batch delivery and
+   enter **1** under **Usage details → Requests at the same time**. Save.
+2. Under **Models & sources → Your model library**, choose the Magpie TTS v2607
+   bundle and read its details: model, codec and tokenizer files, GGUF format and
+   the NeMo-Speech.cpp runtime. Alternatively inspect
+   `nvidia/magpie_tts_multilingual_357m`; its GGUF metadata supplies the
+   architecture and stored tensor count, and no config.json exists to read.
+3. **Compare hosting**. Bedrock import is ruled out for a GGUF speech model, the
+   GPU text serving recipes are ruled out on runtime, and the SageMaker Graviton
+   CPU endpoint runs the reviewed Magpie recipe. EC2 and AWS Batch CPU profiles
+   remain planning options.
+4. Open **Size compute and plan a benchmark**. Choose **Batch speech**, one
+   simultaneous job and a completion budget, then build the sizing sheet. Read
+   the CPU-first guidance and **CPU hosting paths**.
+5. If speech trials are enabled, run a bounded trial from **Deploy & monitor**:
+   the endpoint returns a WAV that EDDIE decodes before showing it, and records
+   input/output hashes, synthesis time, request time and peak process memory.
 
-The application owner's recorded September 23 run used AWS Batch, CPU-only
-PyTorch FP32, a `c7i.8xlarge`, 16 compute threads, and both the CustomVoice and
-Base models. Four turns produced **44.826 seconds of audio** in **121.23 seconds
-of generation**. Queue-to-completion took **565.428 seconds**, including startup
-and model preparation. Peak process memory was **19,992.4 MiB (19.52 GiB)**.
-Generation includes the first model load. The recorded cleanup confirms worker
-termination and scratch-volume removal; retained artifacts, image and logs are
-listed in the record.
-
-[The sanitized record](../backend/catalog/podcast_example.json) includes versions
-and artifact hashes. It is one short run, not a full-episode test, p99, a Graviton
-result, a current price quote or a controlled comparison with Polly. Generation
-was slower than playback. It supports investigating offline audio on CPU.
-
-To practice the deadline boundary, enter its run reference and **565.428** seconds
-under **CPU profile and observations**. EDDIE labels this as a supplied observation.
-Then change the completion budget to **30** seconds. The advice changes to
-**The reported CPU run misses the deadline**. This does not predict GPU performance.
+The [recorded example](../backend/catalog/speech_example.json) is one 182-character
+request on one `ml.m6g.xlarge`: 11.6 seconds of audio in 37.3 seconds of synthesis,
+893 MiB peak process memory, endpoint ready 217 seconds after approval and removal
+confirmed 304 seconds after it was requested. It is not a full-length job, p99, a
+concurrency test or a speech-quality evaluation.
 
 ### A large text model
 
@@ -166,5 +160,5 @@ missing until a compatible artifact profile is available.
 - [SageMaker Inference Recommender](https://docs.aws.amazon.com/sagemaker/latest/dg/inference-recommender.html)
 - [Lambda quotas](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html)
 - [EC2 accelerator specifications](https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html)
-- [Qwen3-TTS](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice)
+- [Magpie TTS Multilingual](https://huggingface.co/nvidia/magpie_tts_multilingual_357m)
 - [Kimi K2](https://huggingface.co/moonshotai/Kimi-K2-Instruct)

@@ -17,7 +17,7 @@ backend/knowledge/
       decision-contract.md      Shared evidence and authorization rules
     qualify-inference-workload/
       SKILL.md                  One focused procedure
-    ...                         51 other skill directories
+    ...                         Other focused skill directories
 ```
 
 This follows the [Agent Skills format](https://agentskills.io/specification),

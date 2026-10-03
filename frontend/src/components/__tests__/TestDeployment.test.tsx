@@ -21,7 +21,7 @@ const initialForm = {
 const capability = {
   targets: [{ target: 'SAGEMAKER_REALTIME', label: 'SageMaker', available: true, reason: 'Installed' }],
   canCreatePlans: true, note: 'Trials only',
-  recipes: [{ id: 'recipe', version: '1', models: [initialForm.hfRepo], region: 'us-east-1',
+  recipes: [{ id: 'recipe', version: '1', available: true, models: [initialForm.hfRepo], region: 'us-east-1',
     instanceType: 'ml.g5.2xlarge', maximumLifetimeMinutes: 60 }],
 };
 

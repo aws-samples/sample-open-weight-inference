@@ -22,8 +22,8 @@ arithmetic examples in [cost-scenarios.json](../examples/cost-scenarios.json).
 It includes retrieval dates, SKUs and source catalog hashes. These are historical
 public list rates, not current quotes or private account invoices.
 
-The [sanitized podcast record](../backend/catalog/podcast_example.json) documents
-one CPU experiment. It supports offline feasibility investigation for that
+The [recorded speech example](../backend/catalog/speech_example.json) documents one
+bounded CPU trial of the reviewed Magpie speech recipe. It supports functional feasibility for that
 configuration, not real-time performance, production throughput or a controlled
 quality comparison. See [compute-planning.md](compute-planning.md) for its limits.
 

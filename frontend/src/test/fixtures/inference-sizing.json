@@ -78,7 +78,7 @@
             "value": "14.185191",
             "unit": "GiB",
             "basis": "REGISTRY",
-            "explanation": "Tensor elements \u00d7 storage bytes. This is a floor: the runtime may expand BF16 or quantized weights, especially on CPU.",
+            "explanation": "Tensor elements × storage bytes. This is a floor: the runtime may expand BF16 or quantized weights, especially on CPU.",
             "formula": "Sum of bytes across each published tensor dtype",
             "sourceUrl": "https://huggingface.co/model"
           },
@@ -88,8 +88,8 @@
             "value": "56",
             "unit": "KiB",
             "basis": "CALCULATED",
-            "explanation": "Key and value \u00d7 layers \u00d7 KV heads \u00d7 head width \u00d7 bytes per element",
-            "formula": "Key and value \u00d7 layers \u00d7 KV heads \u00d7 head width \u00d7 bytes per element",
+            "explanation": "Key and value × layers × KV heads × head width × bytes per element",
+            "formula": "Key and value × layers × KV heads × head width × bytes per element",
             "sourceUrl": "https://huggingface.co/config"
           },
           {
@@ -98,8 +98,8 @@
             "value": "0.21875",
             "unit": "GiB",
             "basis": "CALCULATED",
-            "explanation": "4,096 cached tokens \u00d7 1 simultaneous sequences; BF16 cache.",
-            "formula": "Cache bytes per token \u00d7 cached tokens \u00d7 concurrent sequences",
+            "explanation": "4,096 cached tokens × 1 simultaneous sequences; BF16 cache.",
+            "formula": "Cache bytes per token × cached tokens × concurrent sequences",
             "sourceUrl": "https://huggingface.co/config"
           },
           {
@@ -109,7 +109,7 @@
             "unit": "GiB",
             "basis": "ASSUMED",
             "explanation": "15% for activations, workspaces and runtime. Validate observed peak memory.",
-            "formula": "(Weights + cache) \u00d7 runtime allowance",
+            "formula": "(Weights + cache) × runtime allowance",
             "sourceUrl": null
           },
           {
@@ -128,7 +128,7 @@
             "value": "14.185191",
             "unit": "GiB",
             "basis": "REGISTRY",
-            "explanation": "7,615,616,512 stored elements \u00d7 2 bytes per element.",
+            "explanation": "7,615,616,512 stored elements × 2 bytes per element.",
             "formula": null,
             "sourceUrl": "https://huggingface.co/model"
           }
@@ -175,7 +175,7 @@
             "unit": "tokens/s",
             "basis": "CALCULATED",
             "explanation": "Average over the complete comparison period.",
-            "formula": "Input tokens \u00f7 hours \u00f7 3,600",
+            "formula": "Input tokens ÷ hours ÷ 3,600",
             "sourceUrl": null
           },
           {
@@ -185,7 +185,7 @@
             "unit": "tokens/s",
             "basis": "CALCULATED",
             "explanation": "Average demand does not describe bursts.",
-            "formula": "Output tokens \u00f7 hours \u00f7 3,600",
+            "formula": "Output tokens ÷ hours ÷ 3,600",
             "sourceUrl": null
           },
           {
@@ -195,7 +195,7 @@
             "unit": "tokens/s",
             "basis": "NOT_AVAILABLE",
             "explanation": "A planning normalization that depends on the supplied prefill ratio and peak multiplier.",
-            "formula": "(Output/s + input/s \u00f7 prefill speed ratio) \u00d7 peak multiplier",
+            "formula": "(Output/s + input/s ÷ prefill speed ratio) × peak multiplier",
             "sourceUrl": null
           }
         ]
@@ -251,7 +251,7 @@
             "unit": "GiB",
             "basis": "CALCULATED",
             "explanation": "Includes repeated cache where the attention layout requires it.",
-            "formula": "(Weights per GPU + cache per GPU) \u00d7 (1 + allowance) \u00d7 GPUs",
+            "formula": "(Weights per GPU + cache per GPU) × (1 + allowance) × GPUs",
             "sourceUrl": null
           },
           {
@@ -297,7 +297,7 @@
             "unit": "tokens/s",
             "basis": "MODELED",
             "explanation": "Analytical roofline using dense BF16 compute and memory bandwidth. This is not measured throughput.",
-            "formula": "Min(compute \u00f7 (2 \u00d7 active parameters), bandwidth \u00d7 batch \u00f7 bytes read per decode step)",
+            "formula": "Min(compute ÷ (2 × active parameters), bandwidth × batch ÷ bytes read per decode step)",
             "sourceUrl": "https://www.nvidia.com/en-us/data-center/l4/"
           },
           {
@@ -307,7 +307,7 @@
             "unit": "copies",
             "basis": "NOT_AVAILABLE",
             "explanation": "One replica per node for fault isolation. Requires a prefill ratio; final capacity needs a load test.",
-            "formula": "Max(availability floor, ceil(peak demand \u00f7 (decode ceiling \u00d7 utilization)))",
+            "formula": "Max(availability floor, ceil(peak demand ÷ (decode ceiling × utilization)))",
             "sourceUrl": null
           },
           {
@@ -337,7 +337,7 @@
             "unit": "USD",
             "basis": "NOT_AVAILABLE",
             "explanation": "720 hours. Compute only; storage, networking and other charges are additional.",
-            "formula": "Hourly rate \u00d7 comparison hours",
+            "formula": "Hourly rate × comparison hours",
             "sourceUrl": null
           },
           {
@@ -347,7 +347,7 @@
             "unit": "USD",
             "basis": "NOT_AVAILABLE",
             "explanation": "An estimate for the modeled replica floor. It is not the hosting comparison's recommendation.",
-            "formula": "Nodes \u00d7 hours \u00d7 hourly node rate",
+            "formula": "Nodes × hours × hourly node rate",
             "sourceUrl": null
           },
           {
@@ -434,51 +434,60 @@
       ],
       "sizeGuidance": [
         "There is no universal parameter-count cutoff. Measure peak resident memory, supported operations and time per item.",
-        "A rough weight-only floor is parameters \u00d7 bytes per parameter: FP32 uses 4, BF16/FP16 2, INT8 1. Runtime expansion, caches, audio decoders and simultaneous models add memory.",
+        "A rough weight-only floor is parameters × bytes per parameter: FP32 uses 4, BF16/FP16 2, INT8 1. Runtime expansion, caches, audio decoders and simultaneous models add memory.",
         "For scale: 1.7B FP32 weights alone need about 6.3 GiB; 7B need 26.1 GiB; 70B need 260.8 GiB. Halving storage precision only halves that floor if the CPU runtime actually uses it without expanding the weights.",
         "Large generative models, long context, high concurrency or a missed deadline can make CPU impractical even when RAM is sufficient."
       ],
       "graviton": "Graviton is an ARM CPU option, not a GPU. Build an ARM64 image with compatible libraries and kernels, then compare completed work per dollar against x86. Do not reuse an x86 timing or assume a fixed speedup.",
       "example": {
-        "id": "qwen-tts-cpu-20260923",
-        "title": "A podcast generated on CPU",
+        "id": "magpie-tts-v2607-sagemaker-m6g-20261003",
+        "title": "A short speech sample on a Graviton2 CPU endpoint",
         "basis": "RECORDED_EXAMPLE",
-        "recordedAt": "2026-09-23T22:19:05+00:00",
-        "description": "One recorded AWS Batch run produced a four-turn, two-voice sample. This is an example from the application owner's experiment, not a benchmark of your project.",
-        "model": "Qwen3-TTS 12Hz 1.7B CustomVoice and Base",
-        "modelSource": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
-        "instance": "c7i.8xlarge",
+        "recordedAt": "2026-10-03T08:35:19+00:00",
+        "description": "One bounded EDDIE trial generated one sentence with one preset voice. This is an example from a test installation, not a benchmark of your project.",
+        "model": "NVIDIA Magpie TTS Multilingual 357M (v2607 F16 GGUF)",
+        "modelSource": "https://huggingface.co/nvidia/magpie_tts_multilingual_357m",
+        "architecture": "magpietts",
+        "runtime": "NeMo-Speech.cpp 0f706e43 (CPU, armv8.2-a+fp16+dotprod)",
+        "hosting": "Amazon SageMaker real-time endpoint",
+        "instance": "ml.m6g.xlarge",
         "region": "us-east-1",
-        "vcpus": 32,
-        "memoryGiB": 64,
-        "device": "cpu",
-        "dtype": "float32",
-        "threads": 16,
-        "interopThreads": 2,
-        "audioSeconds": 44.826,
-        "generationSeconds": 121.23,
-        "startupSeconds": 192.93,
-        "assetLoadSeconds": 245.92,
-        "endToEndSeconds": 565.428,
-        "realTimeFactor": 2.704,
-        "peakProcessMiB": 19992.4,
+        "vcpus": 4,
+        "memoryGiB": 16,
+        "cpuArchitecture": "ARM64 / Graviton2",
+        "threads": 4,
+        "inputCharacters": 182,
+        "audioSeconds": 11.61,
+        "synthesisSeconds": 37.333,
+        "requestSeconds": 37.517,
+        "realTimeFactor": 3.22,
+        "peakProcessMiB": 893.4,
+        "startupSeconds": 217,
+        "hourlyUsd": "0.1848",
+        "trialCostUsd": "0.03",
+        "cleanup": {
+          "verifiedAt": "2026-10-03T08:40:49+00:00",
+          "endpointRemoved": true,
+          "stagedFilesRemoved": true,
+          "scope": "Endpoint, endpoint configuration, model, staged files and log group confirmed removed 304 seconds after removal was requested; checked again directly in AWS."
+        },
         "versions": {
-          "qwen-tts": "0.1.1",
-          "torch": "2.14.0",
-          "transformers": "4.57.3",
-          "accelerate": "1.12.0"
+          "bundle": "magpie-tts-v2607",
+          "nemo-speech-tts": "0.1.0 (source 0f706e43)",
+          "ggml": "c03b4e2b",
+          "image": "Amazon Linux 2023 minimal, linux/arm64"
         },
         "artifactHashes": {
-          "modelArchive": "53abad247f69028b0a1c99e2417ca6571a116b89e412d16fb182a4e54a60268a",
-          "input": "5ae89a77546d481549eb96e5bc06c722831d92389b6359b1e0ed352a3bb42c4f",
-          "audio": "669d3c15670f4a48be9619d442edadafa1e3168e8145f5c4b70770815485f597"
+          "bundleArchive": "9034a43de72ea097a2ba59571ef85538a3f81500a048d133254871652bb8bad5",
+          "input": "5173263813e0b1ac67c1b767cb5603585a14ba3773f9388bf0be1e2186b60666",
+          "audio": "61ac7fde1e5bd318a48d0b7c8cf1a23dc7d6eeb2df4ba1c10a2591d7e7132655"
         },
         "limitations": [
-          "One short run does not establish a percentile, production throughput, a full-episode deadline or performance on Graviton.",
-          "Generation was slower than playback. This run does not demonstrate real-time voice.",
-          "Two model variants and audio components were loaded. A parameter count alone would understate process memory.",
-          "Voice quality requires listening tests. No controlled comparison against another speech service was recorded.",
-          "No AWS access, security approval, deployment recipe or current price is established by this example."
+          "One request does not establish a percentile, throughput, concurrency or a longer input's completion time.",
+          "Synthesis took about 3.2 seconds per second of audio on this instance. It does not demonstrate live or streaming voice.",
+          "Peak memory covers one loaded model and codec with two generation and two codec threads; concurrent workers need their own measurement.",
+          "Speech quality was not evaluated. The audio was checked only for complete decoding in the recipe's format.",
+          "The cost is list price multiplied by the time from approval to confirmed removal (about 11 minutes); it is not an invoice."
         ]
       },
       "qualifiesDeployment": false
@@ -764,7 +773,7 @@
             "value": "3.570088",
             "unit": "GiB",
             "basis": "REGISTRY",
-            "explanation": "Tensor elements \u00d7 storage bytes. This is a floor: the runtime may expand BF16 or quantized weights, especially on CPU.",
+            "explanation": "Tensor elements × storage bytes. This is a floor: the runtime may expand BF16 or quantized weights, especially on CPU.",
             "formula": "Sum of bytes across each published tensor dtype",
             "sourceUrl": "https://huggingface.co/api/models/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
           },
@@ -774,7 +783,7 @@
             "value": "3.570088",
             "unit": "GiB",
             "basis": "REGISTRY",
-            "explanation": "1,916,676,352 stored elements \u00d7 2 bytes per element.",
+            "explanation": "1,916,676,352 stored elements × 2 bytes per element.",
             "formula": null,
             "sourceUrl": "https://huggingface.co/api/models/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
           }
@@ -891,7 +900,7 @@
             "unit": "USD",
             "basis": "NOT_AVAILABLE",
             "explanation": "Based on supplied billable time. Storage, network, logs and other services are additional.",
-            "formula": "Allocated seconds \u00f7 3,600 \u00d7 hourly rate",
+            "formula": "Allocated seconds ÷ 3,600 × hourly rate",
             "sourceUrl": null
           }
         ]
@@ -968,51 +977,60 @@
       ],
       "sizeGuidance": [
         "There is no universal parameter-count cutoff. Measure peak resident memory, supported operations and time per item.",
-        "A rough weight-only floor is parameters \u00d7 bytes per parameter: FP32 uses 4, BF16/FP16 2, INT8 1. Runtime expansion, caches, audio decoders and simultaneous models add memory.",
+        "A rough weight-only floor is parameters × bytes per parameter: FP32 uses 4, BF16/FP16 2, INT8 1. Runtime expansion, caches, audio decoders and simultaneous models add memory.",
         "For scale: 1.7B FP32 weights alone need about 6.3 GiB; 7B need 26.1 GiB; 70B need 260.8 GiB. Halving storage precision only halves that floor if the CPU runtime actually uses it without expanding the weights.",
         "Large generative models, long context, high concurrency or a missed deadline can make CPU impractical even when RAM is sufficient."
       ],
       "graviton": "Graviton is an ARM CPU option, not a GPU. Build an ARM64 image with compatible libraries and kernels, then compare completed work per dollar against x86. Do not reuse an x86 timing or assume a fixed speedup.",
       "example": {
-        "id": "qwen-tts-cpu-20260923",
-        "title": "A podcast generated on CPU",
+        "id": "magpie-tts-v2607-sagemaker-m6g-20261003",
+        "title": "A short speech sample on a Graviton2 CPU endpoint",
         "basis": "RECORDED_EXAMPLE",
-        "recordedAt": "2026-09-23T22:19:05+00:00",
-        "description": "One recorded AWS Batch run produced a four-turn, two-voice sample. This is an example from the application owner's experiment, not a benchmark of your project.",
-        "model": "Qwen3-TTS 12Hz 1.7B CustomVoice and Base",
-        "modelSource": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
-        "instance": "c7i.8xlarge",
+        "recordedAt": "2026-10-03T08:35:19+00:00",
+        "description": "One bounded EDDIE trial generated one sentence with one preset voice. This is an example from a test installation, not a benchmark of your project.",
+        "model": "NVIDIA Magpie TTS Multilingual 357M (v2607 F16 GGUF)",
+        "modelSource": "https://huggingface.co/nvidia/magpie_tts_multilingual_357m",
+        "architecture": "magpietts",
+        "runtime": "NeMo-Speech.cpp 0f706e43 (CPU, armv8.2-a+fp16+dotprod)",
+        "hosting": "Amazon SageMaker real-time endpoint",
+        "instance": "ml.m6g.xlarge",
         "region": "us-east-1",
-        "vcpus": 32,
-        "memoryGiB": 64,
-        "device": "cpu",
-        "dtype": "float32",
-        "threads": 16,
-        "interopThreads": 2,
-        "audioSeconds": 44.826,
-        "generationSeconds": 121.23,
-        "startupSeconds": 192.93,
-        "assetLoadSeconds": 245.92,
-        "endToEndSeconds": 565.428,
-        "realTimeFactor": 2.704,
-        "peakProcessMiB": 19992.4,
+        "vcpus": 4,
+        "memoryGiB": 16,
+        "cpuArchitecture": "ARM64 / Graviton2",
+        "threads": 4,
+        "inputCharacters": 182,
+        "audioSeconds": 11.61,
+        "synthesisSeconds": 37.333,
+        "requestSeconds": 37.517,
+        "realTimeFactor": 3.22,
+        "peakProcessMiB": 893.4,
+        "startupSeconds": 217,
+        "hourlyUsd": "0.1848",
+        "trialCostUsd": "0.03",
+        "cleanup": {
+          "verifiedAt": "2026-10-03T08:40:49+00:00",
+          "endpointRemoved": true,
+          "stagedFilesRemoved": true,
+          "scope": "Endpoint, endpoint configuration, model, staged files and log group confirmed removed 304 seconds after removal was requested; checked again directly in AWS."
+        },
         "versions": {
-          "qwen-tts": "0.1.1",
-          "torch": "2.14.0",
-          "transformers": "4.57.3",
-          "accelerate": "1.12.0"
+          "bundle": "magpie-tts-v2607",
+          "nemo-speech-tts": "0.1.0 (source 0f706e43)",
+          "ggml": "c03b4e2b",
+          "image": "Amazon Linux 2023 minimal, linux/arm64"
         },
         "artifactHashes": {
-          "modelArchive": "53abad247f69028b0a1c99e2417ca6571a116b89e412d16fb182a4e54a60268a",
-          "input": "5ae89a77546d481549eb96e5bc06c722831d92389b6359b1e0ed352a3bb42c4f",
-          "audio": "669d3c15670f4a48be9619d442edadafa1e3168e8145f5c4b70770815485f597"
+          "bundleArchive": "9034a43de72ea097a2ba59571ef85538a3f81500a048d133254871652bb8bad5",
+          "input": "5173263813e0b1ac67c1b767cb5603585a14ba3773f9388bf0be1e2186b60666",
+          "audio": "61ac7fde1e5bd318a48d0b7c8cf1a23dc7d6eeb2df4ba1c10a2591d7e7132655"
         },
         "limitations": [
-          "One short run does not establish a percentile, production throughput, a full-episode deadline or performance on Graviton.",
-          "Generation was slower than playback. This run does not demonstrate real-time voice.",
-          "Two model variants and audio components were loaded. A parameter count alone would understate process memory.",
-          "Voice quality requires listening tests. No controlled comparison against another speech service was recorded.",
-          "No AWS access, security approval, deployment recipe or current price is established by this example."
+          "One request does not establish a percentile, throughput, concurrency or a longer input's completion time.",
+          "Synthesis took about 3.2 seconds per second of audio on this instance. It does not demonstrate live or streaming voice.",
+          "Peak memory covers one loaded model and codec with two generation and two codec threads; concurrent workers need their own measurement.",
+          "Speech quality was not evaluated. The audio was checked only for complete decoding in the recipe's format.",
+          "The cost is list price multiplied by the time from approval to confirmed removal (about 11 minutes); it is not an invoice."
         ]
       },
       "qualifiesDeployment": false

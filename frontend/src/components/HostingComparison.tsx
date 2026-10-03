@@ -60,8 +60,11 @@ function checkName(gate: Gate): string {
 
 function optionStatus(candidate: Candidate): string {
   const failed = candidate.gates.filter((gate) => gate.status === 'FAIL');
-  if (failed.some((gate) => gate.name === 'budget')) return 'Over budget';
-  if (failed.length > 0) return `${checkName(failed[0])} not met`;
+  // A path that cannot run the model is not merely over budget: show the more basic
+  // failure first, and the budget only when it is the sole reason.
+  const blocking = failed.filter((gate) => gate.name !== 'budget');
+  if (blocking.length > 0) return `${checkName(blocking[0])} not met`;
+  if (failed.length > 0) return 'Over budget';
   if (candidate.gates.some((gate) => gate.status === 'UNKNOWN')) return 'Needs verification';
   return 'Passed declared checks';
 }
@@ -76,7 +79,7 @@ function NextChecks({ candidates }: { candidates: Candidate[] }) {
   if (unknown.size === 0) return null;
   const checks: { title: string; detail: string }[] = [];
   if (unknown.has('quality')) {
-    checks.push({ title: 'Test answer quality', detail: 'Use representative examples and an agreed acceptance rule for your task.' });
+    checks.push({ title: 'Test the model’s output', detail: 'Use representative inputs and an agreed acceptance rule for your task.' });
   }
   if (unknown.has('latency')) {
     checks.push({
@@ -165,7 +168,9 @@ function CurrentComparison({ result, historical = false, ...mapActions }: {
               : candidate.target === 'BEDROCK_NATIVE' ? 'Native model · pay per token'
               : candidate.target === 'EC2_CPU' ? 'CPU only · billed while allocated'
               : candidate.target === 'AWS_BATCH_CPU' ? 'Queued CPU jobs · EC2 allocation billing'
-              : 'Dedicated GPU · billed while running'}
+              // SageMaker hosts both: ml.g*/ml.p* sizes carry GPUs; the speech recipe is CPU.
+              : /^ml\.(g|p)\d/.test(candidate.instanceType ?? '') ? 'Dedicated GPU · billed while running'
+              : 'Dedicated CPU · billed while running'}
           </Box>
           {candidate.target === 'BEDROCK_CMI' && candidate.cmusPerCopy ? (
             <Box variant="small" color="text-body-secondary">

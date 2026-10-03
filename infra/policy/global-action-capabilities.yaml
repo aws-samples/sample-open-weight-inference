@@ -259,6 +259,20 @@ records:
     conditionsAvailable: none
     reviewBy: "2026-12-15"
 
+  - id: EDDIE-GLOBAL-015
+    role: RuntimeRole
+    policy: EvidenceCollectionGlobal
+    sid: PublicSavingsPlanRatesRead
+    actions: [savingsplans:DescribeSavingsPlansOfferingRates]
+    reason: >
+      Lists public offering rates for specified EC2 instance types and Regions.
+      This operation has no resource-level authorization. It does not list owned
+      plans, read customer billing records, reveal private discounts or purchase plans.
+    source: https://docs.aws.amazon.com/service-authorization/latest/reference/list_savingsplans.html
+    mutates: false
+    conditionsAvailable: none
+    reviewBy: "2026-12-15"
+
 # Statements deliberately exempt from the record requirement, with the reason the
 # exemption is sound. The verifier applies these by resource type, not by name.
 structuralExemptions:

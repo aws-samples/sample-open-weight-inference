@@ -1,0 +1,1228 @@
+{
+  "gpu": {
+    "schemaVersion": 1,
+    "scope": "PLANNING_ONLY",
+    "performanceMeasured": false,
+    "reportHash": "a8f7ee4563f9b6035ab0e1e092b921def308397a466f1c1275b6594637ad073c",
+    "retrievedAt": "2026-09-23T00:00:00Z",
+    "settings": {
+      "contextTokens": "4096",
+      "batchSize": "1",
+      "kvDtype": "BF16",
+      "overheadPercent": "15",
+      "utilizationPercent": "70",
+      "minimumReplicas": "1",
+      "peakFactor": "1",
+      "hardwareId": "auto",
+      "trafficMode": "requests",
+      "totalTokens": "",
+      "outputSharePercent": "",
+      "prefillSpeedup": "",
+      "hourlyRateUsd": "",
+      "rateDescription": "",
+      "workloadKind": "general",
+      "servingMode": "unsure",
+      "computePreference": "auto",
+      "cpuRuntime": "unknown",
+      "jobConcurrency": "",
+      "deadlineSeconds": "",
+      "cpuInstance": "c7i.8xlarge",
+      "cpuPeakGiB": "",
+      "cpuJobSeconds": "",
+      "cpuBillableSeconds": "",
+      "cpuRunReference": ""
+    },
+    "model": {
+      "name": "Qwen test",
+      "repo": "Qwen/Qwen2.5-7B-Instruct",
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "groups": [
+      {
+        "id": "memory",
+        "title": "Model and memory",
+        "metrics": [
+          {
+            "id": "stored",
+            "label": "Stored tensor elements",
+            "value": "7.615617",
+            "unit": "billion",
+            "basis": "REGISTRY",
+            "explanation": "Includes stored buffers and quantization scales; not a trainable-parameter count.",
+            "formula": null,
+            "sourceUrl": "https://huggingface.co/model"
+          },
+          {
+            "id": "active",
+            "label": "Active parameters per token",
+            "value": "7.615617",
+            "unit": "billion",
+            "basis": "CALCULATED",
+            "explanation": "Dense-model approximation using stored tensor elements, including any buffers.",
+            "formula": null,
+            "sourceUrl": "https://huggingface.co/config"
+          },
+          {
+            "id": "architecture",
+            "label": "Model structure",
+            "value": "Dense text model",
+            "unit": "",
+            "basis": "REGISTRY",
+            "explanation": "Read from supported model geometry; other pipelines may contain multiple components.",
+            "formula": null,
+            "sourceUrl": "https://huggingface.co/config"
+          },
+          {
+            "id": "weights",
+            "label": "Weight storage footprint",
+            "value": "14.185191",
+            "unit": "GiB",
+            "basis": "REGISTRY",
+            "explanation": "Tensor elements \u00d7 storage bytes. This is a floor: the runtime may expand BF16 or quantized weights, especially on CPU.",
+            "formula": "Sum of bytes across each published tensor dtype",
+            "sourceUrl": "https://huggingface.co/model"
+          },
+          {
+            "id": "cachePerToken",
+            "label": "Attention cache per token",
+            "value": "56",
+            "unit": "KiB",
+            "basis": "CALCULATED",
+            "explanation": "Key and value \u00d7 layers \u00d7 KV heads \u00d7 head width \u00d7 bytes per element",
+            "formula": "Key and value \u00d7 layers \u00d7 KV heads \u00d7 head width \u00d7 bytes per element",
+            "sourceUrl": "https://huggingface.co/config"
+          },
+          {
+            "id": "cache",
+            "label": "Attention cache, before sharding",
+            "value": "0.21875",
+            "unit": "GiB",
+            "basis": "CALCULATED",
+            "explanation": "4,096 cached tokens \u00d7 1 simultaneous sequences; BF16 cache.",
+            "formula": "Cache bytes per token \u00d7 cached tokens \u00d7 concurrent sequences",
+            "sourceUrl": "https://huggingface.co/config"
+          },
+          {
+            "id": "overhead",
+            "label": "Runtime allowance",
+            "value": "2.160591",
+            "unit": "GiB",
+            "basis": "ASSUMED",
+            "explanation": "15% for activations, workspaces and runtime. Validate observed peak memory.",
+            "formula": "(Weights + cache) \u00d7 runtime allowance",
+            "sourceUrl": null
+          },
+          {
+            "id": "logicalMemory",
+            "label": "Memory before parallelism",
+            "value": "16.564532",
+            "unit": "GiB",
+            "basis": "CALCULATED",
+            "explanation": "One logical model copy; the GPU layout below includes replicated cache.",
+            "formula": "Weights + cache + runtime allowance",
+            "sourceUrl": null
+          },
+          {
+            "id": "dtype-BF16",
+            "label": "BF16 tensors",
+            "value": "14.185191",
+            "unit": "GiB",
+            "basis": "REGISTRY",
+            "explanation": "7,615,616,512 stored elements \u00d7 2 bytes per element.",
+            "formula": null,
+            "sourceUrl": "https://huggingface.co/model"
+          }
+        ]
+      },
+      {
+        "id": "traffic",
+        "title": "Traffic to serve",
+        "metrics": [
+          {
+            "id": "requests",
+            "label": "Requests in this period",
+            "value": "30000",
+            "unit": "requests",
+            "basis": "DECLARED",
+            "explanation": "Tokens alone do not establish a request count.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "inputTokens",
+            "label": "Input volume",
+            "value": "15000000",
+            "unit": "tokens",
+            "basis": "CALCULATED",
+            "explanation": "The input portion of the declared traffic.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "outputTokens",
+            "label": "Output volume",
+            "value": "3000000",
+            "unit": "tokens",
+            "basis": "CALCULATED",
+            "explanation": "The generated portion of the declared traffic.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "inputRate",
+            "label": "Average input demand",
+            "value": "5.787037",
+            "unit": "tokens/s",
+            "basis": "CALCULATED",
+            "explanation": "Average over the complete comparison period.",
+            "formula": "Input tokens \u00f7 hours \u00f7 3,600",
+            "sourceUrl": null
+          },
+          {
+            "id": "outputRate",
+            "label": "Average output demand",
+            "value": "1.157407",
+            "unit": "tokens/s",
+            "basis": "CALCULATED",
+            "explanation": "Average demand does not describe bursts.",
+            "formula": "Output tokens \u00f7 hours \u00f7 3,600",
+            "sourceUrl": null
+          },
+          {
+            "id": "equivalentRate",
+            "label": "Decode-equivalent peak demand",
+            "value": null,
+            "unit": "tokens/s",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "A planning normalization that depends on the supplied prefill ratio and peak multiplier.",
+            "formula": "(Output/s + input/s \u00f7 prefill speed ratio) \u00d7 peak multiplier",
+            "sourceUrl": null
+          }
+        ]
+      },
+      {
+        "id": "hardware",
+        "title": "GPU layout",
+        "metrics": [
+          {
+            "id": "instance",
+            "label": "Node profile",
+            "value": "g6.2xlarge",
+            "unit": "",
+            "basis": "PUBLISHED",
+            "explanation": "A hardware planning profile; Region availability, quota and capacity have not been checked.",
+            "formula": null,
+            "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html"
+          },
+          {
+            "id": "accelerator",
+            "label": "Accelerator",
+            "value": "NVIDIA L4",
+            "unit": "",
+            "basis": "PUBLISHED",
+            "explanation": "1 GPUs per node.",
+            "formula": null,
+            "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html"
+          },
+          {
+            "id": "nodeMemory",
+            "label": "Published GPU memory per node",
+            "value": "22",
+            "unit": "GiB",
+            "basis": "PUBLISHED",
+            "explanation": "Uses the EC2 specification's binary units, not a marketing GB label.",
+            "formula": null,
+            "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html"
+          },
+          {
+            "id": "tensorParallel",
+            "label": "GPUs sharing one model copy",
+            "value": "1",
+            "unit": "GPUs",
+            "basis": "CALCULATED",
+            "explanation": "Memory and attention-head divisibility fit this planning profile. The serving engine still needs validation.",
+            "formula": "Smallest supported degree in 1, 2, 4, 8 that divides attention heads and fits memory",
+            "sourceUrl": null
+          },
+          {
+            "id": "physicalMemory",
+            "label": "Memory across this model copy",
+            "value": "16.564532",
+            "unit": "GiB",
+            "basis": "CALCULATED",
+            "explanation": "Includes repeated cache where the attention layout requires it.",
+            "formula": "(Weights per GPU + cache per GPU) \u00d7 (1 + allowance) \u00d7 GPUs",
+            "sourceUrl": null
+          },
+          {
+            "id": "perGpuMemory",
+            "label": "Memory required on each GPU",
+            "value": "16.564532",
+            "unit": "GiB",
+            "basis": "CALCULATED",
+            "explanation": "The per-GPU limit must pass; aggregate memory alone is insufficient.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "interconnect",
+            "label": "Within-node connection",
+            "value": "One GPU",
+            "unit": "",
+            "basis": "PUBLISHED",
+            "explanation": "No inter-node tensor parallelism is modeled.",
+            "formula": null,
+            "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html"
+          },
+          {
+            "id": "packing",
+            "label": "Maximum copies by GPU count",
+            "value": "1",
+            "unit": "per node",
+            "basis": "CALCULATED",
+            "explanation": "A density limit only. Shared-node contention and memory must be tested.",
+            "formula": null,
+            "sourceUrl": null
+          }
+        ]
+      },
+      {
+        "id": "fleet",
+        "title": "Throughput and spend",
+        "metrics": [
+          {
+            "id": "roofline",
+            "label": "Idealized decode ceiling",
+            "value": "19.397245",
+            "unit": "tokens/s",
+            "basis": "MODELED",
+            "explanation": "Analytical roofline using dense BF16 compute and memory bandwidth. This is not measured throughput.",
+            "formula": "Min(compute \u00f7 (2 \u00d7 active parameters), bandwidth \u00d7 batch \u00f7 bytes read per decode step)",
+            "sourceUrl": "https://www.nvidia.com/en-us/data-center/l4/"
+          },
+          {
+            "id": "copies",
+            "label": "Traffic-based replica floor",
+            "value": null,
+            "unit": "copies",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "One replica per node for fault isolation. Requires a prefill ratio; final capacity needs a load test.",
+            "formula": "Max(availability floor, ceil(peak demand \u00f7 (decode ceiling \u00d7 utilization)))",
+            "sourceUrl": null
+          },
+          {
+            "id": "nodes",
+            "label": "Nodes at that planning floor",
+            "value": null,
+            "unit": "nodes",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "Copies are spread across nodes. Placement across Availability Zones is not established.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "hourly",
+            "label": "Hourly node rate",
+            "value": null,
+            "unit": "USD/hour",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "Linux shared-tenancy EC2 On-Demand. SageMaker Hosting and commitment rates are separate.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "nodeCost",
+            "label": "One node over this period",
+            "value": null,
+            "unit": "USD",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "720 hours. Compute only; storage, networking and other charges are additional.",
+            "formula": "Hourly rate \u00d7 comparison hours",
+            "sourceUrl": null
+          },
+          {
+            "id": "fleetCost",
+            "label": "Fleet compute at the planning floor",
+            "value": null,
+            "unit": "USD",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "An estimate for the modeled replica floor. It is not the hosting comparison's recommendation.",
+            "formula": "Nodes \u00d7 hours \u00d7 hourly node rate",
+            "sourceUrl": null
+          },
+          {
+            "id": "ttft",
+            "label": "First-token latency",
+            "value": null,
+            "unit": "ms",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "Requires a streaming benchmark for this model, engine, workload and GPU layout.",
+            "formula": null,
+            "sourceUrl": null
+          }
+        ]
+      }
+    ],
+    "compute": "gpu",
+    "guidance": {
+      "priority": "NEEDS_WORKLOAD",
+      "title": "Establish the workload before choosing compute",
+      "reason": "CPU versus GPU depends on the runtime, deadline, memory and arrival rate. A model size or traffic total alone cannot answer it.",
+      "checks": [
+        {
+          "label": "CPU runtime",
+          "value": "Not verified",
+          "detail": "Confirm all operators and dependencies run on CPU. A laptop with no discrete GPU may still use Apple Metal or another integrated accelerator."
+        },
+        {
+          "label": "Delivery",
+          "value": "Not specified",
+          "detail": "Include queueing, image pull, model loading and generation in a batch deadline."
+        },
+        {
+          "label": "Concurrent jobs",
+          "value": "Not specified",
+          "detail": "Low concurrency is an experiment priority, not a proof that CPU will meet demand."
+        },
+        {
+          "label": "Completion budget",
+          "value": "Not specified",
+          "detail": "A batch completion budget differs from first-token or first-audio latency."
+        },
+        {
+          "label": "CPU memory screen",
+          "value": "Peak measurement needed",
+          "detail": "The selected CPU profile has 64 GiB RAM. Include every loaded model, decoder, process and concurrent worker; a weight-only estimate is a floor."
+        }
+      ],
+      "cpuServices": [
+        {
+          "id": "batch",
+          "name": "AWS Batch",
+          "fit": "Queued or scheduled jobs",
+          "detail": "Run a container on EC2 CPU instances or Fargate. Start with a job deadline, queue limits and a scale-down policy. Startup and model loading count toward the deadline.",
+          "sourceUrl": "https://docs.aws.amazon.com/batch/latest/userguide/what-is-batch.html"
+        },
+        {
+          "id": "fargate",
+          "name": "Amazon ECS on Fargate",
+          "fit": "CPU containers without managing hosts",
+          "detail": "Use for compatible CPU jobs or services within the supported task sizes. Include image pull and model download. Fargate does not expose GPUs.",
+          "sourceUrl": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html"
+        },
+        {
+          "id": "ec2",
+          "name": "Amazon EC2 CPU",
+          "fit": "Control over memory, instructions and model reuse",
+          "detail": "Compare compute-optimized C instances and memory-optimized R instances using measured process memory. Persistent workers can amortize loading; allocated instances cost money while idle.",
+          "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/instance-types.html"
+        },
+        {
+          "id": "sagemaker",
+          "name": "Amazon SageMaker AI CPU",
+          "fit": "Managed serving or offline transformation",
+          "detail": "CPU endpoints and Batch Transform can serve compatible models. Check the container, payload limits, job mode and instance support. SageMaker does not imply GPU.",
+          "sourceUrl": "https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html"
+        },
+        {
+          "id": "lambda",
+          "name": "AWS Lambda",
+          "fit": "Small, short, event-driven inference",
+          "detail": "For standard Lambda functions, test the 10,240 MB memory and 15-minute invocation limits, package size, cold starts and available CPU. A model that fits on disk may still exceed process memory. Evaluate other Lambda compute modes separately.",
+          "sourceUrl": "https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html"
+        }
+      ],
+      "sizeGuidance": [
+        "There is no universal parameter-count cutoff. Measure peak resident memory, supported operations and time per item.",
+        "A rough weight-only floor is parameters \u00d7 bytes per parameter: FP32 uses 4, BF16/FP16 2, INT8 1. Runtime expansion, caches, audio decoders and simultaneous models add memory.",
+        "For scale: 1.7B FP32 weights alone need about 6.3 GiB; 7B need 26.1 GiB; 70B need 260.8 GiB. Halving storage precision only halves that floor if the CPU runtime actually uses it without expanding the weights.",
+        "Large generative models, long context, high concurrency or a missed deadline can make CPU impractical even when RAM is sufficient."
+      ],
+      "graviton": "Graviton is an ARM CPU option, not a GPU. Build an ARM64 image with compatible libraries and kernels, then compare completed work per dollar against x86. Do not reuse an x86 timing or assume a fixed speedup.",
+      "example": {
+        "id": "qwen-tts-cpu-20260923",
+        "title": "A podcast generated on CPU",
+        "basis": "RECORDED_EXAMPLE",
+        "recordedAt": "2026-09-23T22:19:05+00:00",
+        "description": "One recorded AWS Batch run produced a four-turn, two-voice sample. This is an example from the application owner's experiment, not a benchmark of your project.",
+        "model": "Qwen3-TTS 12Hz 1.7B CustomVoice and Base",
+        "modelSource": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+        "instance": "c7i.8xlarge",
+        "region": "us-east-1",
+        "vcpus": 32,
+        "memoryGiB": 64,
+        "device": "cpu",
+        "dtype": "float32",
+        "threads": 16,
+        "interopThreads": 2,
+        "audioSeconds": 44.826,
+        "generationSeconds": 121.23,
+        "startupSeconds": 192.93,
+        "assetLoadSeconds": 245.92,
+        "endToEndSeconds": 565.428,
+        "realTimeFactor": 2.704,
+        "peakProcessMiB": 19992.4,
+        "versions": {
+          "qwen-tts": "0.1.1",
+          "torch": "2.14.0",
+          "transformers": "4.57.3",
+          "accelerate": "1.12.0"
+        },
+        "artifactHashes": {
+          "modelArchive": "53abad247f69028b0a1c99e2417ca6571a116b89e412d16fb182a4e54a60268a",
+          "input": "5ae89a77546d481549eb96e5bc06c722831d92389b6359b1e0ed352a3bb42c4f",
+          "audio": "669d3c15670f4a48be9619d442edadafa1e3168e8145f5c4b70770815485f597"
+        },
+        "limitations": [
+          "One short run does not establish a percentile, production throughput, a full-episode deadline or performance on Graviton.",
+          "Generation was slower than playback. This run does not demonstrate real-time voice.",
+          "Two model variants and audio components were loaded. A parameter count alone would understate process memory.",
+          "Voice quality requires listening tests. No controlled comparison against another speech service was recorded.",
+          "No AWS access, security approval, deployment recipe or current price is established by this example."
+        ]
+      },
+      "qualifiesDeployment": false
+    },
+    "benchmark": {
+      "title": "Your inference workload",
+      "metrics": [
+        "Task quality",
+        "End-to-end latency at expected load",
+        "Completed work per dollar"
+      ],
+      "levers": [
+        "Establish a representative input set",
+        "Measure cold and warm requests separately"
+      ],
+      "record": [
+        "Exact model revision and all pipeline components",
+        "Container digest, engine version, precision and cache settings",
+        "CPU architecture and threads, or GPU type and parallelism",
+        "Representative inputs, output lengths, arrival rate and concurrency",
+        "Cold/warm timing, sample count, percentiles, errors and quality results",
+        "Run date, Region, resource lifetime and billable usage"
+      ],
+      "sourceUrl": "https://docs.aws.amazon.com/sagemaker/latest/dg/inference-recommender.html",
+      "note": "These are experiments to run, not results. A published optimization or a different customer's benchmark does not verify this configuration."
+    },
+    "cpuChoices": [
+      {
+        "instance": "c7i.8xlarge",
+        "vcpus": 32,
+        "memoryGiB": 64,
+        "architecture": "x86_64"
+      },
+      {
+        "instance": "c7g.8xlarge",
+        "vcpus": 32,
+        "memoryGiB": 64,
+        "architecture": "ARM64 / Graviton"
+      },
+      {
+        "instance": "m7i.2xlarge",
+        "vcpus": 8,
+        "memoryGiB": 32,
+        "architecture": "x86_64"
+      },
+      {
+        "instance": "m7g.2xlarge",
+        "vcpus": 8,
+        "memoryGiB": 32,
+        "architecture": "ARM64 / Graviton"
+      },
+      {
+        "instance": "r7i.2xlarge",
+        "vcpus": 8,
+        "memoryGiB": 64,
+        "architecture": "x86_64"
+      },
+      {
+        "instance": "r7g.2xlarge",
+        "vcpus": 8,
+        "memoryGiB": 64,
+        "architecture": "ARM64 / Graviton"
+      }
+    ],
+    "pricing": null,
+    "memorySegments": [
+      {
+        "id": "weights",
+        "label": "Weights",
+        "gib": "14.185191"
+      },
+      {
+        "id": "cache",
+        "label": "Attention cache",
+        "gib": "0.21875"
+      },
+      {
+        "id": "runtime",
+        "label": "Runtime allowance",
+        "gib": "2.160591"
+      }
+    ],
+    "hardware": {
+      "instance": "g6.2xlarge",
+      "accelerator": "NVIDIA L4",
+      "gpus": 1,
+      "memory_gib": 22,
+      "bandwidth_gbps": 300,
+      "bf16_tflops": 121,
+      "interconnect": "One GPU",
+      "compute_source": "https://www.nvidia.com/en-us/data-center/l4/",
+      "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+      "reviewedAt": "2026-09-23",
+      "basis": "PUBLISHED",
+      "availability": "NOT_CHECKED"
+    },
+    "hardwareChoices": [
+      {
+        "instance": "g6.2xlarge",
+        "accelerator": "NVIDIA L4",
+        "gpus": 1,
+        "memory_gib": 22,
+        "bandwidth_gbps": 300,
+        "bf16_tflops": 121,
+        "interconnect": "One GPU",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/l4/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "g5.2xlarge",
+        "accelerator": "NVIDIA A10G",
+        "gpus": 1,
+        "memory_gib": 22,
+        "bandwidth_gbps": 600,
+        "bf16_tflops": 125,
+        "interconnect": "One GPU",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/products/a10-gpu/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "g6e.2xlarge",
+        "accelerator": "NVIDIA L40S",
+        "gpus": 1,
+        "memory_gib": 44,
+        "bandwidth_gbps": 864,
+        "bf16_tflops": 366.5,
+        "interconnect": "One GPU",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/l40s/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "g5.12xlarge",
+        "accelerator": "NVIDIA A10G",
+        "gpus": 4,
+        "memory_gib": 22,
+        "bandwidth_gbps": 600,
+        "bf16_tflops": 125,
+        "interconnect": "PCIe; communication cost is not modeled",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/products/a10-gpu/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "p5.48xlarge",
+        "accelerator": "NVIDIA H100",
+        "gpus": 8,
+        "memory_gib": 80,
+        "bandwidth_gbps": 3350,
+        "bf16_tflops": 989,
+        "interconnect": "NVLink / NVSwitch within the node",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/h100/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "p5e.48xlarge",
+        "accelerator": "NVIDIA H200",
+        "gpus": 8,
+        "memory_gib": 141,
+        "bandwidth_gbps": 4800,
+        "bf16_tflops": 989,
+        "interconnect": "NVLink / NVSwitch within the node",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/h200/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "p6-b200.48xlarge",
+        "accelerator": "NVIDIA B200",
+        "gpus": 8,
+        "memory_gib": 179,
+        "bandwidth_gbps": 8000,
+        "bf16_tflops": 2250,
+        "interconnect": "NVLink / NVSwitch within the node",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/hgx/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      }
+    ],
+    "memoryFit": true,
+    "limitations": [
+      "Memory fit does not establish model-loader, quantization, kernel or tensor-parallel support.",
+      "The throughput ceiling ignores communication, scheduling, attention compute and service overhead. Benchmark the exact configuration.",
+      "A replica count derived from that ceiling is a planning floor, not a production fleet recommendation.",
+      "One replica provides no node redundancy. Choose the availability floor your application requires.",
+      "Input processing and output generation have different costs. Supply a measured or explicit assumed ratio before estimating a fleet."
+    ],
+    "selectionReason": "First memory fit in the published shortlist; not a price ranking.",
+    "request": {
+      "model": {
+        "name": "Qwen test",
+        "architecture": "Qwen2ForCausalLM",
+        "hfRepo": "Qwen/Qwen2.5-7B-Instruct",
+        "weightsExportable": true
+      },
+      "workload": {
+        "horizonHours": "720",
+        "requests": "30000",
+        "inputTokensPerRequest": "500",
+        "outputTokensPerRequest": "100"
+      },
+      "constraints": {
+        "permittedRegions": [
+          "us-east-1"
+        ]
+      }
+    },
+    "region": "us-east-1"
+  },
+  "cpu": {
+    "schemaVersion": 1,
+    "scope": "PLANNING_ONLY",
+    "performanceMeasured": false,
+    "reportHash": "fb3ea3fe92c8639de1948d422d439a02d27fe386f4fe7e8c893784501d55e395",
+    "retrievedAt": "2026-09-23T00:00:00Z",
+    "settings": {
+      "contextTokens": "4096",
+      "batchSize": "1",
+      "kvDtype": "BF16",
+      "overheadPercent": "15",
+      "utilizationPercent": "70",
+      "minimumReplicas": "1",
+      "peakFactor": "1",
+      "hardwareId": "auto",
+      "trafficMode": "requests",
+      "totalTokens": "",
+      "outputSharePercent": "",
+      "prefillSpeedup": "",
+      "hourlyRateUsd": "",
+      "rateDescription": "",
+      "workloadKind": "tts",
+      "servingMode": "batch",
+      "computePreference": "auto",
+      "cpuRuntime": "unknown",
+      "jobConcurrency": "1",
+      "deadlineSeconds": "1200",
+      "cpuInstance": "c7i.8xlarge",
+      "cpuPeakGiB": "",
+      "cpuJobSeconds": "",
+      "cpuBillableSeconds": "",
+      "cpuRunReference": ""
+    },
+    "model": {
+      "name": "Qwen test",
+      "repo": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe"
+    },
+    "groups": [
+      {
+        "id": "memory",
+        "title": "Model files",
+        "metrics": [
+          {
+            "id": "stored",
+            "label": "Stored tensor elements",
+            "value": "1.916676",
+            "unit": "billion",
+            "basis": "REGISTRY",
+            "explanation": "Includes stored buffers and quantization scales; not a trainable-parameter count.",
+            "formula": null,
+            "sourceUrl": "https://huggingface.co/api/models/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+          },
+          {
+            "id": "weights",
+            "label": "Weight storage footprint",
+            "value": "3.570088",
+            "unit": "GiB",
+            "basis": "REGISTRY",
+            "explanation": "Tensor elements \u00d7 storage bytes. This is a floor: the runtime may expand BF16 or quantized weights, especially on CPU.",
+            "formula": "Sum of bytes across each published tensor dtype",
+            "sourceUrl": "https://huggingface.co/api/models/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+          },
+          {
+            "id": "dtype-BF16",
+            "label": "BF16 tensors",
+            "value": "3.570088",
+            "unit": "GiB",
+            "basis": "REGISTRY",
+            "explanation": "1,916,676,352 stored elements \u00d7 2 bytes per element.",
+            "formula": null,
+            "sourceUrl": "https://huggingface.co/api/models/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+          }
+        ]
+      },
+      {
+        "id": "cpu",
+        "title": "CPU experiment",
+        "metrics": [
+          {
+            "id": "cpuInstance",
+            "label": "CPU instance to test",
+            "value": "c7i.8xlarge",
+            "unit": "",
+            "basis": "DECLARED",
+            "explanation": "Your experiment profile. This is not a solver-selected deployment.",
+            "formula": null,
+            "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/instance-types.html"
+          },
+          {
+            "id": "cpuArchitecture",
+            "label": "CPU architecture",
+            "value": "x86_64",
+            "unit": "",
+            "basis": "PUBLISHED",
+            "explanation": "An ARM64 image and compatible native dependencies are required on Graviton.",
+            "formula": null,
+            "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/instance-types.html"
+          },
+          {
+            "id": "cpuVcpus",
+            "label": "Virtual CPUs",
+            "value": "32",
+            "unit": "vCPUs",
+            "basis": "PUBLISHED",
+            "explanation": "Thread count and CPU instructions affect performance.",
+            "formula": null,
+            "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/instance-types.html"
+          },
+          {
+            "id": "cpuRam",
+            "label": "Instance RAM",
+            "value": "64",
+            "unit": "GiB",
+            "basis": "PUBLISHED",
+            "explanation": "Allow memory for the OS and all concurrent workers.",
+            "formula": null,
+            "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/instance-types.html"
+          },
+          {
+            "id": "cpuPeak",
+            "label": "Reported process memory",
+            "value": null,
+            "unit": "GiB",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "Supplied observation; the run and workload have not been independently validated.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "cpuJob",
+            "label": "Reported completion time",
+            "value": null,
+            "unit": "seconds",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "Include queueing, loading and output processing for a job deadline.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "cpuDeadline",
+            "label": "Completion budget",
+            "value": "1200",
+            "unit": "seconds",
+            "basis": "DECLARED",
+            "explanation": "Your maximum acceptable queue-to-completion time.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "cpuWithinDeadline",
+            "label": "Reported run within budget",
+            "value": null,
+            "unit": "",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "Supply a run time and completion budget.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "cpuBillable",
+            "label": "Reported allocated time",
+            "value": null,
+            "unit": "seconds",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "Compute billing can start before the model runs and continue until the resource stops.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "cpuHourly",
+            "label": "EC2 hourly rate",
+            "value": null,
+            "unit": "USD/hour",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "Linux shared-tenancy EC2 On-Demand; Fargate and SageMaker have different meters.",
+            "formula": null,
+            "sourceUrl": null
+          },
+          {
+            "id": "cpuCost",
+            "label": "Compute for the supplied allocation",
+            "value": null,
+            "unit": "USD",
+            "basis": "NOT_AVAILABLE",
+            "explanation": "Based on supplied billable time. Storage, network, logs and other services are additional.",
+            "formula": "Allocated seconds \u00f7 3,600 \u00d7 hourly rate",
+            "sourceUrl": null
+          }
+        ]
+      }
+    ],
+    "compute": "cpu",
+    "guidance": {
+      "priority": "CPU_BENCHMARK_FIRST",
+      "title": "Test CPU before reserving GPUs",
+      "reason": "Queued work with low concurrency can trade completion time for simpler compute. First check runtime support, peak memory and the full job deadline.",
+      "checks": [
+        {
+          "label": "CPU runtime",
+          "value": "Not verified",
+          "detail": "Confirm all operators and dependencies run on CPU. A laptop with no discrete GPU may still use Apple Metal or another integrated accelerator."
+        },
+        {
+          "label": "Delivery",
+          "value": "Queued / batch",
+          "detail": "Include queueing, image pull, model loading and generation in a batch deadline."
+        },
+        {
+          "label": "Concurrent jobs",
+          "value": "1",
+          "detail": "Low concurrency is an experiment priority, not a proof that CPU will meet demand."
+        },
+        {
+          "label": "Completion budget",
+          "value": "1200 seconds",
+          "detail": "A batch completion budget differs from first-token or first-audio latency."
+        },
+        {
+          "label": "CPU memory screen",
+          "value": "Peak measurement needed",
+          "detail": "The selected CPU profile has 64 GiB RAM. Include every loaded model, decoder, process and concurrent worker; a weight-only estimate is a floor."
+        }
+      ],
+      "cpuServices": [
+        {
+          "id": "batch",
+          "name": "AWS Batch",
+          "fit": "Queued or scheduled jobs",
+          "detail": "Run a container on EC2 CPU instances or Fargate. Start with a job deadline, queue limits and a scale-down policy. Startup and model loading count toward the deadline.",
+          "sourceUrl": "https://docs.aws.amazon.com/batch/latest/userguide/what-is-batch.html"
+        },
+        {
+          "id": "fargate",
+          "name": "Amazon ECS on Fargate",
+          "fit": "CPU containers without managing hosts",
+          "detail": "Use for compatible CPU jobs or services within the supported task sizes. Include image pull and model download. Fargate does not expose GPUs.",
+          "sourceUrl": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html"
+        },
+        {
+          "id": "ec2",
+          "name": "Amazon EC2 CPU",
+          "fit": "Control over memory, instructions and model reuse",
+          "detail": "Compare compute-optimized C instances and memory-optimized R instances using measured process memory. Persistent workers can amortize loading; allocated instances cost money while idle.",
+          "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/instance-types.html"
+        },
+        {
+          "id": "sagemaker",
+          "name": "Amazon SageMaker AI CPU",
+          "fit": "Managed serving or offline transformation",
+          "detail": "CPU endpoints and Batch Transform can serve compatible models. Check the container, payload limits, job mode and instance support. SageMaker does not imply GPU.",
+          "sourceUrl": "https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html"
+        },
+        {
+          "id": "lambda",
+          "name": "AWS Lambda",
+          "fit": "Small, short, event-driven inference",
+          "detail": "For standard Lambda functions, test the 10,240 MB memory and 15-minute invocation limits, package size, cold starts and available CPU. A model that fits on disk may still exceed process memory. Evaluate other Lambda compute modes separately.",
+          "sourceUrl": "https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html"
+        }
+      ],
+      "sizeGuidance": [
+        "There is no universal parameter-count cutoff. Measure peak resident memory, supported operations and time per item.",
+        "A rough weight-only floor is parameters \u00d7 bytes per parameter: FP32 uses 4, BF16/FP16 2, INT8 1. Runtime expansion, caches, audio decoders and simultaneous models add memory.",
+        "For scale: 1.7B FP32 weights alone need about 6.3 GiB; 7B need 26.1 GiB; 70B need 260.8 GiB. Halving storage precision only halves that floor if the CPU runtime actually uses it without expanding the weights.",
+        "Large generative models, long context, high concurrency or a missed deadline can make CPU impractical even when RAM is sufficient."
+      ],
+      "graviton": "Graviton is an ARM CPU option, not a GPU. Build an ARM64 image with compatible libraries and kernels, then compare completed work per dollar against x86. Do not reuse an x86 timing or assume a fixed speedup.",
+      "example": {
+        "id": "qwen-tts-cpu-20260923",
+        "title": "A podcast generated on CPU",
+        "basis": "RECORDED_EXAMPLE",
+        "recordedAt": "2026-09-23T22:19:05+00:00",
+        "description": "One recorded AWS Batch run produced a four-turn, two-voice sample. This is an example from the application owner's experiment, not a benchmark of your project.",
+        "model": "Qwen3-TTS 12Hz 1.7B CustomVoice and Base",
+        "modelSource": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+        "instance": "c7i.8xlarge",
+        "region": "us-east-1",
+        "vcpus": 32,
+        "memoryGiB": 64,
+        "device": "cpu",
+        "dtype": "float32",
+        "threads": 16,
+        "interopThreads": 2,
+        "audioSeconds": 44.826,
+        "generationSeconds": 121.23,
+        "startupSeconds": 192.93,
+        "assetLoadSeconds": 245.92,
+        "endToEndSeconds": 565.428,
+        "realTimeFactor": 2.704,
+        "peakProcessMiB": 19992.4,
+        "versions": {
+          "qwen-tts": "0.1.1",
+          "torch": "2.14.0",
+          "transformers": "4.57.3",
+          "accelerate": "1.12.0"
+        },
+        "artifactHashes": {
+          "modelArchive": "53abad247f69028b0a1c99e2417ca6571a116b89e412d16fb182a4e54a60268a",
+          "input": "5ae89a77546d481549eb96e5bc06c722831d92389b6359b1e0ed352a3bb42c4f",
+          "audio": "669d3c15670f4a48be9619d442edadafa1e3168e8145f5c4b70770815485f597"
+        },
+        "limitations": [
+          "One short run does not establish a percentile, production throughput, a full-episode deadline or performance on Graviton.",
+          "Generation was slower than playback. This run does not demonstrate real-time voice.",
+          "Two model variants and audio components were loaded. A parameter count alone would understate process memory.",
+          "Voice quality requires listening tests. No controlled comparison against another speech service was recorded.",
+          "No AWS access, security approval, deployment recipe or current price is established by this example."
+        ]
+      },
+      "qualifiesDeployment": false
+    },
+    "benchmark": {
+      "title": "Batch speech and podcasts",
+      "metrics": [
+        "Listening quality and pronunciation",
+        "Generation seconds / audio seconds",
+        "Queue-to-completion time",
+        "Peak process memory",
+        "Cost per audio minute"
+      ],
+      "levers": [
+        "CPU runtime, thread count and FP32 memory",
+        "Reuse loaded voice models across segments",
+        "Compare GPU only if the CPU deadline, concurrency or economics fall short"
+      ],
+      "record": [
+        "Exact model revision and all pipeline components",
+        "Container digest, engine version, precision and cache settings",
+        "CPU architecture and threads, or GPU type and parallelism",
+        "Representative inputs, output lengths, arrival rate and concurrency",
+        "Cold/warm timing, sample count, percentiles, errors and quality results",
+        "Run date, Region, resource lifetime and billable usage"
+      ],
+      "sourceUrl": "https://docs.aws.amazon.com/sagemaker/latest/dg/inference-recommender.html",
+      "note": "These are experiments to run, not results. A published optimization or a different customer's benchmark does not verify this configuration."
+    },
+    "cpuChoices": [
+      {
+        "instance": "c7i.8xlarge",
+        "vcpus": 32,
+        "memoryGiB": 64,
+        "architecture": "x86_64"
+      },
+      {
+        "instance": "c7g.8xlarge",
+        "vcpus": 32,
+        "memoryGiB": 64,
+        "architecture": "ARM64 / Graviton"
+      },
+      {
+        "instance": "m7i.2xlarge",
+        "vcpus": 8,
+        "memoryGiB": 32,
+        "architecture": "x86_64"
+      },
+      {
+        "instance": "m7g.2xlarge",
+        "vcpus": 8,
+        "memoryGiB": 32,
+        "architecture": "ARM64 / Graviton"
+      },
+      {
+        "instance": "r7i.2xlarge",
+        "vcpus": 8,
+        "memoryGiB": 64,
+        "architecture": "x86_64"
+      },
+      {
+        "instance": "r7g.2xlarge",
+        "vcpus": 8,
+        "memoryGiB": 64,
+        "architecture": "ARM64 / Graviton"
+      }
+    ],
+    "pricing": null,
+    "memorySegments": [
+      {
+        "id": "weights",
+        "label": "Weights",
+        "gib": "3.570088"
+      },
+      {
+        "id": "cache",
+        "label": "Attention cache",
+        "gib": null
+      },
+      {
+        "id": "runtime",
+        "label": "Runtime allowance",
+        "gib": null
+      }
+    ],
+    "hardware": null,
+    "hardwareChoices": [
+      {
+        "instance": "g6.2xlarge",
+        "accelerator": "NVIDIA L4",
+        "gpus": 1,
+        "memory_gib": 22,
+        "bandwidth_gbps": 300,
+        "bf16_tflops": 121,
+        "interconnect": "One GPU",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/l4/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "g5.2xlarge",
+        "accelerator": "NVIDIA A10G",
+        "gpus": 1,
+        "memory_gib": 22,
+        "bandwidth_gbps": 600,
+        "bf16_tflops": 125,
+        "interconnect": "One GPU",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/products/a10-gpu/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "g6e.2xlarge",
+        "accelerator": "NVIDIA L40S",
+        "gpus": 1,
+        "memory_gib": 44,
+        "bandwidth_gbps": 864,
+        "bf16_tflops": 366.5,
+        "interconnect": "One GPU",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/l40s/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "g5.12xlarge",
+        "accelerator": "NVIDIA A10G",
+        "gpus": 4,
+        "memory_gib": 22,
+        "bandwidth_gbps": 600,
+        "bf16_tflops": 125,
+        "interconnect": "PCIe; communication cost is not modeled",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/products/a10-gpu/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "p5.48xlarge",
+        "accelerator": "NVIDIA H100",
+        "gpus": 8,
+        "memory_gib": 80,
+        "bandwidth_gbps": 3350,
+        "bf16_tflops": 989,
+        "interconnect": "NVLink / NVSwitch within the node",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/h100/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "p5e.48xlarge",
+        "accelerator": "NVIDIA H200",
+        "gpus": 8,
+        "memory_gib": 141,
+        "bandwidth_gbps": 4800,
+        "bf16_tflops": 989,
+        "interconnect": "NVLink / NVSwitch within the node",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/h200/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      },
+      {
+        "instance": "p6-b200.48xlarge",
+        "accelerator": "NVIDIA B200",
+        "gpus": 8,
+        "memory_gib": 179,
+        "bandwidth_gbps": 8000,
+        "bf16_tflops": 2250,
+        "interconnect": "NVLink / NVSwitch within the node",
+        "compute_source": "https://www.nvidia.com/en-us/data-center/hgx/",
+        "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+        "reviewedAt": "2026-09-23",
+        "basis": "PUBLISHED",
+        "availability": "NOT_CHECKED"
+      }
+    ],
+    "memoryFit": null,
+    "limitations": [
+      "CPU observations are supplied evidence. They never pass the deployment solver's performance or compatibility checks automatically."
+    ],
+    "selectionReason": "First memory fit in the published shortlist; not a price ranking.",
+    "request": {
+      "model": {
+        "name": "Qwen test",
+        "architecture": "Qwen2ForCausalLM",
+        "hfRepo": "Qwen/Qwen2.5-7B-Instruct",
+        "weightsExportable": true
+      },
+      "workload": {
+        "horizonHours": "720",
+        "requests": "30000",
+        "inputTokensPerRequest": "500",
+        "outputTokensPerRequest": "100"
+      },
+      "constraints": {
+        "permittedRegions": [
+          "us-east-1"
+        ]
+      }
+    },
+    "region": "us-east-1"
+  }
+}

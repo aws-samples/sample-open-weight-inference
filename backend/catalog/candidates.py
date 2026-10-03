@@ -41,6 +41,17 @@ from .pricing import ARCHITECTURE_TO_CMI_FAMILY
 # more; these are the sizes with recipes qualified in this release.
 SAGEMAKER_SHORTLIST = ("ml.g5.2xlarge", "ml.g5.12xlarge", "ml.g6.2xlarge")
 
+# GGUF speech models run in their own native runtime (NeMo-Speech.cpp), not in the
+# Transformers-based GPU serving containers or Bedrock Custom Model Import.
+GGUF_SPEECH_ARCHITECTURES = frozenset({"magpietts"})
+#: The reviewed CPU speech recipe that this installation can run as a bounded trial.
+SPEECH_CPU_INSTANCE = "ml.m6g.xlarge"
+SPEECH_RECIPE_ID = "sagemaker-magpie-cpu"
+GPU_RUNTIME_MISMATCH = (
+    "The GPU serving recipe (TGI/vLLM) loads Transformers checkpoints. This GGUF speech "
+    "model needs the NeMo-Speech.cpp runtime; no GPU recipe for it is qualified here."
+)
+
 # Rough weight-capacity screen used only to reject obvious non-fits. This is a
 # memory feasibility hint, never a latency or throughput prediction.
 INSTANCE_GPU_MEMORY_GB = {
@@ -81,6 +92,7 @@ def _candidates_in_region(req: PlacementRequest, region: str) -> tuple[Candidate
         out.append(Candidate(
             candidate_id=f"{prefix}-{CPU_INSTANCE}", target=target, region=region,
             model_ref=req.model.name, instance_type=CPU_INSTANCE,
+            compute_type="cpu", memory_gib=Decimal("64"),
             ops_burden=ops, supported_modalities=tuple(Modality),
             supports_streaming=target is Target.EC2_CPU,
             notes="CPU-only experiment profile: 32 vCPU, 64 GiB RAM, full model resident, no GPU or disk offload. "
@@ -94,6 +106,29 @@ def _candidates_in_region(req: PlacementRequest, region: str) -> tuple[Candidate
         arch in ARCHITECTURE_TO_CMI_FAMILY
         and req.model.modality in (Modality.TEXT, Modality.VISION_LANGUAGE)
     )
+
+    if arch in GGUF_SPEECH_ARCHITECTURES:
+        # Evaluate import explicitly so the map shows why it is ruled out, rather
+        # than silently omitting the route a reader most often asks about.
+        out.append(Candidate(
+            candidate_id="cmi-import", target=Target.BEDROCK_CMI, region=region,
+            model_ref=req.model.name, scale_to_zero=True, prewarmed=False,
+            ops_burden=OpsBurden.SERVICE_API, blast_radius=BlastRadius.SHARED_ACCOUNT_SERVICE,
+            supported_modalities=(Modality.TEXT, Modality.VISION_LANGUAGE),
+            notes="Custom Model Import accepts supported text and vision-language architectures. "
+            "It has no path for a GGUF text-to-speech model, so no import cost is computed.",
+        ))
+        out.append(Candidate(
+            candidate_id=f"sagemaker-{SPEECH_CPU_INSTANCE}", target=Target.SAGEMAKER_REALTIME,
+            region=region, model_ref=req.model.name, instance_type=SPEECH_CPU_INSTANCE,
+            instance_count=Decimal("1"), ops_burden=OpsBurden.MANAGED_CONTAINER_ENDPOINT,
+            blast_radius=BlastRadius.ISOLATED_DEPLOYMENT, recipe_id=SPEECH_RECIPE_ID,
+            supported_modalities=(Modality.TTS,),
+            compute_type="cpu", memory_gib=Decimal("16"), supports_streaming=False,
+            hardware_source_url="https://docs.aws.amazon.com/ec2/latest/instancetypes/gp.html",
+            notes="One Graviton2 CPU real-time endpoint (4 vCPU, 16 GiB) running the reviewed Magpie-only "
+            "NeMo-Speech.cpp image. Continuously allocated while it exists; one request at a time.",
+        ))
 
     if cmi_eligible:
         # How many Custom Model Units a copy needs, with its provenance.
@@ -267,7 +302,10 @@ def build_snapshot(
     latency_by_candidate = latency_by_candidate or {}
     per_candidate: dict[str, CandidateEvidence] = {}
 
+    speech_gguf = req.model.architecture in GGUF_SPEECH_ARCHITECTURES
     for cand in candidates:
+        gpu_mismatch = (speech_gguf and cand.target is Target.SAGEMAKER_REALTIME
+                        and cand.recipe_id != SPEECH_RECIPE_ID)
         per_candidate[cand.candidate_id] = CandidateEvidence(
             latency=latency_by_candidate.get(cand.candidate_id),
             capacity=(
@@ -275,10 +313,13 @@ def build_snapshot(
             ),
             quota_headroom_ok=True if assume_cleared else None,
             license_cleared=True if assume_cleared else None,
-            architecture_supported=True,
+            architecture_supported=False if gpu_mismatch else True,
+            unsupported_reason=GPU_RUNTIME_MISMATCH if gpu_mismatch else None,
             # CPU is newly evaluated, not an executable/qualified app recipe.
             recipe_qualified=True if assume_cleared and cand.target not in CPU_TARGETS else None,
-            cost=cost_for_candidate(cand, req, rates),
+            # An ineligible import has no meaningful price; show none rather than a guess.
+            cost=None if cand.target is Target.BEDROCK_CMI and cand.cmus_per_copy is None
+            else cost_for_candidate(cand, req, rates),
         )
 
     return EvidenceSnapshot(

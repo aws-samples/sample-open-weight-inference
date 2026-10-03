@@ -22,7 +22,7 @@ EXCLUDED_SUFFIXES = frozenset({".pyc", ".pyo", ".log", ".tsbuildinfo"})
 TEXT_SUFFIXES = frozenset({
     ".py", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".css", ".html",
     ".svg", ".json", ".yaml", ".yml", ".toml", ".ini", ".txt", ".md", ".sh",
-    ".gitignore", ".dockerignore", ".npmrc",
+    ".gitignore", ".dockerignore", ".npmrc", ".patch",
 })
 TEXT_NAMES = frozenset({
     ".gitignore", ".dockerignore", ".npmrc", ".nvmrc", "Dockerfile", "LICENSE", "NOTICE",

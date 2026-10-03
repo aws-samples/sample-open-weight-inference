@@ -101,7 +101,8 @@ export function patchFromInspection(
   if (result.checkpoint && result.ok) {
     Object.assign(patch, {
       sourceKind: 'checkpoint', sourceLocation: result.checkpoint.source,
-      modelName: result.checkpoint.name, modelStage: 'fine-tuned',
+      modelName: result.checkpoint.name,
+      modelStage: result.checkpoint.customization === 'published' ? 'base' : 'fine-tuned',
       modelIntent: 'specific', selectionStage: 'committed',
       artifactDigest: result.checkpoint.revision, hfRepo: '', hfCommit: '',
     });

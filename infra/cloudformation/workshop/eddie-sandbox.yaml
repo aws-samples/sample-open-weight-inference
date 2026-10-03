@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
   EDDIE Workshop Studio bootstrap. Builds the reviewed source release with deploy.sh,
-  publishes the application and teaching checkpoint, and creates a participant login.
+  publishes the application and the reviewed Magpie speech bundle, and creates a participant login.
   Intended only for disposable workshop accounts.
 
 Parameters:
@@ -23,16 +23,16 @@ Parameters:
     Default: ""
     AllowedPattern: "^$|^[0-9a-f]{64}$"
     Description: Required release checksum. make-assets.sh populates this in the workshop copy.
-  CheckpointZipS3Uri:
+  SpeechModelS3Uri:
     Type: String
     Default: ""
-    AllowedPattern: "^$|^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/.+\\.zip$"
-    Description: Optional override; otherwise acme-catalog-checkpoint.zip from workshop S3 assets.
-  CheckpointZipSha256:
+    AllowedPattern: "^$|^s3://[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/.+\\.tar\\.gz$"
+    Description: Optional override; otherwise magpie-tts-v2607.tar.gz from workshop S3 assets.
+  SpeechModelSha256:
     Type: String
     Default: ""
     AllowedPattern: "^$|^[0-9a-f]{64}$"
-    Description: Required when loading Acme's actual fine-tuned teaching checkpoint.
+    Description: Required when publishing the reviewed Magpie TTS v2607 speech bundle.
   ParticipantEmail:
     Type: String
     Default: "participant@example.com"
@@ -47,7 +47,7 @@ Parameters:
     Type: String
     Default: lab
     AllowedPattern: "[a-z0-9-]{2,20}"
-  LoadTeachingCheckpoint:
+  LoadSpeechModel:
     Type: String
     Default: "true"
     AllowedValues: ["true", "false"]
@@ -55,7 +55,7 @@ Parameters:
     Type: String
     Default: "false"
     AllowedValues: ["true", "false"]
-    Description: Prepare the serving image for approved trials. Does not start an endpoint.
+    Description: Build the Magpie-only CPU image for approved speech trials. Does not start an endpoint.
   AlarmEmail:
     Type: String
     Default: ""
@@ -76,15 +76,15 @@ Rules:
           - !Not [!Equals [!Ref SourceZipS3Uri, ""]]
           - !Not [!Equals [!Ref MyAssetsBucketName, ""]]
         AssertDescription: Provide workshop S3 assets or an explicit source ZIP URI.
-  RequireCheckpoint:
-    RuleCondition: !Equals [!Ref LoadTeachingCheckpoint, "true"]
+  RequireSpeechModel:
+    RuleCondition: !Equals [!Ref LoadSpeechModel, "true"]
     Assertions:
-      - Assert: !Not [!Equals [!Ref CheckpointZipSha256, ""]]
-        AssertDescription: The teaching checkpoint is required; missing files must fail provisioning.
+      - Assert: !Not [!Equals [!Ref SpeechModelSha256, ""]]
+        AssertDescription: The speech bundle is required; missing files must fail provisioning.
       - Assert: !Or
-          - !Not [!Equals [!Ref CheckpointZipS3Uri, ""]]
+          - !Not [!Equals [!Ref SpeechModelS3Uri, ""]]
           - !Not [!Equals [!Ref MyAssetsBucketName, ""]]
-        AssertDescription: Provide workshop S3 assets or an explicit checkpoint ZIP URI.
+        AssertDescription: Provide workshop S3 assets or an explicit speech bundle URI.
   TrialNotificationOwner:
     RuleCondition: !Equals [!Ref EnableInferenceTrials, "true"]
     Assertions:
@@ -93,7 +93,7 @@ Rules:
 
 Conditions:
   UseSourceAssets: !Equals [!Ref SourceZipS3Uri, ""]
-  UseCheckpointAssets: !Equals [!Ref CheckpointZipS3Uri, ""]
+  UseSpeechAssets: !Equals [!Ref SpeechModelS3Uri, ""]
 
 Resources:
   ParticipantSecretKey:
@@ -184,21 +184,24 @@ Resources:
           - { Name: PARTICIPANT_EMAIL, Value: !Ref ParticipantEmail }
           - { Name: PARTICIPANT_GROUP, Value: !Ref ParticipantGroup }
           - { Name: PARTICIPANT_SECRET_ARN, Value: !Ref ParticipantSecret }
-          - { Name: LOAD_CHECKPOINT, Value: !Ref LoadTeachingCheckpoint }
-          - { Name: EDDIE_ENABLE_INFERENCE, Value: !Ref EnableInferenceTrials }
+          - { Name: LOAD_SPEECH_MODEL, Value: !Ref LoadSpeechModel }
+          # The workshop's only executable recipe is the Magpie CPU speech trial.
+          # The GPU text serving image is not prepared here.
+          - { Name: EDDIE_ENABLE_INFERENCE, Value: "false" }
+          - { Name: EDDIE_ENABLE_SPEECH, Value: !Ref EnableInferenceTrials }
           - { Name: EDDIE_ALARM_EMAIL, Value: !Ref AlarmEmail }
           - { Name: SOURCE_SHA256, Value: !Ref SourceZipSha256 }
-          - { Name: CHECKPOINT_SHA256, Value: !Ref CheckpointZipSha256 }
+          - { Name: SPEECH_MODEL_SHA256, Value: !Ref SpeechModelSha256 }
           - Name: SOURCE_ZIP
             Value: !If
               - UseSourceAssets
               - !Sub "s3://${MyAssetsBucketName}/${MyAssetsBucketPrefix}eddie-solution.zip"
               - !Ref SourceZipS3Uri
-          - Name: CHECKPOINT_ZIP
+          - Name: SPEECH_MODEL_ARCHIVE
             Value: !If
-              - UseCheckpointAssets
-              - !Sub "s3://${MyAssetsBucketName}/${MyAssetsBucketPrefix}acme-catalog-checkpoint.zip"
-              - !Ref CheckpointZipS3Uri
+              - UseSpeechAssets
+              - !Sub "s3://${MyAssetsBucketName}/${MyAssetsBucketPrefix}magpie-tts-v2607.tar.gz"
+              - !Ref SpeechModelS3Uri
       Source:
         Type: NO_SOURCE
         BuildSpec: |
@@ -249,6 +252,16 @@ Resources:
                   test -f "$EDDIE_RELEASE_ROOT/scripts/workshop/bootstrap.py"
                 - |
                   set -euo pipefail
+                  # Check the model asset before the long application install, so a
+                  # missing or altered bundle fails in minutes, not after deploy.sh.
+                  if [ "$LOAD_SPEECH_MODEL" = "true" ]; then
+                    echo "1/5 Download and verify the pinned speech bundle"
+                    aws s3 cp "$SPEECH_MODEL_ARCHIVE" /tmp/eddie-speech.tar.gz --only-show-errors
+                    python3 "$EDDIE_RELEASE_ROOT/scripts/workshop/bootstrap.py" verify-speech-model \
+                      --archive /tmp/eddie-speech.tar.gz
+                  fi
+                - |
+                  set -euo pipefail
                   echo "2/5 Install the pinned build dependencies"
                   cd "$EDDIE_RELEASE_ROOT"
                   python3 -m venv .venv
@@ -265,7 +278,7 @@ Resources:
                     --region "$EDDIE_REGION" --expect-account "$EDDIE_EXPECTED_ACCOUNT"
                 - |
                   set -euo pipefail
-                  echo "4/5 Publish the checkpoint and configure participant sign-in"
+                  echo "4/5 Publish the speech bundle and configure participant sign-in"
                   cd "$EDDIE_RELEASE_ROOT"
                   .venv/bin/python scripts/workshop/bootstrap.py finish
             post_build:
@@ -464,9 +477,9 @@ Resources:
       Source: !Ref SourceZipS3Uri
       AssetsBucket: !Ref MyAssetsBucketName
       AssetsPrefix: !Ref MyAssetsBucketPrefix
-      CheckpointSha256: !Ref CheckpointZipSha256
-      CheckpointSource: !Ref CheckpointZipS3Uri
-      LoadCheckpoint: !Ref LoadTeachingCheckpoint
+      SpeechModelSha256: !Ref SpeechModelSha256
+      SpeechModelSource: !Ref SpeechModelS3Uri
+      LoadSpeechModel: !Ref LoadSpeechModel
       EnableTrials: !Ref EnableInferenceTrials
       AlarmEmail: !Ref AlarmEmail
 
@@ -486,9 +499,9 @@ Outputs:
   ApplicationStack:
     Description: Sibling application stack installed by deploy.sh. Workshop Studio account cleanup owns final teardown.
     Value: !GetAtt EddieInstallation.ApplicationStack
-  TeachingCheckpoint:
-    Description: Published indicates model files are in the private library; no model quality or inference was tested.
-    Value: !GetAtt EddieInstallation.CheckpointStatus
+  SpeechModel:
+    Description: Published indicates the verified Magpie bundle is in the private model library; no inference was run.
+    Value: !GetAtt EddieInstallation.SpeechModelStatus
   ReleaseSha256:
     Value: !Ref SourceZipSha256
   InstallerLogGroup:

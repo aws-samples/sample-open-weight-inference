@@ -66,7 +66,7 @@ describe('a workspace for beginners and experienced users', () => {
   it('represents private connections as unavailable capabilities, not successful connections', async () => {
     const { invocations } = start();
     await userEvent.click(screen.getByRole('tab', { name: 'Models & sources' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Your fine-tuned model' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Your model library' }));
     await userEvent.click(screen.getByRole('button', { name: 'Another company source or vendor integration' }));
     await userEvent.type(screen.getByRole('textbox', { name: 'Company model source' }), 's3://company-models/my-model/');
     expect(screen.getByText('Private source access needs an adapter')).toBeVisible();

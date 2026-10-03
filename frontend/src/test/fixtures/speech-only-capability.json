@@ -1,0 +1,62 @@
+{
+  "targets": [
+    {
+      "target": "SAGEMAKER_REALTIME",
+      "label": "Amazon SageMaker",
+      "available": true,
+      "reason": "Short, authenticated tests of the Magpie speech bundle on one CPU instance."
+    },
+    {
+      "target": "BEDROCK_CMI",
+      "label": "Import into Amazon Bedrock",
+      "available": false,
+      "reason": "Custom Model Import can be evaluated. Import execution is not implemented in this installation."
+    },
+    {
+      "target": "EC2_GPU",
+      "label": "Amazon EC2 GPU",
+      "available": false,
+      "reason": "Deployment execution for EC2 GPU servers is not implemented yet."
+    }
+  ],
+  "canCreatePlans": true,
+  "speechRecipe": {
+    "id": "sagemaker-magpie-cpu",
+    "version": "1.0.0",
+    "available": true,
+    "bundle": "magpie-tts-v2607",
+    "instanceType": "ml.m6g.xlarge",
+    "maximumLifetimeMinutes": 60,
+    "targets": [
+      "SAGEMAKER_REALTIME"
+    ],
+    "note": "The reviewed Magpie TTS v2607 bundle from your model library, unchanged, in a Magpie-only NeMo-Speech.cpp image on one Graviton CPU instance. One request at a time; audio is returned to you and not stored."
+  },
+  "checkpointRecipe": {
+    "id": "byo-qwen2-safetensors",
+    "version": "1.0.0",
+    "available": false,
+    "maximumModelGiB": 18,
+    "architectures": [
+      "Qwen2ForCausalLM"
+    ],
+    "targets": [
+      "SAGEMAKER_REALTIME"
+    ],
+    "note": "Full or merged BF16 fine-tunes of Qwen2.5 0.5B, 1.5B or 7B. Custom code and adapter-only exports need another recipe."
+  },
+  "recipes": [
+    {
+      "id": "sagemaker-qwen-small-vllm",
+      "version": "1.0.0",
+      "models": [
+        "Qwen/Qwen2.5-0.5B-Instruct",
+        "Qwen/Qwen2.5-1.5B-Instruct"
+      ],
+      "region": "us-east-1",
+      "instanceType": "ml.g5.2xlarge",
+      "maximumLifetimeMinutes": 60
+    }
+  ],
+  "note": "A test deployment does not certify answer quality or p99 latency. Review its cost and expiry before approving."
+}

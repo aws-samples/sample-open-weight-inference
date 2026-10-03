@@ -326,7 +326,7 @@ export function DecisionMap({ result, initialCandidateId, onDismiss, ...actions 
               <div><h4>{active.id === 'cpu' || active.id === 'gpu'
                 ? 'Plan the compute experiment' : 'This route needs an evaluation'}</h4>
                 <p>{active.id === 'cpu'
-                  ? 'Use the sizing sheet to check CPU runtime support, memory and the completion budget, then choose a service for the trial. A recorded podcast run provides a concrete example.'
+                  ? 'Use the sizing sheet to check CPU runtime support, memory and the completion budget, then choose a service for the trial. A recorded speech run provides a concrete example.'
                   : active.id === 'gpu'
                     ? 'Inspect weight precision, attention-cache memory, GPU sharing and the traffic assumptions. Use the resulting configuration as a benchmark candidate.'
                     : 'No configuration on this path was checked in this run. That does not mean the route failed.'}</p>

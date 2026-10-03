@@ -115,6 +115,7 @@ class Settings:
     staging_function: str
     inference_function: str
     reconciler_function: str
+    speech_image: str = ""
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -133,18 +134,37 @@ class Settings:
             staging_function=os.environ.get("EDDIE_ARTIFACT_STAGER", ""),
             inference_function=os.environ.get("EDDIE_INFERENCE_FUNCTION", ""),
             reconciler_function=os.environ.get("EDDIE_RECONCILER_FUNCTION", ""),
+            speech_image=os.environ.get("EDDIE_SPEECH_IMAGE", ""),
         )
 
+    def _image(self, repository: str) -> str:
+        return (rf"{re.escape(self.account)}\.dkr\.ecr\.{re.escape(self.region)}\.amazonaws\.com/"
+                rf"eddie-{re.escape(self.environment)}-{repository}@sha256:[0-9a-f]{{64}}")
+
     @property
-    def ready(self) -> bool:
-        image = rf"{re.escape(self.account)}\.dkr\.ecr\.{re.escape(self.region)}\.amazonaws\.com/eddie-{re.escape(self.environment)}-(?:kms-)?serving@sha256:[0-9a-f]{{64}}"
+    def infrastructure_ready(self) -> bool:
+        """The private network, roles, ledger and cleanup are present; no image implied."""
         return bool(
             re.fullmatch(r"\d{12}", self.account) and self.region and self.environment
-            and self.table and self.bucket and self.kms_key and re.fullmatch(image, self.image)
+            and self.table and self.bucket and self.kms_key
             and self.execution_role and len(self.subnets) >= 2 and self.security_group
             and self.worker_function and self.staging_function and self.inference_function
             and self.reconciler_function
         )
+
+    @property
+    def ready(self) -> bool:
+        """The reviewed GPU text recipes: the vLLM serving image is configured."""
+        return self.infrastructure_ready and bool(re.fullmatch(self._image("(?:kms-)?serving"), self.image))
+
+    @property
+    def speech_ready(self) -> bool:
+        """The reviewed Magpie CPU recipe: the Magpie-only image is configured."""
+        return self.infrastructure_ready and bool(re.fullmatch(self._image("speech"), self.speech_image))
+
+    @property
+    def any_ready(self) -> bool:
+        return self.ready or self.speech_ready
 
     @property
     def fingerprint(self) -> str:
@@ -160,6 +180,17 @@ class Settings:
     def recipe_fingerprint(self, recipe: str, target: str) -> str:
         if recipe == RECIPE_ID and target == "SAGEMAKER_REALTIME":
             return self.fingerprint
+        from .speech import SPEECH_RECIPE_ID, SPEECH_RECIPE_VERSION, SPEECH_INSTANCE_TYPE, speech_environment
+        if recipe == SPEECH_RECIPE_ID and target == "SAGEMAKER_REALTIME":
+            # The speech recipe has its own image and CPU instance; it does not
+            # depend on the GPU serving image being configured.
+            return digest({
+                "account": self.account, "region": self.region, "image": self.speech_image,
+                "role": self.execution_role, "subnets": self.subnets, "securityGroup": self.security_group,
+                "bucket": self.bucket, "kms": self.kms_key, "instance": SPEECH_INSTANCE_TYPE,
+                "environment": speech_environment(), "recipe": [recipe, SPEECH_RECIPE_VERSION],
+                "target": target,
+            })
         from .checkpoints import CHECKPOINT_RECIPE_ID, CHECKPOINT_RECIPE_VERSION
         if recipe != CHECKPOINT_RECIPE_ID or target != "SAGEMAKER_REALTIME":
             raise ValueError("The deployment recipe is not supported.")
@@ -169,18 +200,32 @@ class Settings:
         })
 
     def capability(self) -> dict[str, Any]:
+        from .speech import SPEECH_RECIPE_ID, SPEECH_RECIPE_VERSION, SPEECH_INSTANCE_TYPE, BUNDLE
+        reviewed = [label for label, ok in (("reviewed small Qwen text models on one GPU", self.ready),
+                                            ("the Magpie speech bundle on one CPU instance", self.speech_ready)) if ok]
         return {
             "targets": [
                 {"target": "SAGEMAKER_REALTIME", "label": "Amazon SageMaker",
-                 "available": self.ready,
-                 "reason": ("Short, authenticated tests of reviewed small Qwen models."
-                            if self.ready else "The serving image or private deployment infrastructure is not configured.")},
+                 "available": self.any_ready,
+                 "reason": ("Short, authenticated tests of " + " and ".join(reviewed) + "."
+                            if reviewed else "The serving image or private deployment infrastructure is not configured.")},
                 {"target": "BEDROCK_CMI", "label": "Import into Amazon Bedrock", "available": False,
                  "reason": "Custom Model Import can be evaluated. Import execution is not implemented in this installation."},
                 {"target": "EC2_GPU", "label": "Amazon EC2 GPU", "available": False,
                  "reason": "Deployment execution for EC2 GPU servers is not implemented yet."},
             ],
-            "canCreatePlans": self.ready,
+            "canCreatePlans": self.any_ready,
+            "speechRecipe": {
+                "id": SPEECH_RECIPE_ID, "version": SPEECH_RECIPE_VERSION,
+                "available": self.speech_ready, "bundle": BUNDLE["id"],
+                "instanceType": SPEECH_INSTANCE_TYPE, "maximumLifetimeMinutes": 60,
+                "targets": ["SAGEMAKER_REALTIME"],
+                "note": ("The reviewed Magpie TTS v2607 bundle from your model library, unchanged, "
+                         "in a Magpie-only NeMo-Speech.cpp image on one Graviton CPU instance. "
+                         "One request at a time; audio is returned to you and not stored."
+                         if self.speech_ready else
+                         "The Magpie-only speech image is not configured in this installation."),
+            },
             "checkpointRecipe": {
                 "id": "byo-qwen2-safetensors", "version": "1.0.0",
                 "available": self.ready, "maximumModelGiB": 18,
@@ -189,6 +234,7 @@ class Settings:
                 "note": "Full or merged BF16 fine-tunes of Qwen2.5 0.5B, 1.5B or 7B. Custom code and adapter-only exports need another recipe.",
             },
             "recipes": [{"id": RECIPE_ID, "version": RECIPE_VERSION, "models": list(MODEL_SOURCES),
+                         "available": self.ready,
                          "region": self.region, "instanceType": INSTANCE_TYPE,
                          "maximumLifetimeMinutes": 60}],
             "note": "A test deployment does not certify answer quality or p99 latency. Review its cost and expiry before approving.",

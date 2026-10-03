@@ -26,6 +26,9 @@ from .checkpoints import (
     CHECKPOINT_RECIPE_ID, CHECKPOINT_RECIPE_VERSION, inspect_checkpoint,
     inspection_result, list_checkpoints,
 )
+from .speech import (
+    SPEECH_INSTANCE_TYPE, SPEECH_QUOTA_CODE, SPEECH_RECIPE_ID, SPEECH_RECIPE_VERSION,
+)
 from .store import DynamoStore
 
 CLIENT_CONFIG = Config(connect_timeout=3, read_timeout=20, retries={"mode": "standard", "max_attempts": 2})
@@ -71,8 +74,17 @@ def verify_network(settings: Settings) -> list[Check]:
                   "Private serving network verified." if isolated else "The serving network does not match the private profile.")]
 
 
-def verify_image(settings: Settings) -> Check:
-    repo, sha = settings.image.split("/", 1)[1].split("@", 1)
+def recipe_profile(settings: Settings, recipe_id: str) -> dict[str, str]:
+    """Instance, quota and image are properties of the reviewed recipe, never the request."""
+    if recipe_id == SPEECH_RECIPE_ID:
+        return {"instance": SPEECH_INSTANCE_TYPE, "quota": SPEECH_QUOTA_CODE, "image": settings.speech_image}
+    if recipe_id in (RECIPE_ID, CHECKPOINT_RECIPE_ID):
+        return {"instance": INSTANCE_TYPE, "quota": QUOTA_CODE, "image": settings.image}
+    raise ValueError("The deployment recipe is not supported.")
+
+
+def verify_image(settings: Settings, image: str | None = None) -> Check:
+    repo, sha = (image or settings.image).split("/", 1)[1].split("@", 1)
     evidence = client("ecr", settings.region).describe_image_scan_findings(
         repositoryName=repo, imageId={"imageDigest": sha},
     )
@@ -121,15 +133,16 @@ def verify_cleanup(settings: Settings) -> Check:
                  "Automatic cleanup is not currently verified as healthy. Wait for the next sweep or ask the installation operator to check its schedule and alarms.")
 
 
-def safety_checks(settings: Settings) -> list[Check]:
+def safety_checks(settings: Settings, recipe_id: str = RECIPE_ID) -> list[Check]:
+    profile = recipe_profile(settings, recipe_id)
     checks = verify_network(settings)
-    checks.append(verify_image(settings))
+    checks.append(verify_image(settings, profile["image"]))
     checks.append(verify_cleanup(settings))
     quota = client("service-quotas", settings.region).get_service_quota(
-        ServiceCode="sagemaker", QuotaCode=QUOTA_CODE,
+        ServiceCode="sagemaker", QuotaCode=profile["quota"],
     )["Quota"]
     checks.append(check("quota.applied", Decimal(str(quota["Value"])) >= 1,
-                        f"Applied {INSTANCE_TYPE} endpoint quota at least one",
+                        f"Applied {profile['instance']} endpoint quota at least one",
                         f"Applied quota {quota['Value']}. Existing usage and capacity are checked by allocation; quota is not a reservation."))
     return checks
 
@@ -139,7 +152,7 @@ class DeploymentService:
         self.settings, self.store = settings, store
 
     def prepare(self, payload: dict[str, Any], principal: Any, project: str) -> dict[str, Any]:
-        if not self.settings.ready:
+        if not self.settings.any_ready:
             raise ValueError("Test deployments are not configured in this installation.")
         region = payload.get("region") or self.settings.region
         if region != self.settings.region:
@@ -158,16 +171,22 @@ class DeploymentService:
         metadata = (inspect_checkpoint(payload["source"], self.settings, project,
                                        client("s3", region), payload.get("revision"))
                     if is_checkpoint else inspect_recipe_model(payload.get("source"), payload.get("revision")))
-        recipe_id = CHECKPOINT_RECIPE_ID if is_checkpoint else RECIPE_ID
-        recipe_version = CHECKPOINT_RECIPE_VERSION if is_checkpoint else RECIPE_VERSION
+        speech = metadata.get("recipeId") == SPEECH_RECIPE_ID
+        recipe_id = SPEECH_RECIPE_ID if speech else CHECKPOINT_RECIPE_ID if is_checkpoint else RECIPE_ID
+        recipe_version = (SPEECH_RECIPE_VERSION if speech else
+                          CHECKPOINT_RECIPE_VERSION if is_checkpoint else RECIPE_VERSION)
+        if not (self.settings.speech_ready if speech else self.settings.ready):
+            raise ValueError("This model's reviewed deployment recipe is not configured in this installation. "
+                             "No plan was created.")
         target = payload.get("target", "SAGEMAKER_REALTIME")
         if target != "SAGEMAKER_REALTIME":
             raise ValueError("This installation has no executable recipe for that hosting target. The selected target was not changed.")
+        profile = recipe_profile(self.settings, recipe_id)
         from catalog.pricing import sagemaker_hosting_rate
-        rate = sagemaker_hosting_rate(INSTANCE_TYPE, region)
+        rate = sagemaker_hosting_rate(profile["instance"], region)
         if rate is None:
             raise ValueError("A current SageMaker hosting price could not be obtained. No plan was created.")
-        checks = safety_checks(self.settings)
+        checks = safety_checks(self.settings, recipe_id)
         # This is a disclosed allowance, not an invented service price. The only
         # quoted rate is the live SageMaker Hosting SKU. No fixed monthly costs are
         # assigned to a short test.
@@ -187,13 +206,13 @@ class DeploymentService:
             artifacts=(
                 Artifact("weights", metadata["source"] if is_checkpoint else f"hf://{metadata['source']}", digest=metadata["revision"]),
                 Artifact("manifest", "eddie://model-files", digest=digest(metadata)),
-                Artifact("image", self.settings.image, digest=self.settings.image.split("@")[1], scan_status="COMPLETE"),
+                Artifact("image", profile["image"], digest=profile["image"].split("@")[1], scan_status="COMPLETE"),
                 Artifact("config", "eddie://private-sagemaker-profile",
                          digest=self.settings.recipe_fingerprint(recipe_id, target)),
                 Artifact("price", "aws-price-list://sagemaker-hosting", digest=digest(price_evidence)),
             ),
             envelope=ResourceEnvelope(
-                instance_type=INSTANCE_TYPE, max_instance_count=1, max_concurrent_jobs=1,
+                instance_type=profile["instance"], max_instance_count=1, max_concurrent_jobs=1,
                 max_spend_usd=ceiling, max_lifetime_minutes=minutes,
                 execution_deadline_minutes=25, max_storage_gb=500, max_retries=2,
                 permitted_regions=(region,),
@@ -202,11 +221,18 @@ class DeploymentService:
             estimated_setup_usd=allowance, estimated_hourly_usd=rate.amount,
             checks=tuple(checks),
             notes=(
-                "Trial only. Answer quality, throughput and p99 performance remain unqualified.",
+                ("Trial only. It checks that the model loads and returns valid audio; speech quality, "
+                 "throughput and concurrency remain unmeasured." if speech else
+                 "Trial only. Answer quality, throughput and p99 performance remain unqualified."),
                 "The lifetime starts when you approve and start, including model preparation.",
                 "Expiry requests removal. Billing continues until AWS confirms removal; it is not a financial hard cap.",
-                "One fixed GPU instance; no autoscaling, reservations, public IP or SSH access.",
-                ("The exact fine-tuned checkpoint is used; its base model is never substituted. "
+                (f"One fixed CPU instance ({SPEECH_INSTANCE_TYPE}, Graviton); one request at a time. "
+                 "No autoscaling, reservations, public IP or SSH access." if speech else
+                 "One fixed GPU instance; no autoscaling, reservations, public IP or SSH access."),
+                ("The reviewed Magpie bundle is used unchanged: model, codec and tokenizer files are verified "
+                 "against the approved S3 versions and SHA-256 digests. Audio is returned to you, not stored."
+                 if speech else
+                 "The exact fine-tuned checkpoint is used; its base model is never substituted. "
                  "Files are capped at 18 GiB and verified against the approved S3 versions and SHA-256 digests."
                  if is_checkpoint else "Model files are capped at 4 GiB.") +
                 " The 500 GB storage envelope includes the instance's managed local disk.",
@@ -236,7 +262,7 @@ class DeploymentService:
         config = next(a.digest for a in plan.artifacts if a.kind == "config")
         if config != self.settings.recipe_fingerprint(plan.recipe_id, plan.target.value):
             raise ApprovalError("The deployment configuration changed. Prepare a fresh plan.", "profile_changed")
-        fresh_checks = safety_checks(self.settings)
+        fresh_checks = safety_checks(self.settings, plan.recipe_id)
         if any(c.status is not CheckStatus.PASS for c in fresh_checks if c.required):
             raise ApprovalError("A deployment check changed. Prepare a fresh plan to see what needs attention.", "checks_changed")
         # The reference is a deterministic idempotency identity for this actor + plan.
@@ -277,7 +303,8 @@ class DeploymentService:
         return {**replace(job, resources=resources).to_json(), "modelRef": plan.model_ref,
                 "region": plan.region, "hourlyUsd": str(plan.estimated_hourly_usd),
                 "modelRevision": next(a.digest for a in plan.artifacts if a.kind == "weights"),
-                "kind": plan.kind.value, "performanceQualified": False}
+                "kind": plan.kind.value, "performanceQualified": False,
+                "recipeId": plan.recipe_id, "instanceType": plan.envelope.instance_type}
 
     def list(self, project: str) -> dict[str, Any]:
         from .reconciler import residual_report

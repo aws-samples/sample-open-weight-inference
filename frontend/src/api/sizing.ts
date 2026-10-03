@@ -22,13 +22,16 @@ export interface SizingSettings {
   cpuPeakGiB: string; cpuJobSeconds: string; cpuBillableSeconds: string; cpuRunReference: string;
 }
 export interface CpuService { id: string; name: string; fit: string; detail: string; sourceUrl: string }
-export interface PodcastExample {
+/** A sanitized record of one real run of the reviewed speech recipe; never a placeholder. */
+export interface SpeechExample {
   id: string; title: string; basis: 'RECORDED_EXAMPLE'; recordedAt: string;
-  description: string; model: string; modelSource: string; instance: string;
-  region: string; vcpus: number; memoryGiB: number; device: string; dtype: string;
-  threads: number; interopThreads: number; audioSeconds: number; generationSeconds: number;
-  startupSeconds: number; assetLoadSeconds: number; endToEndSeconds: number;
-  realTimeFactor: number; peakProcessMiB: number;
+  description: string; model: string; modelSource: string; architecture: string;
+  runtime: string; hosting: string; instance: string; region: string;
+  vcpus: number; memoryGiB: number; cpuArchitecture: string; threads: number;
+  inputCharacters: number; audioSeconds: number; synthesisSeconds: number;
+  requestSeconds: number; realTimeFactor: number; peakProcessMiB: number;
+  startupSeconds: number | null; hourlyUsd: string | null; trialCostUsd: string | null;
+  cleanup: { verifiedAt: string; endpointRemoved: boolean; stagedFilesRemoved: boolean; scope: string };
   versions: Record<string, string>; artifactHashes: Record<string, string>; limitations: string[];
 }
 export interface SizingReport {
@@ -47,7 +50,7 @@ export interface SizingReport {
     priority: string; title: string; reason: string;
     checks: { label: string; value: string; detail: string }[];
     cpuServices: CpuService[]; sizeGuidance: string[]; graviton: string;
-    example: PodcastExample; qualifiesDeployment: false;
+    example: SpeechExample | null; qualifiesDeployment: false;
   };
   benchmark: { title: string; metrics: string[]; levers: string[]; record: string[]; sourceUrl: string; note: string };
 }

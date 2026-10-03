@@ -21,9 +21,11 @@ WORKLOADS = {
     "batch": ("Offline text processing",
               ["Task quality", "Queue-to-completion deadline", "Completed items per hour", "Cost per completed item"],
               ["Try CPU when the runtime and memory fit", "Batch size, parallel workers and model-load amortization"]),
-    "tts": ("Batch speech and podcasts",
-            ["Listening quality and pronunciation", "Generation seconds / audio seconds", "Queue-to-completion time", "Peak process memory", "Cost per audio minute"],
-            ["CPU runtime, thread count and FP32 memory", "Reuse loaded voice models across segments", "Compare GPU only if the CPU deadline, concurrency or economics fall short"]),
+    "tts": ("Batch speech",
+            ["Complete, decodable audio for the supplied text", "Synthesis seconds / audio seconds", "Queue-to-completion time",
+             "Peak process memory", "Cost per completed job", "Listening quality, when it is a requirement"],
+            ["CPU runtime, thread count and the precision the runtime actually uses", "Load the model once and reuse it across jobs",
+             "Compare GPU only if the CPU deadline, concurrency or economics fall short"]),
     "voice": ("Live voice",
               ["Time to first audio", "Pause in a complete conversation", "Audio continuity at peak concurrency", "Listening quality"],
               ["Measure the whole audio pipeline", "Streaming support, audio chunk size and warm capacity"]),
@@ -82,6 +84,14 @@ def benchmark_guidance(kind: str) -> dict:
         "sourceUrl": "https://docs.aws.amazon.com/sagemaker/latest/dg/inference-recommender.html",
         "note": "These are experiments to run, not results. A published optimization or a different customer's benchmark does not verify this configuration.",
     }
+
+
+EXAMPLE = Path(__file__).resolve().parents[1] / "catalog" / "speech_example.json"
+
+
+def recorded_example() -> dict | None:
+    """A sanitized record of one real run, or nothing; never a placeholder."""
+    return json.loads(EXAMPLE.read_text()) if EXAMPLE.is_file() else None
 
 
 def compute_guidance(request: dict, settings: dict, weights_bytes: Decimal | None = None,
@@ -150,6 +160,6 @@ def compute_guidance(request: dict, settings: dict, weights_bytes: Decimal | Non
             "Large generative models, long context, high concurrency or a missed deadline can make CPU impractical even when RAM is sufficient.",
         ],
         "graviton": "Graviton is an ARM CPU option, not a GPU. Build an ARM64 image with compatible libraries and kernels, then compare completed work per dollar against x86. Do not reuse an x86 timing or assume a fixed speedup.",
-        "example": json.loads((Path(__file__).resolve().parents[1] / "catalog" / "podcast_example.json").read_text()),
+        "example": recorded_example(),
         "qualifiesDeployment": False,
     }

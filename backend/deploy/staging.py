@@ -12,6 +12,7 @@ import json
 import time
 import urllib.request
 from dataclasses import replace
+from decimal import Decimal
 from contextlib import contextmanager
 from tempfile import TemporaryFile
 from typing import Any
@@ -20,6 +21,7 @@ from .executor import admitted_plan, still_creating, intent, created, step_done,
 from .models import JobState, with_step
 from .recipes import Settings, inspect_recipe_model, digest
 from .checkpoints import CHECKPOINT_RECIPE_ID, inspect_checkpoint
+from .speech import SPEECH_RECIPE_ID
 from .service import client
 from .store import DynamoStore
 from netio import open_url, permitted_url
@@ -68,6 +70,24 @@ def source_stream(metadata, item, settings, s3, opener):
             yield response
 
 
+def from_store(value: Any) -> Any:
+    """Undo DynamoDB's number type so the review hashes exactly as it did when approved.
+
+    DynamoDB returns every number as Decimal, which json.dumps rejects. The reviewed
+    model manifest only ever contains integers (sizes, counts); anything else is a
+    changed review and must fail the comparison, not be coerced into passing it.
+    """
+    if isinstance(value, Decimal):
+        if value != value.to_integral_value():
+            raise ValueError("The saved model manifest contains an unexpected number.")
+        return int(value)
+    if isinstance(value, dict):
+        return {key: from_store(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [from_store(item) for item in value]
+    return value
+
+
 def stage(store: Any, settings: Settings, job: Any, *, remaining=None) -> None:
     plan = admitted_plan(store, settings, job)
     if step_done(job, "prepare-model"):
@@ -75,8 +95,8 @@ def stage(store: Any, settings: Settings, job: Any, *, remaining=None) -> None:
     revision = next(a.digest for a in plan.artifacts if a.kind == "weights")
     expected_manifest = next(a.digest for a in plan.artifacts if a.kind == "manifest")
     s3 = client("s3", settings.region)
-    if plan.recipe_id == CHECKPOINT_RECIPE_ID:
-        reviewed = store.get_plan_review(job.project_id, job.plan_id)["model"]
+    if plan.recipe_id in (CHECKPOINT_RECIPE_ID, SPEECH_RECIPE_ID):
+        reviewed = from_store(store.get_plan_review(job.project_id, job.plan_id)["model"])
         if digest(reviewed) != expected_manifest:
             raise ValueError("The saved checkpoint manifest does not match the approved plan.")
         metadata = inspect_checkpoint(

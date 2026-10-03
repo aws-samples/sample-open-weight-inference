@@ -73,7 +73,7 @@ describe('manual compute planning', () => {
     expect(screen.getByRole('textbox', { name: 'Simultaneous jobs or requests' })).toHaveValue('4');
   });
 
-  it('shows the CPU podcast record without treating it as this project’s measurement', async () => {
+  it('shows the recorded Magpie run without treating it as this project’s measurement', async () => {
     const { invocations } = renderWithProviders(<InferenceSizing />, {
       withCase: true,
       handler: (action, payload) => action === 'sizing.estimate'
@@ -81,15 +81,32 @@ describe('manual compute planning', () => {
     });
     await userEvent.click(screen.getByRole('button', { name: 'Build sizing sheet' }));
     await screen.findByTestId('inference-sizing-report');
+    await userEvent.click(screen.getByRole('tab', { name: 'Recorded example' }));
+    expect(screen.getByText('Recorded example: speech on CPU')).toBeVisible();
+    expect(screen.getByText(/Recorded example.*one request/)).toBeVisible();
+    expect(screen.getByText('11.6')).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: /What this proves/ }));
+    expect(screen.getByText(/does not demonstrate live or streaming voice/)).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Reproduction details' }));
+    expect(screen.getByText(/bundle magpie-tts-v2607/)).toBeVisible();
+    expect(invocations.filter((call) => call.action === 'sizing.estimate')).toHaveLength(1);
+  });
+
+  it('shows no recorded example tab when no real record is installed, and never a placeholder', async () => {
+    const { invocations } = renderWithProviders(<InferenceSizing />, {
+      withCase: true,
+      handler: (action, payload) => {
+        if (action !== 'sizing.estimate') return okEnvelope(action, {});
+        const report = reply(payload, 'cpu');
+        return okEnvelope(action, { ...report, guidance: { ...report.guidance, example: null } });
+      },
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Build sizing sheet' }));
+    await screen.findByTestId('inference-sizing-report');
     await userEvent.click(screen.getByRole('button', { name: /What still needs evidence/ }));
     expect(screen.getByText('Reported process memory:')).toBeVisible();
-    await userEvent.click(screen.getByRole('tab', { name: 'Podcast example' }));
-    expect(screen.getByText('Real example: speech on CPU')).toBeVisible();
-    expect(screen.getByText(/Recorded example.*one run/)).toBeVisible();
-    expect(screen.getByText('44.8')).toBeVisible();
-    expect(screen.getByText(/does not demonstrate live voice/)).toBeVisible();
-    await userEvent.click(screen.getByRole('button', { name: 'Reproduction details' }));
-    expect(screen.getByText(/qwen-tts 0.1.1/)).toBeVisible();
+    expect(screen.queryByRole('tab', { name: 'Recorded example' })).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Podcast example' })).toBeNull();
     expect(invocations.filter((call) => call.action === 'sizing.estimate')).toHaveLength(1);
     const billableOrMutating = new Set([
       'plan.create', 'plan.approve', 'deployment.invoke', 'deployment.delete', 'demo.wake',

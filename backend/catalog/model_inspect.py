@@ -401,7 +401,16 @@ def inspect_hf_model(
     if not license_id:
         tags = [t for t in info.get("tags", []) if str(t).startswith("license:")]
         license_id = tags[0].split(":", 1)[1] if tags else None
-    if license_id:
+    license_name = card.get("license_name")
+    if license_id == "other" and isinstance(license_name, str) and license_name.strip():
+        # "other" is a placeholder; the card names the actual terms separately.
+        inspection.license_id = Detected(
+            origin=Origin.DETECTED,
+            value=license_name.strip()[:120],
+            detail="Declared by the model card as license: other with this licence name. Read the terms on the model card.",
+            source_url=info_url,
+        )
+    elif license_id:
         inspection.license_id = Detected(
             origin=Origin.DETECTED,
             value=str(license_id),
@@ -416,7 +425,18 @@ def inspect_hf_model(
     # count rather than a figure parsed out of the model's name.
     safetensors = info.get("safetensors") or {}
     total_params = safetensors.get("total")
-    if isinstance(total_params, int) and total_params > 0:
+    gguf = info.get("gguf") if isinstance(info.get("gguf"), dict) else {}
+    gguf_total = gguf.get("total")
+    if not (isinstance(total_params, int) and total_params > 0) and isinstance(gguf_total, int) and gguf_total > 0:
+        billions = (Decimal(gguf_total) / Decimal(10**9)).quantize(Decimal("0.001"))
+        inspection.total_params_b = Detected(
+            origin=Origin.DETECTED,
+            value=str(billions),
+            detail=f"{gguf_total:,} stored tensor elements in the GGUF file, from Hugging Face's GGUF metadata. "
+                   "This can differ from a model's marketed size.",
+            source_url=info_url,
+        )
+    elif isinstance(total_params, int) and total_params > 0:
         billions = (Decimal(total_params) / Decimal(10**9)).quantize(Decimal("0.001"))
         inspection.total_params_b = Detected(
             origin=Origin.DETECTED,
@@ -521,6 +541,24 @@ def inspect_hf_model(
         # summary describes the default branch, which may have moved.
         indexed = info.get("config") or {}
         architectures = indexed.get("architectures")
+        if not architectures and isinstance(gguf.get("architecture"), str) and gguf["architecture"].strip():
+            # A GGUF-only repository has no config.json. Its GGUF header names the
+            # runtime architecture; it is not a Transformers class and no LLM context,
+            # cache or precision is derived from it here.
+            inspection.architecture = Detected(
+                origin=Origin.DETECTED,
+                value=gguf["architecture"].strip()[:120],
+                detail="GGUF architecture from Hugging Face's GGUF metadata. GGUF files need a compatible GGUF runtime; "
+                       "Transformers-based serving containers and Bedrock Custom Model Import do not load them.",
+                source_url=info_url,
+            )
+            inspection.context_tokens = _missing(
+                "This repository has no config.json. A GGUF context length is runtime-specific and is not "
+                "treated as a chat context window.")
+            inspection.notes += (
+                "Weights are published as GGUF. Check that your serving runtime loads this exact file and any "
+                "companion files (for example, a speech codec) before planning a deployment.",
+            )
         if isinstance(architectures, list) and architectures:
             inspection.architecture = Detected(
                 origin=Origin.DETECTED,

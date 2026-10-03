@@ -25,6 +25,7 @@ import { ProjectSwitcher } from '../components/ProjectSwitcher';
 import { NativeUsageInputs } from '../components/NativeUsageInputs';
 import { CpuComparisonInputs } from '../components/CpuComparisonInputs';
 import { InferenceSizing } from '../components/InferenceSizing';
+import { Tokenomics } from '../components/Tokenomics';
 import ExpandableSection from '@cloudscape-design/components/expandable-section';
 
 const SECTIONS = ['needs', 'models', 'hosting', 'tests', 'deployment', 'advanced'];
@@ -154,6 +155,11 @@ export default function ProjectWorkspace() {
           <InferenceSizing onAsk={ask} />
         </ExpandableSection>
       </div>
+      <ExpandableSection headerText="Tokenomics: compare GPU prices and Savings Plans">
+        <Tokenomics key={form.caseId}
+          initialRegion={form.permittedRegions.split(',')[0]?.trim() || 'us-east-1'}
+          initialInstance={state.sizingDraft.report?.hardware?.instance ?? ''} />
+      </ExpandableSection>
       {!result ? <HostingDecisionPath result={null} outdated={false} onAsk={ask}
         cpuFirst={form.servingPattern === 'batch' && Number(form.concurrency) > 0 && Number(form.concurrency) <= 2}
         onCompute={exploreCompute}

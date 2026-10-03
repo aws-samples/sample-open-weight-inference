@@ -1,0 +1,33 @@
+--- a/src/tts/magpietts/magpietts.cpp
++++ b/src/tts/magpietts/magpietts.cpp
+@@ -1321,6 +1321,7 @@
+             }
+             metrics.encoder_ms += (double)(ggml_time_us() - encoder_start_us) / 1000.0;
+ 
++            bool studio_chunk_completed = false;
+             int chunk_frames_generated = 0;
+             int near_end_frames = 0;
+             bool suppress_nonfinal_codec_output = false;
+@@ -1631,6 +1632,7 @@
+                     }
+                 }
+                 if (end_chunk_after_frame) {
++                    studio_chunk_completed = true;
+                     if (params.verbose) {
+                         fprintf(
+                             stderr,
+@@ -1643,8 +1645,14 @@
+                     break;
+                 }
+                 if (terminate_after_frame) {
++                    studio_chunk_completed = true;
+                     break;
+                 }
++            }
++
++            if (!studio_chunk_completed) {
++                fprintf(stderr, "Studio rejected a Magpie chunk that reached its generation limit\n");
++                return cancel_worker();
+             }
+ 
+             if (longform_active && !final_text_chunk) {

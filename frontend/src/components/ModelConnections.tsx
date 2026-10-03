@@ -69,14 +69,14 @@ export function ModelConnections({ onCompare, onSettings }: {
         options={[
           { id: 'huggingface', text: 'Hugging Face' },
           { id: 'bedrock', text: 'Amazon Bedrock' },
-          { id: 'company', text: 'Your fine-tuned model' },
+          { id: 'company', text: 'Your model library' },
         ]}
       />
       {view === 'huggingface' ? (
         <>
           {form.modelStage === 'fine-tuned' ? <Alert type="info" header="Use the checkpoint saved after fine-tuning">
             The original base model does not include your changes. Paste the repository containing your fine-tuned weights,
-            or choose Your fine-tuned model for a private checkpoint.
+            or choose Your model library for a private checkpoint.
           </Alert> : null}
           <Container header={<Header variant="h3">Have a model link?</Header>}>
             <SpaceBetween size="m">

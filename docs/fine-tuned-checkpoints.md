@@ -11,8 +11,8 @@ Bedrock import is a comparison path; import execution is not implemented.
 ## Participant workflow
 
 1. In **Your needs**, select **Yes — we have fine-tuned weights**.
-2. Open **Models & sources → Your fine-tuned model**.
-3. Choose a prepared checkpoint and select **Read checkpoint details**.
+2. Open **Models & sources → Your model library**.
+3. Choose a prepared checkpoint and select **Read model details**.
 4. Check the derived artifact identity, distinct base revision and supplied
    training history. Save the project.
 5. Define quality tests and compare hosting. Use **View decision map** to inspect
@@ -130,3 +130,27 @@ previous stock-model trial do not establish those properties for a fine-tune.
 - [Import prerequisites](https://docs.aws.amazon.com/bedrock/latest/userguide/custom-model-import-prereq.html)
 - [Import cost calculation](https://docs.aws.amazon.com/bedrock/latest/userguide/import-model-calculate-cost.html)
 - [SageMaker inference](https://docs.aws.amazon.com/sagemaker/latest/dg/deploy-model.html)
+
+## Published speech bundle
+
+The model library also accepts one reviewed published artifact: **NVIDIA Magpie TTS
+Multilingual v2607**, as a GGUF model, its Nano Codec decoder and ten tokenizer files
+plus the required NVIDIA licence and notice
+([file manifest](../backend/deploy/magpie-v2607.json)). Every file must match the
+pinned size and SHA-256; any other file set is a different recipe. It is recorded
+as published and unchanged, with no training lineage.
+
+- Build the bundle from its pinned public sources with
+  `scripts/workshop/speech_bundle.py --output magpie-tts-v2607.tar.gz`. It reads the
+  tokenizer from two byte ranges of the `.nemo` archive and never downloads the full
+  checkpoint.
+- Validate a directory with `scripts/publish_checkpoint.py --directory DIR --speech-bundle`,
+  and add `--publish ...` as for a checkpoint.
+- `./deploy.sh --enable-speech` builds and scans the Magpie-only CPU image
+  (`backend/speech-runtime/`, linux/arm64). A bounded trial then runs on one
+  `ml.m6g.xlarge` SageMaker endpoint, accepts up to 200 characters per request and
+  returns a WAV that the service decodes before returning it. Text and audio are not stored.
+
+Custom Model Import and the GPU text recipes are reported as ruled out for this artifact:
+import accepts supported text and vision-language Safetensors models, and the GPU recipes
+load Transformers checkpoints.

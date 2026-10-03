@@ -579,6 +579,10 @@ export class AgentCoreClient {
     return this.invoke('deployment.invoke', { jobId, text, maxTokens });
   }
 
+  synthesizeTestSpeech(jobId: string, text: string, speaker: string): Promise<TestInvocationResponse> {
+    return this.invoke('deployment.invoke', { jobId, text, speaker });
+  }
+
   removeTestDeployment(jobId: string): Promise<{ deployment: DeploymentView }> {
     return this.invoke('deployment.delete', { jobId });
   }

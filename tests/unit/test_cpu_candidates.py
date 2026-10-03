@@ -54,7 +54,8 @@ def test_exact_base_model_without_latency_exposes_both_cpu_options():
         questions = gate(item, "cpu_delivery").reason
         for phrase in ("live output", "completion deadline", "same time", "comparison period"):
             assert phrase in questions
-        assert gate(item, "cpu_runtime").evidence_ref == "recorded-example:qwen-tts-cpu-20260923"
+        # A recorded speech run applies only to its own architecture, never this one.
+        assert gate(item, "cpu_runtime").evidence_ref is None
         assert item.candidate.recipe_id is None
     wire = decision_json(decision, req)
     assert {i["target"] for i in wire["unresolved"]} >= {"EC2_CPU", "AWS_BATCH_CPU"}

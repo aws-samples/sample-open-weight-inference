@@ -46,9 +46,9 @@ describe('Private fine-tuned checkpoints', () => {
       },
     });
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: /Choose a checkpoint/ }));
+    await user.click(await screen.findByRole('button', { name: /Choose a model/ }));
     await user.click(await screen.findByRole('option', { name: /acme-teaching/ }));
-    await user.click(screen.getByRole('button', { name: 'Read checkpoint details' }));
+    await user.click(screen.getByRole('button', { name: 'Read model details' }));
     await screen.findByText('Checkpoint details read');
     expect(screen.getByText('Acme teaching checkpoint')).toBeInTheDocument();
     expect(screen.getByText('Qwen/Qwen2.5-1.5B-Instruct')).toBeInTheDocument();

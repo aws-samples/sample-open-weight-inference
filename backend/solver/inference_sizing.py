@@ -32,6 +32,7 @@ WORKLOAD_KINDS = set(WORKLOADS)
 CPU_PROFILES = {
     "c7i.8xlarge": {"vcpus": 32, "memoryGiB": 64, "architecture": "x86_64"},
     "c7g.8xlarge": {"vcpus": 32, "memoryGiB": 64, "architecture": "ARM64 / Graviton"},
+    "m6g.xlarge": {"vcpus": 4, "memoryGiB": 16, "architecture": "ARM64 / Graviton2"},
     "m7i.2xlarge": {"vcpus": 8, "memoryGiB": 32, "architecture": "x86_64"},
     "m7g.2xlarge": {"vcpus": 8, "memoryGiB": 32, "architecture": "ARM64 / Graviton"},
     "r7i.2xlarge": {"vcpus": 8, "memoryGiB": 64, "architecture": "x86_64"},

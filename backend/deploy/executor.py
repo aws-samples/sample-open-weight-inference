@@ -17,6 +17,7 @@ from .failures import DeploymentFailure, endpoint_failure
 from .models import Job, JobState, LedgerEntry, ResourceState, intent_key, with_step, _now, _iso
 from .recipes import Settings, RECIPE_ID, RECIPE_VERSION, INSTANCE_TYPE, INFERENCE_AMI, serving_environment
 from .checkpoints import CHECKPOINT_RECIPE_ID, CHECKPOINT_RECIPE_VERSION
+from .speech import SPEECH_INSTANCE_TYPE, SPEECH_RECIPE_ID, SPEECH_RECIPE_VERSION, speech_environment
 from .service import client
 from .store import DynamoStore
 
@@ -45,11 +46,13 @@ def admitted_plan(store: Any, settings: Settings, job: Job):
             or approval.project_id != job.project_id or approval.policy_version != plan.policy_version
             or approval.approved_by_subject != job.started_by_subject):
         raise DeploymentFailure("approval_mismatch", "The persisted plan, admission and approval do not agree.")
-    recipes = {RECIPE_ID: RECIPE_VERSION, CHECKPOINT_RECIPE_ID: CHECKPOINT_RECIPE_VERSION}
+    recipes = {RECIPE_ID: RECIPE_VERSION, CHECKPOINT_RECIPE_ID: CHECKPOINT_RECIPE_VERSION,
+               SPEECH_RECIPE_ID: SPEECH_RECIPE_VERSION}
+    instance = SPEECH_INSTANCE_TYPE if plan.recipe_id == SPEECH_RECIPE_ID else INSTANCE_TYPE
     if (recipes.get(plan.recipe_id) != plan.recipe_version
             or plan.target.value != "SAGEMAKER_REALTIME"
             or plan.account_id != settings.account or plan.region != settings.region
-            or plan.envelope.instance_type != INSTANCE_TYPE or plan.envelope.max_instance_count != 1):
+            or plan.envelope.instance_type != instance or plan.envelope.max_instance_count != 1):
         raise DeploymentFailure("recipe_mismatch", "The admitted plan does not match this worker's reviewed recipe.")
     config = next(a.digest for a in plan.artifacts if a.kind == "config")
     if config != settings.recipe_fingerprint(plan.recipe_id, plan.target.value):
@@ -141,13 +144,15 @@ class SageMakerExecutor:
         logs.put_retention_policy(logGroupName=log_name, retentionInDays=7)
         created(self.store, log_entry)
 
+        speech = plan.recipe_id == SPEECH_RECIPE_ID
         container = {
-            "Image": self.settings.image,
+            "Image": self.settings.speech_image if speech else self.settings.image,
             "ModelDataSource": {"S3DataSource": {
                 "S3Uri": f"s3://{self.settings.bucket}/{model_prefix(self.settings, job)}files/",
                 "S3DataType": "S3Prefix", "CompressionType": "None",
             }},
-            "Environment": serving_environment(checkpoint=plan.recipe_id == CHECKPOINT_RECIPE_ID),
+            "Environment": (speech_environment() if speech else
+                            serving_environment(checkpoint=plan.recipe_id == CHECKPOINT_RECIPE_ID)),
         }
         model_entry = intent(self.store, self.settings, job, "sagemaker-model", name)
         model = self._get("describe_model", "ModelName", name)
@@ -175,14 +180,20 @@ class SageMakerExecutor:
         job = still_creating(self.store, job)
         config_entry = intent(self.store, self.settings, job, "sagemaker-endpoint-config", name)
         config = self._get("describe_endpoint_config", "EndpointConfigName", name)
-        variant = {
+        # The CPU speech recipe uses SageMaker's default CPU host image; the GPU
+        # inference AMI and its extended GPU start-up timeouts apply only to vLLM.
+        variant = ({
+            "VariantName": "primary", "ModelName": name,
+            "InstanceType": SPEECH_INSTANCE_TYPE, "InitialInstanceCount": 1,
+            "InitialVariantWeight": 1.0, "EnableSSMAccess": False,
+        } if speech else {
             "VariantName": "primary", "ModelName": name,
             "InstanceType": INSTANCE_TYPE, "InitialInstanceCount": 1,
             "InitialVariantWeight": 1.0, "InferenceAmiVersion": INFERENCE_AMI,
             "ModelDataDownloadTimeoutInSeconds": 600,
             "ContainerStartupHealthCheckTimeoutInSeconds": 600,
             "EnableSSMAccess": False,
-        }
+        })
         if config:
             self._owned(config, "EndpointConfigArn", job)
             variants = config.get("ProductionVariants", [])
@@ -225,7 +236,7 @@ class SageMakerExecutor:
 
 def handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
     store = DynamoStore(SETTINGS.table, SETTINGS.region)
-    if not SETTINGS.ready:
+    if not SETTINGS.any_ready:
         return {"ok": False, "error": "deployment_not_configured"}
     if event.get("jobId") and event.get("projectId"):
         jobs = [store.get_job(str(event["projectId"]), str(event["jobId"]))]

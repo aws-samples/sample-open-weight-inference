@@ -1,0 +1,51 @@
+{
+  "id": "magpie-tts-v2607-sagemaker-m6g-20261003",
+  "title": "A short speech sample on a Graviton2 CPU endpoint",
+  "basis": "RECORDED_EXAMPLE",
+  "recordedAt": "2026-10-03T08:35:19+00:00",
+  "description": "One bounded EDDIE trial generated one sentence with one preset voice. This is an example from a test installation, not a benchmark of your project.",
+  "model": "NVIDIA Magpie TTS Multilingual 357M (v2607 F16 GGUF)",
+  "modelSource": "https://huggingface.co/nvidia/magpie_tts_multilingual_357m",
+  "architecture": "magpietts",
+  "runtime": "NeMo-Speech.cpp 0f706e43 (CPU, armv8.2-a+fp16+dotprod)",
+  "hosting": "Amazon SageMaker real-time endpoint",
+  "instance": "ml.m6g.xlarge",
+  "region": "us-east-1",
+  "vcpus": 4,
+  "memoryGiB": 16,
+  "cpuArchitecture": "ARM64 / Graviton2",
+  "threads": 4,
+  "inputCharacters": 182,
+  "audioSeconds": 11.61,
+  "synthesisSeconds": 37.333,
+  "requestSeconds": 37.517,
+  "realTimeFactor": 3.22,
+  "peakProcessMiB": 893.4,
+  "startupSeconds": 217,
+  "hourlyUsd": "0.1848",
+  "trialCostUsd": "0.03",
+  "cleanup": {
+    "verifiedAt": "2026-10-03T08:40:49+00:00",
+    "endpointRemoved": true,
+    "stagedFilesRemoved": true,
+    "scope": "Endpoint, endpoint configuration, model, staged files and log group confirmed removed 304 seconds after removal was requested; checked again directly in AWS."
+  },
+  "versions": {
+    "bundle": "magpie-tts-v2607",
+    "nemo-speech-tts": "0.1.0 (source 0f706e43)",
+    "ggml": "c03b4e2b",
+    "image": "Amazon Linux 2023 minimal, linux/arm64"
+  },
+  "artifactHashes": {
+    "bundleArchive": "9034a43de72ea097a2ba59571ef85538a3f81500a048d133254871652bb8bad5",
+    "input": "5173263813e0b1ac67c1b767cb5603585a14ba3773f9388bf0be1e2186b60666",
+    "audio": "61ac7fde1e5bd318a48d0b7c8cf1a23dc7d6eeb2df4ba1c10a2591d7e7132655"
+  },
+  "limitations": [
+    "One request does not establish a percentile, throughput, concurrency or a longer input's completion time.",
+    "Synthesis took about 3.2 seconds per second of audio on this instance. It does not demonstrate live or streaming voice.",
+    "Peak memory covers one loaded model and codec with two generation and two codec threads; concurrent workers need their own measurement.",
+    "Speech quality was not evaluated. The audio was checked only for complete decoding in the recipe's format.",
+    "The cost is list price multiplied by the time from approval to confirmed removal (about 11 minutes); it is not an invoice."
+  ]
+}

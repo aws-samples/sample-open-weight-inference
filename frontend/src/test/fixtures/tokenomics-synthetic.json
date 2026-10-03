@@ -1,0 +1,641 @@
+{
+  "schemaVersion": 1,
+  "scope": "PUBLIC_EC2_COMPUTE_ESTIMATE",
+  "currency": "USD",
+  "instanceType": "p6-b200.48xlarge",
+  "region": "us-east-1",
+  "poolSizes": [
+    1,
+    2
+  ],
+  "hoursPerDay": "24",
+  "hoursPerYear": "8760",
+  "commitmentHoursPerYear": "8760",
+  "monthlyOutputTokens": null,
+  "retrievedAt": "2026-10-03T00:00:00+00:00",
+  "hardware": {
+    "instance": "p6-b200.48xlarge",
+    "accelerator": "NVIDIA B200",
+    "gpus": 8,
+    "memory_gib": 179,
+    "bandwidth_gbps": 8000,
+    "bf16_tflops": 2250,
+    "interconnect": "NVLink / NVSwitch within the node",
+    "compute_source": "https://www.nvidia.com/en-us/data-center/hgx/",
+    "sourceUrl": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+    "reviewedAt": "2026-09-23",
+    "basis": "PUBLISHED",
+    "availability": "NOT_CHECKED"
+  },
+  "hardwareChoices": [
+    {
+      "instance": "g6.2xlarge",
+      "accelerator": "NVIDIA L4",
+      "gpus": 1
+    },
+    {
+      "instance": "g5.2xlarge",
+      "accelerator": "NVIDIA A10G",
+      "gpus": 1
+    },
+    {
+      "instance": "g6e.2xlarge",
+      "accelerator": "NVIDIA L40S",
+      "gpus": 1
+    },
+    {
+      "instance": "g5.12xlarge",
+      "accelerator": "NVIDIA A10G",
+      "gpus": 4
+    },
+    {
+      "instance": "p5.48xlarge",
+      "accelerator": "NVIDIA H100",
+      "gpus": 8
+    },
+    {
+      "instance": "p5e.48xlarge",
+      "accelerator": "NVIDIA H200",
+      "gpus": 8
+    },
+    {
+      "instance": "p6-b200.48xlarge",
+      "accelerator": "NVIDIA B200",
+      "gpus": 8
+    }
+  ],
+  "rows": [
+    {
+      "id": "on-demand",
+      "planType": "OnDemand",
+      "termYears": 0,
+      "paymentOption": "Pay as you go",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "10",
+      "breakEvenAllocatedPercent": null,
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "10",
+        "sku": "synthetic",
+        "sourceUrl": "https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/price-changes.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "87600.00",
+          "monthlyEquivalentUsd": "7300.00",
+          "upfrontUsd": "0.00",
+          "recurringMonthlyUsd": "7300.00",
+          "termCommitmentUsd": null,
+          "annualSavingsUsd": "0.00",
+          "savingsPercent": "0.0",
+          "hourlyCommitmentUsd": null,
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "175200.00",
+          "monthlyEquivalentUsd": "14600.00",
+          "upfrontUsd": "0.00",
+          "recurringMonthlyUsd": "14600.00",
+          "termCommitmentUsd": null,
+          "annualSavingsUsd": "0.00",
+          "savingsPercent": "0.0",
+          "hourlyCommitmentUsd": null,
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "Compute-1-no-upfront",
+      "planType": "Compute",
+      "termYears": 1,
+      "paymentOption": "No Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-Compute-1-No Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": "0.00",
+          "recurringMonthlyUsd": "2920.00",
+          "termCommitmentUsd": "35040.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": "0.00",
+          "recurringMonthlyUsd": "5840.00",
+          "termCommitmentUsd": "70080.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "Compute-1-partial-upfront",
+      "planType": "Compute",
+      "termYears": 1,
+      "paymentOption": "Partial Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-Compute-1-Partial Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": null,
+          "recurringMonthlyUsd": null,
+          "termCommitmentUsd": "35040.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": null,
+          "recurringMonthlyUsd": null,
+          "termCommitmentUsd": "70080.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "Compute-1-all-upfront",
+      "planType": "Compute",
+      "termYears": 1,
+      "paymentOption": "All Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-Compute-1-All Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": "35040.00",
+          "recurringMonthlyUsd": "0.00",
+          "termCommitmentUsd": "35040.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": "70080.00",
+          "recurringMonthlyUsd": "0.00",
+          "termCommitmentUsd": "70080.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "EC2Instance-1-no-upfront",
+      "planType": "EC2Instance",
+      "termYears": 1,
+      "paymentOption": "No Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-EC2Instance-1-No Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": "0.00",
+          "recurringMonthlyUsd": "2920.00",
+          "termCommitmentUsd": "35040.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": "0.00",
+          "recurringMonthlyUsd": "5840.00",
+          "termCommitmentUsd": "70080.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "EC2Instance-1-partial-upfront",
+      "planType": "EC2Instance",
+      "termYears": 1,
+      "paymentOption": "Partial Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-EC2Instance-1-Partial Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": null,
+          "recurringMonthlyUsd": null,
+          "termCommitmentUsd": "35040.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": null,
+          "recurringMonthlyUsd": null,
+          "termCommitmentUsd": "70080.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "EC2Instance-1-all-upfront",
+      "planType": "EC2Instance",
+      "termYears": 1,
+      "paymentOption": "All Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-EC2Instance-1-All Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": "35040.00",
+          "recurringMonthlyUsd": "0.00",
+          "termCommitmentUsd": "35040.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": "70080.00",
+          "recurringMonthlyUsd": "0.00",
+          "termCommitmentUsd": "70080.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "Compute-3-no-upfront",
+      "planType": "Compute",
+      "termYears": 3,
+      "paymentOption": "No Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-Compute-3-No Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": "0.00",
+          "recurringMonthlyUsd": "2920.00",
+          "termCommitmentUsd": "105120.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": "0.00",
+          "recurringMonthlyUsd": "5840.00",
+          "termCommitmentUsd": "210240.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "Compute-3-partial-upfront",
+      "planType": "Compute",
+      "termYears": 3,
+      "paymentOption": "Partial Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-Compute-3-Partial Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": null,
+          "recurringMonthlyUsd": null,
+          "termCommitmentUsd": "105120.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": null,
+          "recurringMonthlyUsd": null,
+          "termCommitmentUsd": "210240.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "Compute-3-all-upfront",
+      "planType": "Compute",
+      "termYears": 3,
+      "paymentOption": "All Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-Compute-3-All Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": "105120.00",
+          "recurringMonthlyUsd": "0.00",
+          "termCommitmentUsd": "105120.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": "210240.00",
+          "recurringMonthlyUsd": "0.00",
+          "termCommitmentUsd": "210240.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "EC2Instance-3-no-upfront",
+      "planType": "EC2Instance",
+      "termYears": 3,
+      "paymentOption": "No Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-EC2Instance-3-No Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": "0.00",
+          "recurringMonthlyUsd": "2920.00",
+          "termCommitmentUsd": "105120.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": "0.00",
+          "recurringMonthlyUsd": "5840.00",
+          "termCommitmentUsd": "210240.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "EC2Instance-3-partial-upfront",
+      "planType": "EC2Instance",
+      "termYears": 3,
+      "paymentOption": "Partial Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-EC2Instance-3-Partial Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": null,
+          "recurringMonthlyUsd": null,
+          "termCommitmentUsd": "105120.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": null,
+          "recurringMonthlyUsd": null,
+          "termCommitmentUsd": "210240.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    },
+    {
+      "id": "EC2Instance-3-all-upfront",
+      "planType": "EC2Instance",
+      "termYears": 3,
+      "paymentOption": "All Upfront",
+      "status": "AVAILABLE",
+      "reason": null,
+      "effectiveHourlyRateUsd": "4",
+      "breakEvenAllocatedPercent": "40.0",
+      "evidence": {
+        "status": "AVAILABLE",
+        "hourlyRateUsd": "4",
+        "offeringId": "synthetic-EC2Instance-3-All Upfront",
+        "sourceUrl": "https://docs.aws.amazon.com/savingsplans/latest/APIReference/API_DescribeSavingsPlansOfferingRates.html"
+      },
+      "pools": [
+        {
+          "instances": 1,
+          "annualCostUsd": "35040.00",
+          "monthlyEquivalentUsd": "2920.00",
+          "upfrontUsd": "105120.00",
+          "recurringMonthlyUsd": "0.00",
+          "termCommitmentUsd": "105120.00",
+          "annualSavingsUsd": "52560.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "4",
+          "costPerMillionOutputTokensUsd": null
+        },
+        {
+          "instances": 2,
+          "annualCostUsd": "70080.00",
+          "monthlyEquivalentUsd": "5840.00",
+          "upfrontUsd": "210240.00",
+          "recurringMonthlyUsd": "0.00",
+          "termCommitmentUsd": "210240.00",
+          "annualSavingsUsd": "105120.00",
+          "savingsPercent": "60.0",
+          "hourlyCommitmentUsd": "8",
+          "costPerMillionOutputTokensUsd": null
+        }
+      ]
+    }
+  ],
+  "assumptions": [
+    "Linux, shared tenancy, public USD prices. No private pricing, PPA, credits, taxes or customer billing data.",
+    "One year is 365 days; a monthly equivalent is annual cost divided by 12. A 3-year commitment covers all three years.",
+    "Savings Plans are hourly spending commitments paid throughout the term, including idle hours. The pool is fully covered at the selected public rate.",
+    "Other eligible usage might consume idle commitment, but that usage is not modeled here.",
+    "Compute only: storage, network, EKS control plane, load balancers, observability and other services are additional.",
+    "Pricing does not reserve GPU capacity or prove model fit, throughput or response time.",
+    "Any output-token cost uses your supplied volume for the same workload in each pool; it is not a throughput measurement."
+  ],
+  "sources": [
+    {
+      "label": "Savings Plans commitment terms",
+      "url": "https://docs.aws.amazon.com/savingsplans/latest/userguide/what-is-savings-plans.html"
+    },
+    {
+      "label": "Compute and EC2 Instance plan scope",
+      "url": "https://docs.aws.amazon.com/savingsplans/latest/userguide/plan-types.html"
+    },
+    {
+      "label": "EC2 instance specifications",
+      "url": "https://docs.aws.amazon.com/ec2/latest/instancetypes/ac.html",
+      "reviewedAt": "2026-09-23"
+    }
+  ],
+  "calculatorUrl": "https://calculator.aws/",
+  "quoteHash": "47486b0bdbd5a536c20f8560a110e8be2081f959f6f9cf7f73fecd55ac5fd3ec"
+}

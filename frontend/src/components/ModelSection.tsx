@@ -172,10 +172,7 @@ function InspectionSummary({
       {undetected.length > 0 ? (
         <ExpandableSection
           variant="footer"
-          headerText={`${undetected.length} property could not be read`.replace(
-            '1 property could',
-            '1 property could'
-          )}
+          headerText={`${undetected.length} ${undetected.length === 1 ? 'property' : 'properties'} could not be read`}
         >
           <SpaceBetween size="xxs">
             {undetected.map(([name, field]) => (

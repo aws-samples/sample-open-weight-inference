@@ -144,6 +144,7 @@ ACTION_CAPABILITY: dict[str, str] = {
     "evaluate": Capability.READ,
     "inspect_model": Capability.READ,
     "sizing.estimate": Capability.READ,
+    "tokenomics.compare": Capability.READ,
     "checkpoint.list": Capability.READ,
     "checkpoint.inspect": Capability.READ,
     "connectors": Capability.READ,

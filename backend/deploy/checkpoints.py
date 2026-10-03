@@ -1,4 +1,7 @@
-"""Inspect operator-published, version-pinned fine-tuned checkpoints in private S3.
+"""Inspect operator-published, version-pinned model artifacts in private S3.
+
+Two artifact kinds share the library: fine-tuned Qwen2 Safetensors checkpoints, and
+the reviewed published speech bundle (see speech.py), each with its own contract.
 
 The caller selects a manifest, not an arbitrary bucket, role, container or URL.
 Only this installation's shared library and the authenticated project's namespace
@@ -19,6 +22,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from .recipes import digest
+from .speech import inspect_speech, is_speech_manifest, speech_inspection_result, validate_speech_manifest
 
 CHECKPOINT_RECIPE_ID = "byo-qwen2-safetensors"
 CHECKPOINT_RECIPE_VERSION = "1.0.0"
@@ -229,7 +233,8 @@ def inspect_checkpoint(source: str, settings: Any, project: str, s3: Any,
     if response.get("VersionId") in (None, "", "null"):
         raise ValueError("The checkpoint library must use S3 versioning.")
     document = _json(raw)
-    files = validate_manifest(document)
+    speech = is_speech_manifest(document)
+    files = validate_speech_manifest(document) if speech else validate_manifest(document)
     # The content-addressed folder covers names, digests, sizes and supplied lineage.
     identity = {**document, "files": [
         {k: item[k] for k in ("name", "size", "sha256")} for item in files
@@ -237,6 +242,10 @@ def inspect_checkpoint(source: str, settings: Any, project: str, s3: Any,
     if key.split("/")[-2] != digest(identity):
         raise ValueError("The checkpoint's content identity does not match its library location.")
     prefix = key.removesuffix("manifest.json") + "files/"
+    if speech:
+        # Every file is pinned by the reviewed recipe; the stager verifies full content.
+        return inspect_speech(document, files, source=source, revision=manifest_digest,
+                              manifest_version=response["VersionId"], prefix=prefix)
     by_name = {item["name"]: item for item in files}
 
     def read_file(name: str, maximum: int, byte_range: str | None = None) -> bytes:
@@ -298,6 +307,8 @@ def inspect_checkpoint(source: str, settings: Any, project: str, s3: Any,
 
 
 def inspection_result(metadata: dict[str, Any]) -> dict[str, Any]:
+    if metadata.get("artifactFormat") == "gguf-speech-bundle":
+        return speech_inspection_result(metadata)
     from .models import _iso, _now
     fields = {
         name: {"origin": "DETECTED", "value": str(metadata[key]),
@@ -359,4 +370,4 @@ def list_checkpoints(settings: Any, project: str, s3: Any) -> dict[str, Any]:
         else:
             truncated = True
     return {"checkpoints": results, "truncated": truncated,
-            "note": "Inspect a checkpoint to read its model facts. A library listing does not verify training or quality."}
+            "note": "Inspect a model to read its facts. A library listing does not verify training, quality or fitness."}

@@ -38,6 +38,22 @@ describe('plain-language hosting comparison', () => {
     expect(bedrock).not.toHaveTextContent('Passed declared checks');
   });
 
+  it('shows a compatibility failure before a budget failure on the same option', () => {
+    const result = structuredClone(supportCase) as EvaluateResponse;
+    const all = [...(result.ranked ?? []), ...(result.unresolved ?? []), ...(result.excluded ?? [])];
+    const g6 = all.find((candidate) => candidate.candidateId.includes('ml.g6.2xlarge'))!;
+    g6.gates = g6.gates.map((gate) => gate.name === 'architecture' || gate.name === 'budget'
+      ? { ...gate, status: 'FAIL' as const } : gate);
+    if (!g6.gates.some((gate) => gate.name === 'budget')) {
+      g6.gates.push({ name: 'budget', status: 'FAIL', reason: 'Over the supplied budget' } as never);
+    }
+    render(<HostingComparison {...props} result={result} />);
+    const row = within(screen.getByRole('table')).getAllByRole('row')
+      .find((item) => item.textContent?.includes('ml.g6.2xlarge'));
+    expect(row).toHaveTextContent('Model compatibility not met');
+    expect(row).not.toHaveTextContent('Over budget');
+  });
+
   it('replaces an old comparison with one next action, without old costs or duty figures', async () => {
     const update = vi.fn();
     render(

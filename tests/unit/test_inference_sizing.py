@@ -123,9 +123,9 @@ def test_batch_cpu_first_and_full_job_time_is_separate_from_audio_speed():
     assert report["guidance"]["priority"] == "CPU_BENCHMARK_FIRST"
     assert report["guidance"]["qualifiesDeployment"] is False
     example = report["guidance"]["example"]
-    assert example["realTimeFactor"] > 1
-    assert example["endToEndSeconds"] > example["generationSeconds"]
-    assert example["basis"] == "RECORDED_EXAMPLE"
+    assert example["basis"] == "RECORDED_EXAMPLE" and example["architecture"] == "magpietts"
+    assert example["synthesisSeconds"] > example["audioSeconds"]  # Slower than playback.
+    assert example["requestSeconds"] >= example["synthesisSeconds"]
     assert values(report)["cpuPeak"] is None  # Example is never injected into current inputs.
 
 

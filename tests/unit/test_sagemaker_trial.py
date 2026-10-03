@@ -37,7 +37,7 @@ def prepared(settings, monkeypatch):
     metadata = {"source": recipes.MODEL_SOURCES[0], "revision": "b" * 40,
                 "bytes": 1000, "files": [], "license": "apache-2.0", "licenseUrl": "https://huggingface.co/license"}
     monkeypatch.setattr(service, "inspect_recipe_model", lambda *args: metadata)
-    monkeypatch.setattr(service, "safety_checks", lambda _: [service.check("network", True, "private", "private")])
+    monkeypatch.setattr(service, "safety_checks", lambda *_: [service.check("network", True, "private", "private")])
     import catalog.pricing
     monkeypatch.setattr(catalog.pricing, "sagemaker_hosting_rate", lambda *args: SimpleNamespace(
         amount=Decimal("1.52"), unit="USD/Hrs", currency="USD", region="us-east-1",
@@ -137,7 +137,7 @@ def test_admission_failure_does_not_consume_another_approval(prepared):
 def test_cleanup_checks_are_repeated_immediately_before_start(prepared, monkeypatch):
     app, store, actor, payload = prepared
     plan = app.prepare(payload, actor, "user:alice")["plan"]
-    monkeypatch.setattr(service, "safety_checks", lambda _: [service.check("cleanup", False, "healthy", "stopped")])
+    monkeypatch.setattr(service, "safety_checks", lambda *_: [service.check("cleanup", False, "healthy", "stopped")])
     with pytest.raises(ApprovalError, match="check changed"):
         app.approve_and_start({"planId": plan["planId"], "planHash": plan["planHash"],
                               "acknowledgeCost": True, "modelTermsReviewed": True}, actor, "user:alice")

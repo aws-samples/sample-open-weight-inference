@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Operator tool: validate a complete checkpoint, then optionally publish to EDDIE.
+"""Operator tool: validate a complete checkpoint or the reviewed speech bundle, then optionally publish.
 
 Default: local validation only. Publication requires an explicit account, bucket,
 KMS key and --publish. It does not train a model, create hosting or accept terms.
@@ -23,6 +23,9 @@ from deploy.checkpoints import (  # noqa: E402
     checkpoint_root, project_namespace, tensor_header, validate_config, validate_manifest,
 )
 from deploy.recipes import digest  # noqa: E402
+from deploy.speech import (  # noqa: E402
+    BUNDLE_FILES, is_speech_manifest, library_document, validate_speech_manifest, verify_file,
+)
 
 
 def read_metadata(path: Path) -> dict:
@@ -96,6 +99,19 @@ def describe(directory: Path, description: dict) -> tuple[dict, dict[str, Path]]
     return document, paths
 
 
+def describe_speech(directory: Path) -> tuple[dict, dict[str, Path]]:
+    """The reviewed published speech bundle: every file must match its pinned recipe."""
+    paths = {}
+    for name, item in BUNDLE_FILES.items():
+        path = directory.joinpath(*name.split("/"))
+        verify_file(path, item)
+        paths[name] = path
+    document = library_document()
+    validate_speech_manifest({**document, "files": [
+        {**row, "versionId": "not-yet-published"} for row in document["files"]]})
+    return document, paths
+
+
 def publish(document, paths, *, session, account, region, bucket, key, environment, name, project):
     identity = session.client("sts", region_name=region).get_caller_identity()
     if identity.get("Account") != account:
@@ -126,7 +142,7 @@ def publish(document, paths, *, session, account, region, bucket, key, environme
         if not version or version == "null":
             raise ValueError("S3 did not return a pinned version. No manifest was published.")
         row["versionId"] = version
-    validate_manifest(document)
+    (validate_speech_manifest if is_speech_manifest(document) else validate_manifest)(document)
     raw = json.dumps(document, sort_keys=True, separators=(",", ":")).encode()
     response = s3.put_object(
         Bucket=bucket, Key=prefix + "manifest.json", Body=raw,
@@ -143,8 +159,10 @@ def publish(document, paths, *, session, account, region, bucket, key, environme
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", type=Path, required=True)
-    parser.add_argument("--description", type=Path, required=True,
+    parser.add_argument("--description", type=Path,
                         help="JSON: name, artifactFormat, baseModel, lineage and license")
+    parser.add_argument("--speech-bundle", action="store_true",
+                        help="Validate --directory as the reviewed Magpie TTS v2607 bundle instead")
     parser.add_argument("--publish", action="store_true")
     parser.add_argument("--profile")
     parser.add_argument("--account")
@@ -155,7 +173,12 @@ def main():
     parser.add_argument("--id")
     parser.add_argument("--project", help="Authenticated project namespace. Omit for the installation's shared library.")
     args = parser.parse_args()
-    document, paths = describe(args.directory, json.loads(args.description.read_text()))
+    if args.speech_bundle:
+        document, paths = describe_speech(args.directory)
+    elif args.description:
+        document, paths = describe(args.directory, json.loads(args.description.read_text()))
+    else:
+        parser.error("--description is required for a fine-tuned checkpoint")
     if not args.publish:
         print(json.dumps({"validated": True, "fileCount": len(paths),
                           "bytes": sum(row["size"] for row in document["files"]),

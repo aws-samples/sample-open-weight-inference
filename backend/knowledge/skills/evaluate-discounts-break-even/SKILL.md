@@ -18,6 +18,14 @@ Savings Plans provide a billing benefit, not a GPU capacity reservation. Capacit
 
 ## Solve the stated comparison
 
+For an EC2 GPU pool, use `compare_gpu_commitments` to retrieve live public
+On-Demand and Savings Plans offering rates. Ask for the instance, Region, pool
+sizes and allocation schedule if missing. Return a table with each plan's term,
+payment option, annual equivalent, full commitment and upfront cash. Keep
+unavailable terms unavailable; never fill them with remembered prices or assumed
+discounts. Reduced operating hours do not reduce a Savings Plan commitment.
+Use the AWS documentation tools to verify current plan scope and terms.
+
 For a fixed-cost service versus an API with a known marginal cost per equivalent task:
 
 `break-even tasks = fixed cost over the period / API cost per task`

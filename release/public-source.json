@@ -22,6 +22,7 @@
     "examples",
     "release",
     "docs/advisor-knowledge.md",
+    "docs/adding-a-deployment-recipe.md",
     "docs/architecture-overview.md",
     "docs/architecture.md",
     "docs/compute-planning.md",
@@ -35,6 +36,7 @@
     "docs/ontology-backend.md",
     "docs/open-source-release.md",
     "docs/security-posture.md",
+    "docs/tokenomics.md",
     "docs/sources.md",
     "docs/images",
     "docs/evidence/prices-2026-09-12.json"

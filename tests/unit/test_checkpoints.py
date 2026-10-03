@@ -177,7 +177,7 @@ def test_rejects_custom_code_and_quantized_config():
 def prepare(settings, checkpoint, monkeypatch):
     s3, source, _ = checkpoint
     monkeypatch.setattr(service, "client", lambda *args: s3)
-    monkeypatch.setattr(service, "safety_checks", lambda _: [service.check("test", True, "test", "fixture")])
+    monkeypatch.setattr(service, "safety_checks", lambda *_: [service.check("test", True, "test", "fixture")])
     import catalog.pricing
     monkeypatch.setattr(catalog.pricing, "sagemaker_hosting_rate", lambda *args: SimpleNamespace(
         amount=Decimal("1.52"), unit="USD/Hrs", currency="USD", region="us-east-1",

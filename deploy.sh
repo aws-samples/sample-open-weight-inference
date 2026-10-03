@@ -18,6 +18,7 @@ REGION="${EDDIE_REGION:-us-east-1}"
 STACK="eddie-${ENVIRONMENT}"
 ENABLE_WAF="${EDDIE_ENABLE_WAF:-true}"
 ENABLE_INFERENCE="${EDDIE_ENABLE_INFERENCE:-false}"
+ENABLE_SPEECH="${EDDIE_ENABLE_SPEECH:-false}"
 PLAN_ONLY=false
 SETUP_ONLY=false
 SKIP_FRONTEND=false
@@ -34,6 +35,7 @@ while [[ $# -gt 0 ]]; do
     --region)       REGION="$2"; shift 2 ;;
     --enable-waf)   ENABLE_WAF=true; shift ;;
     --enable-inference) ENABLE_INFERENCE=true; shift ;;
+    --enable-speech) ENABLE_SPEECH=true; shift ;;
     --alarm-email)  EDDIE_ALARM_EMAIL="$2"; shift 2 ;;
     --expect-account) EXPECTED_ACCOUNT="$2"; shift 2 ;;
     -h|--help)
@@ -49,9 +51,11 @@ Usage: ./deploy.sh [options]
   --enable-waf        Attach a CloudFront WAF WebACL (adds standing cost)
   --expect-account ID Fail unless the caller is in this account
   --enable-inference Copy and scan the AWS serving image to enable bounded GPU trials
+  --enable-speech    Build and scan the Magpie-only CPU image to enable bounded speech trials
 
 Environment: EDDIE_ENVIRONMENT, EDDIE_REGION, EDDIE_ENABLE_WAF,
-             EDDIE_EXPECTED_ACCOUNT, EDDIE_ENABLE_INFERENCE, EDDIE_SERVING_IMAGE
+             EDDIE_EXPECTED_ACCOUNT, EDDIE_ENABLE_INFERENCE, EDDIE_SERVING_IMAGE,
+             EDDIE_ENABLE_SPEECH, EDDIE_SPEECH_IMAGE
              PYTHON_BIN (optional existing virtual-environment interpreter)
 USAGE
       exit 0 ;;
@@ -411,6 +415,23 @@ if [[ "$ENABLE_INFERENCE" == true && -z "$SERVING_IMAGE" ]]; then
     || die "Serving image preparation or its scan failed; see $BUILD_DIR/serving-image.log"
   SERVING_IMAGE="$("$PYTHON_BIN" -c 'import json,sys; print(json.load(open(sys.argv[1]))["imageUri"])' "$BUILD_DIR/serving-image.json")"
 fi
+SPEECH_IMAGE="${EDDIE_SPEECH_IMAGE:-$(stack_output SpeechImage || true)}"
+[[ "$SPEECH_IMAGE" != "None" ]] || SPEECH_IMAGE=""
+if [[ "$ENABLE_SPEECH" == true ]]; then
+  [[ "$PLAN_ONLY" != true ]] || die "Prepare the speech image in a normal install; --plan-only cannot enable it."
+  aws cloudformation deploy --template-file infra/cloudformation/inference-assets.yaml \
+    --stack-name "eddie-${ENVIRONMENT}-serving-assets" --region "$REGION" \
+    --parameter-overrides "Environment=$ENVIRONMENT" --no-fail-on-empty-changeset
+  # The tag is the build inputs' content identity: an unchanged recipe is reused,
+  # a changed server or runtime pin always produces and scans a new image.
+  "$PYTHON_BIN" "$REPO/scripts/prepare_speech_image.py" --region "$REGION" \
+    --environment "$ENVIRONMENT" --expect-account "$ACCOUNT_ID" \
+    --output "$BUILD_DIR/speech-image.json" \
+    >"$BUILD_DIR/speech-image.log" 2>&1 \
+    || { tail -30 "$BUILD_DIR/speech-image.log"; die "Speech image build or its scan failed; see $BUILD_DIR/speech-image.log"; }
+  SPEECH_IMAGE="$("$PYTHON_BIN" -c 'import json,sys; print(json.load(open(sys.argv[1]))["imageUri"])' "$BUILD_DIR/speech-image.json")"
+  ok "speech image $SPEECH_IMAGE"
+fi
 
 TEMPLATE="infra/cloudformation/application/eddie-app.yaml"
 # The template exceeds CloudFormation's 51,200-byte inline limit, so it is validated
@@ -442,6 +463,7 @@ PARAMS=(
   "DeploymentCodeKey=$DEPLOYMENT_KEY"
   "S3PrefixListId=$S3_PREFIX_LIST"
   "ServingImageUri=$SERVING_IMAGE"
+  "SpeechImageUri=$SPEECH_IMAGE"
   "AlarmEmail=${EDDIE_ALARM_EMAIL:-}"
 )
 if [[ -n "${EDDIE_FRONTEND_DOMAIN:-}" || -n "${EDDIE_FRONTEND_CERTIFICATE_ARN:-}" ]]; then

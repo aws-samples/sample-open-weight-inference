@@ -1,0 +1,5 @@
+Licensed by NVIDIA Corporation under the NVIDIA Open Model License
+
+Applies to the NVIDIA Magpie TTS and Nano Codec models included in this bundle.
+Agreement: NVIDIA-Open-Model-License.txt
+Source: https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license

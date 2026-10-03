@@ -20,7 +20,7 @@ const RUNTIME = [
   { value: 'gpu-required', label: 'My required runtime needs GPU' },
 ];
 
-/** Shared project fields; no podcast timing or inferred job volume is prefilled. */
+/** Shared project fields; no recorded timing or inferred job volume is prefilled. */
 export function CpuComparisonInputs({ form, onChange }: {
   form: CaseFormState; onChange: (patch: Partial<CaseFormState>) => void;
 }) {
@@ -43,7 +43,7 @@ export function CpuComparisonInputs({ form, onChange }: {
           <Input value={form.concurrency} type="number"
             onChange={({ detail }) => onChange({ concurrency: detail.value })} />
         </FormField>
-        <FormField label={`Jobs or requests in ${period}`} description="Count the same unit for every option, such as one complete episode.">
+        <FormField label={`Jobs or requests in ${period}`} description="Count the same unit for every option, such as one completed speech job.">
           <Input value={form.requests ?? ''} type="number"
             onChange={({ detail }) => onChange({ requests: detail.value })} />
         </FormField>
@@ -54,7 +54,7 @@ export function CpuComparisonInputs({ form, onChange }: {
       </ColumnLayout>
       <ExpandableSection headerText="Allocation schedule and supporting charges">
         <SpaceBetween size="m">
-          <Box>Compare the same workload over {period}. A single podcast job's cost cannot be compared with a whole month of endpoint hosting.</Box>
+          <Box>Compare the same workload over {period}. A single job's cost cannot be compared with a whole month of endpoint hosting.</Box>
           <FormField label={`Allocated hours per worker in ${period}`}
             description="Shared by EC2 CPU, Batch CPU and dedicated SageMaker compute. Include startup, idle time, retries and shutdown. Blank means always-on EC2/SageMaker; Batch stays unpriced.">
             <Input value={form.dedicatedInstanceHours} type="number"

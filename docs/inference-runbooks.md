@@ -1,6 +1,6 @@
 # Advisor skills
 
-This library contains 52 focused decision guides authored for EDᗡIE. Their topics
+This library contains 53 focused decision guides authored for EDᗡIE. Their topics
 follow the decisions a team makes from workload discovery to operating inference.
 They synthesize public documentation and research; each guide links to its sources
 and explains the evidence needed for its recommendation.
@@ -10,7 +10,7 @@ Training a new model is outside the library.
 
 ## Where the guidance comes from
 
-The [source registry](../backend/knowledge/skills/sources.json) records 80 public
+The [source registry](../backend/knowledge/skills/sources.json) records 83 public
 references, their review dates, what each supports and its limitations. Examples:
 
 - **AWS service documentation:** model availability, Custom Model Import,
@@ -21,8 +21,8 @@ references, their review dates, what each supports and its limitations. Examples
 - **Optimization research and runtime documentation:**
   [MIT AWQ](https://hanlab.mit.edu/projects/awq),
   [vLLM](https://docs.vllm.ai/en/latest/), Hugging Face and NVIDIA documentation.
-- **A recorded application experiment:** the [CPU podcast example](../backend/catalog/podcast_example.json),
-  with the exact speech models, worker configuration, timings and limitations.
+- **A recorded application experiment:** the [recorded speech example](../backend/catalog/speech_example.json),
+  with the exact speech model, runtime, instance, timings and limitations.
 
 A published benchmark describes its own experiment. It does not establish the
 performance, access, capacity or cost of a participant's project.
@@ -111,6 +111,7 @@ AWS paths described here require work outside the application's supported trial 
 
 ### Compare costs
 
+- [Analyze inference Tokenomics](../backend/knowledge/skills/analyze-tokenomics/SKILL.md)
 - [Compare equivalent inference costs](../backend/knowledge/skills/compare-like-for-like-cost/SKILL.md)
 - [Estimate native model usage cost](../backend/knowledge/skills/estimate-native-token-cost/SKILL.md)
 - [Estimate imported-model capacity cost](../backend/knowledge/skills/estimate-import-copy-cost/SKILL.md)

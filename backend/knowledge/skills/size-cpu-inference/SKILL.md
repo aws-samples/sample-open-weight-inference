@@ -1,6 +1,6 @@
 ---
 name: size-cpu-inference
-description: Size a CPU inference worker using measured peak RAM, thread scaling, NUMA, job duration and concurrency. Use for Qwen3-TTS, embeddings, rerankers, Graviton comparisons and requests for a universal CPU model-size threshold.
+description: Size a CPU inference worker using measured peak RAM, thread scaling, NUMA, job duration and concurrency. Use for speech models such as Magpie TTS, embeddings, rerankers, Graviton comparisons and requests for a universal CPU model-size threshold.
 ---
 # Size a CPU inference worker
 
@@ -14,7 +14,7 @@ Record exact artifact, CPU architecture, runtime and precision, physical/logical
 
 Measure the full pipeline. A speech model can load additional acoustic or audio components; a classifier can depend on an encoder larger than its classification head. Weight bytes alone understate the worker footprint.
 
-For a worked illustration, read the [recorded CPU experiment](../../../catalog/podcast_example.json) through `estimate_inference`. The record supplies the actual configuration, memory and timing. A short observed job cannot guarantee the deadline for longer audio or concurrent jobs.
+For a worked illustration, read the [recorded speech example](../../../catalog/speech_example.json) through `estimate_inference`. The record supplies the actual configuration, memory and timing. A short observed job cannot guarantee the deadline for longer audio or concurrent jobs.
 
 ## Sweep the dimensions that matter
 

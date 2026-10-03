@@ -942,6 +942,24 @@ async def action_chat(
         except ValueError as exc:
             return {"error": str(exc)}
 
+    def tool_compare_gpu_commitments(args: dict[str, Any]) -> dict[str, Any]:
+        from catalog.tokenomics import compare
+        try:
+            require_inference_scope(case)
+            # Only public compute parameters enter this collector, never identity
+            # fields, customer bills, or an AWS account chosen by the model.
+            regions = case.get("permittedRegions") or REGION
+            region = regions[0] if isinstance(regions, list) else str(regions).split(",")[0].strip()
+            return compare({
+                "instanceType": args.get("instanceType"),
+                "region": args.get("region") or region,
+                "poolSizes": args.get("poolSizes", [1, 2]),
+                "hoursPerDay": args.get("hoursPerDay", "24"),
+                "monthlyOutputTokens": args.get("monthlyOutputTokens"),
+            })
+        except ValueError as exc:
+            return {"error": str(exc)}
+
     # A fresh instance per authorized turn prevents cross-user or stale-document
     # reuse. Only topic/source IDs enter this adapter, never the project payload.
     aws_documents = AwsDocumentationTurn(cancel_signal=transport.cancelled)
@@ -954,6 +972,7 @@ async def action_chat(
             "inspect_model": tool_inspect_model,
             "calculate_usage": tool_calculate_usage,
             "estimate_inference": tool_estimate_inference,
+            "compare_gpu_commitments": tool_compare_gpu_commitments,
             "find_runbooks": find_runbooks,
             "read_runbooks": read_runbooks,
             "lookup_aws_documentation": aws_documents.lookup,
@@ -1297,6 +1316,10 @@ async def action_sizing(payload: dict[str, Any]) -> dict[str, Any]:
     from catalog.sizing import estimate_inference
     return await asyncio.to_thread(estimate_inference, payload)
 
+async def action_tokenomics(payload: dict[str, Any]) -> dict[str, Any]:
+    from catalog.tokenomics import compare
+    return await asyncio.to_thread(compare, payload)
+
 
 async def action_score(payload: dict[str, Any]) -> dict[str, Any]:
     return await asyncio.to_thread(score_responses, payload)
@@ -1341,6 +1364,7 @@ ACTIONS = {
     "health": action_health,
     "inspect_model": action_inspect_model,
     "sizing.estimate": action_sizing,
+    "tokenomics.compare": action_tokenomics,
     "checkpoint.list": deployment_action("checkpoint.list"),
     "checkpoint.inspect": deployment_action("checkpoint.inspect"),
     "chat": action_chat,

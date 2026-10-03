@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "id": "magpie-tts-v2607",
+  "name": "NVIDIA Magpie TTS Multilingual 357M (v2607 F16 GGUF)",
+  "modality": "TTS",
+  "architecture": "magpietts",
+  "precision": "F16",
+  "storedTensorElements": 284200199,
+  "sampleRateHz": 22050,
+  "speakers": {
+    "aria": 0,
+    "jason": 1,
+    "john": 2,
+    "leo": 3,
+    "sofia": 4
+  },
+  "upstream": [
+    {
+      "role": "tts",
+      "source": "nvidia/magpie_tts_multilingual_357m",
+      "revision": "19806879b16d3f2ccf28fb112b1bcd16a3c7923e",
+      "url": "https://huggingface.co/nvidia/magpie_tts_multilingual_357m"
+    },
+    {
+      "role": "codec",
+      "source": "nvidia/nemo-nano-codec-22khz-1.89kbps-21.5fps",
+      "revision": "fc00890b604aa2de298d2641ffc6c5f6caf8c4d7",
+      "url": "https://huggingface.co/nvidia/nemo-nano-codec-22khz-1.89kbps-21.5fps"
+    }
+  ],
+  "license": {
+    "id": "NVIDIA Open Model License",
+    "url": "https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license"
+  },
+  "runtime": {
+    "name": "NeMo-Speech.cpp TTS (CPU)",
+    "repository": "https://github.com/NVIDIA/NeMo-Speech.cpp",
+    "revision": "0f706e43cf1fbc031bad1423e05460d3acaeaa1c",
+    "sourceSha256": "4f4caf09b3010360f3b239a604d688dddabf365106a727f1a3ab8789e17a2810",
+    "ggmlRevision": "c03b4e2bcece5134827881af90242086daf75be5",
+    "ggmlSourceSha256": "7f1fe40bdd9d75bc675dab06c0436308a69556b71125bd1c9c668b26a641d94c",
+    "completionPatchSha256": "e86315d8bd768d3abd4d9d9edc791c2e34a2cb511cabdfbdd2105c4ef16c33d0",
+    "reportedVersion": "nemo-speech-tts 0.1.0"
+  },
+  "sources": [
+    {
+      "type": "file",
+      "repo": "nvidia/magpie_tts_multilingual_357m",
+      "revision": "19806879b16d3f2ccf28fb112b1bcd16a3c7923e",
+      "filename": "magpie_tts_multilingual_357m.v2607.f16.gguf"
+    },
+    {
+      "type": "file",
+      "repo": "nvidia/nemo-nano-codec-22khz-1.89kbps-21.5fps",
+      "revision": "fc00890b604aa2de298d2641ffc6c5f6caf8c4d7",
+      "filename": "nemo_nano_codec_22khz_1.89kbps_21.5fps.decoder.f16.gguf"
+    },
+    {
+      "type": "tar-ranges",
+      "repo": "nvidia/magpie_tts_multilingual_357m",
+      "revision": "19806879b16d3f2ccf28fb112b1bcd16a3c7923e",
+      "filename": "magpie_tts_multilingual_357m.nemo",
+      "directory": "tokenizer",
+      "bytes": 31076864,
+      "sha256": "169144a64f6d775178696914e5aad8282db44820e73341d5f9a4e7865fac1f26",
+      "ranges": [
+        {
+          "start": 0,
+          "end": 20619263,
+          "stopBefore": "model_weights.ckpt"
+        },
+        {
+          "start": 1459750400,
+          "end": 1470207999
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "name": "magpie_tts_multilingual_357m.v2607.f16.gguf",
+      "role": "tts",
+      "size": 568663328,
+      "sha256": "30d27551fc4a050e8095139f0185796024493373e83d49443c8ddba33c514e68"
+    },
+    {
+      "name": "nemo_nano_codec_22khz_1.89kbps_21.5fps.decoder.f16.gguf",
+      "role": "codec",
+      "size": 78823104,
+      "sha256": "cc86d36d821a27cdc1d4ef600a3e2b0dabe76e88fcc2a8652d9543134c07ef2d"
+    },
+    {
+      "name": "tokenizer/05adc40366e149b69319acd4b28a4919_pt_br_prondict-v1.0.dict",
+      "role": "tokenizer",
+      "size": 3580284,
+      "sha256": "6492abc404db16bbad83dd9d7f9a60eb617699f0a3ff54b3be6184e14507b745"
+    },
+    {
+      "name": "tokenizer/339da71c54b046f98cbcf38ef6d4ff67_hindi_phoneme_merged_phoneme_dict.dict",
+      "role": "tokenizer",
+      "size": 7319864,
+      "sha256": "3b50cc2c21cd8d34983d8492c91308e9db4a58c1194d6506fdbb2b97aead75fc"
+    },
+    {
+      "name": "tokenizer/41913ebaa70342058574da74293b7630_magpie_tts_multilingual_357m.nemo.speakers.json",
+      "role": "tokenizer",
+      "size": 68,
+      "sha256": "36cdcf01ebc0afb506660ac71f2d0a211236374ad5c872d7d8d985a3f9f6ccaf"
+    },
+    {
+      "name": "tokenizer/61d57a4ccb064d1e8e3d9f871c571932_heteronyms-052722",
+      "role": "tokenizer",
+      "size": 1606,
+      "sha256": "b701909aedf753172eff223950f8859cd4b9b4c80199cf0a6e9ac4a307c8f8ec"
+    },
+    {
+      "name": "tokenizer/74b3e832fe914a569fcd42b51d06b2f1_ipa_dict_nv23.05.txt",
+      "role": "tokenizer",
+      "size": 5419,
+      "sha256": "252e8eaf60dfd891520759913dc8534393eebfa8d57192365f76f9229f294e9e"
+    },
+    {
+      "name": "tokenizer/7dbc31751f224f2486090d59dc95b9f7_es_ES_nv230301.dict",
+      "role": "tokenizer",
+      "size": 2230910,
+      "sha256": "94c9a25bb359f733cd863c887d0112e7ae19a744b0333ef64b6a88e576428669"
+    },
+    {
+      "name": "tokenizer/c5e4ec2af5a14ce294f4b9edcc936535_de_nv230119.heteronym",
+      "role": "tokenizer",
+      "size": 44566,
+      "sha256": "771cc585a574fd35bd14f4ce6108edf1e0e512a8dbc810db7de4c1165ba9d0ef"
+    },
+    {
+      "name": "tokenizer/cf01ab5c48c84f3282ef7888263361e5_de_nv230119.dict",
+      "role": "tokenizer",
+      "size": 4313907,
+      "sha256": "5c7bbf3346ebd6dc57769b5cc805124215cb1bcc3b8174c4254e9e928c5d6094"
+    },
+    {
+      "name": "tokenizer/dc7d60d6b15a4651b21c9ca2932b62c6_ipa_cmudict-0.7b_nv23.01.txt",
+      "role": "tokenizer",
+      "size": 3093097,
+      "sha256": "7ea5c4c2c59cc780748b24d4ab60bd689779c4ac4ea7e27c0a8c3e20f300c0fa"
+    },
+    {
+      "name": "tokenizer/model_config.yaml",
+      "role": "tokenizer",
+      "size": 8358,
+      "sha256": "9577bfa4769981849feccd6a54d38425d81fff41ac16c282f60be97faf46ebe4"
+    },
+    {
+      "name": "licenses/NVIDIA-Open-Model-License.txt",
+      "role": "license",
+      "size": 10212,
+      "sha256": "7662321be38bf0d3203d6c344740010f265a453f3ff7e03e67bcc402fa301908"
+    },
+    {
+      "name": "licenses/Notice.txt",
+      "role": "license",
+      "size": 283,
+      "sha256": "41597247c23ff93b5bda781dfcc8d6ab5bff5311cdef4a6f04cc0ac8d91d1254"
+    }
+  ]
+}

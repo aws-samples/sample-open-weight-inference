@@ -8,25 +8,28 @@ CPU_TARGETS = frozenset({Target.EC2_CPU, Target.AWS_BATCH_CPU})
 CPU_INSTANCE = "c7i.8xlarge"
 CPU_RAM_GIB = Decimal("64")
 CPU_SPEC_URL = "https://docs.aws.amazon.com/ec2/latest/instancetypes/co.html"
-QWEN_TTS_REPOS = frozenset({
-    "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
-    "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
-})
+
+
+def _recorded_example() -> dict | None:
+    from .inference_guidance import recorded_example
+    return recorded_example()
 
 
 def cpu_gates(candidate: Candidate, request: PlacementRequest) -> tuple[Gate, ...]:
     """Retain CPU with missing requirements; reject only a stated incompatibility."""
-    if candidate.target not in CPU_TARGETS:
+    if candidate.compute_type != "cpu" and candidate.target not in CPU_TARGETS:
         return ()
+    ram_gib = candidate.memory_gib
+    if ram_gib is None and candidate.target in CPU_TARGETS:
+        ram_gib = CPU_RAM_GIB
     answers = request.qualification
-    known_example = (
-        request.model.hf_repo in QWEN_TTS_REPOS
-        and request.model.source_kind != "checkpoint"
-    )
+    example = _recorded_example()
+    # The record applies to the same artifact family only: its architecture must match.
+    known_example = bool(example) and request.model.architecture == example.get("architecture")
     runtime_required = answers.get("cpuRuntime") == "gpu-required"
     example_note = (
-        " A recorded Qwen3-TTS Base + CustomVoice CPU run demonstrates offline "
-        "feasibility, not this project's revision, complete runtime or performance."
+        f" A recorded {example['model']} run on {example['instance']} shows the CPU runtime loads and "
+        "returns audio; it is not this project's workload, throughput or deadline."
         if known_example else ""
     )
     runtime = Gate(
@@ -36,18 +39,19 @@ def cpu_gates(candidate: Candidate, request: PlacementRequest) -> tuple[Gate, ..
         "Validate a CPU-only container, dependencies, precision and audio/model components for this exact artifact."
         + example_note,
         "declared:cpuRuntime" if runtime_required else
-        ("recorded-example:qwen-tts-cpu-20260923" if known_example else None),
+        (f"recorded-example:{example['id']}" if known_example else None),
     )
     weights = request.model.weights_gb
-    too_large = weights is not None and weights >= CPU_RAM_GIB
+    too_large = weights is not None and ram_gib is not None and weights >= ram_gib
     memory = Gate(
         "cpu_memory", GateStatus.FAIL if too_large else GateStatus.UNKNOWN,
-        f"The declared weight footprint ({weights} GiB) reaches or exceeds this {CPU_RAM_GIB} GiB RAM profile. "
+        f"The declared weight footprint ({weights} GiB) reaches or exceeds this {ram_gib} GiB RAM profile. "
         "This candidate keeps the full model resident; a larger CPU profile or an explicit offload plan must be evaluated separately."
         if too_large else
-        f"This CPU profile has {CPU_RAM_GIB} GiB RAM. Measure peak process memory including runtime precision, "
+        (f"This CPU profile has {ram_gib} GiB RAM. " if ram_gib is not None else "CPU RAM is not verified. ")
+        + "Measure peak process memory including runtime precision, "
         "all models, decoders, OS headroom and concurrent workers. Weight storage alone does not establish a fit.",
-        CPU_SPEC_URL,
+        candidate.hardware_source_url or CPU_SPEC_URL,
     )
     pattern = answers.get("servingPattern")
     if candidate.target is Target.AWS_BATCH_CPU and pattern in ("interactive", "both"):

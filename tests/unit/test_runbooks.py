@@ -36,6 +36,10 @@ def editable_library(tmp_path):
     ("What should I monitor besides GPU utilization?", "observe-inference-service"),
     ("LoRA adapter serving dynamic loading", "tune-lora-serving"),
     ("Serverless CPU Fargate or Lambda", "route-cpu-serverless"),
+    ("Tokenomics for an agent: cost per successful task", "analyze-tokenomics"),
+    ("Our agent bill grows with tool results and repeated history", "analyze-tokenomics"),
+    ("Compare model and harness changes including retries and fallbacks", "analyze-tokenomics"),
+    ("Compare one-year and three-year GPU Savings Plans", "evaluate-discounts-break-even"),
 ])
 def test_retrieval_covers_decision_gaps(library, question, expected):
     result = library.search(question, today=date(2026, 9, 28))
@@ -98,6 +102,26 @@ def test_every_bundled_runbook_is_readable(library):
         result = library.read([identifier])
         assert result["runbooks"][0]["id"] == identifier
         assert result["citations"]
+
+
+def test_tokenomics_discovery_and_followup_use_bounded_offline_tools(monkeypatch):
+    from knowledge import runbooks
+
+    def network_forbidden(*args, **kwargs):
+        raise AssertionError("Skill discovery and reading must stay local")
+
+    monkeypatch.setattr(socket, "socket", network_forbidden)
+    result = runbooks.find_runbooks({"query": "agent tokenomics", "stage": "cost", "limit": 3})
+    selected = result["matches"][0]["id"]
+    assert selected == "analyze-tokenomics"
+    detail = runbooks.read_runbooks({
+        "ids": [selected, "estimate-native-token-cost", "evaluate-discounts-break-even"],
+    })
+    assert detail["affectsPlacement"] is False and detail["trust"] == "guidance"
+    assert len(json.dumps(detail, ensure_ascii=False)) <= MAX_RESPONSE_CHARS
+    assert all(source["visibility"] == "public" for source in detail["citations"])
+    assert len(detail["citations"]) == len({source["id"] for source in detail["citations"]})
+    assert "measuredEvidence" not in detail and "candidates" not in detail
 
 
 def test_changed_or_oversized_content_is_not_released(editable_library):
