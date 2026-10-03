@@ -301,9 +301,14 @@ Resources:
               - Effect: Allow
                 Action: codebuild:StartBuild
                 Resource: !GetAtt Installer.Arn
+              # BatchGetBuilds is authorized against the PROJECT ARN, not the build
+              # ARN. Scoped to build/...:* it was always denied, so the failure
+              # watcher crashed and CloudFormation never received a response for
+              # any build that failed before post_build (download, checksum or
+              # dependency install), timing out after an hour instead.
               - Effect: Allow
                 Action: codebuild:BatchGetBuilds
-                Resource: !Sub "arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:build/eddie-${EddieEnvironment}-workshop-installer:*"
+                Resource: !GetAtt Installer.Arn
               - Effect: Allow
                 Action: [logs:CreateLogStream, logs:PutLogEvents]
                 Resource: !Sub "${ControllerLogGroup.Arn}:*"

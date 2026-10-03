@@ -394,7 +394,10 @@ S3_PREFIX_LIST="$(aws ec2 describe-prefix-lists --region "$REGION" \
   --filters "Name=prefix-list-name,Values=com.amazonaws.${REGION}.s3" \
   --query 'PrefixLists[0].PrefixListId' --output text)"
 [[ "$S3_PREFIX_LIST" == pl-* ]] || die "could not discover the Region's S3 prefix list"
-SERVING_IMAGE="${EDDIE_SERVING_IMAGE:-$(stack_output ServingImage)}"
+# On a first install the application stack does not exist yet, so describe-stacks
+# exits non-zero. Under `set -Eeuo pipefail` that aborted every fresh-account install
+# here, before the stack was ever created. "No stack yet" means "no serving image yet".
+SERVING_IMAGE="${EDDIE_SERVING_IMAGE:-$(stack_output ServingImage || true)}"
 [[ "$SERVING_IMAGE" != "None" ]] || SERVING_IMAGE=""
 if [[ "$ENABLE_INFERENCE" == true && -z "$SERVING_IMAGE" ]]; then
   [[ "$PLAN_ONLY" != true ]] || die "Prepare the serving image in a normal install; --plan-only cannot enable it."
