@@ -9,5 +9,5 @@ httpx2==2.13.1
 # Token verification (SEC-01). The runtime validates the Cognito access token itself
 # rather than relying on the authorizer in front of it, so it needs a JWT library and
 # the RSA backend PyJWT uses for RS256.
-PyJWT==2.14.0
+PyJWT==2.15.0
 cryptography==50.0.1
