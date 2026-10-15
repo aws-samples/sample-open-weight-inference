@@ -1,4 +1,4 @@
-# <img src="frontend/public/brand/eddie-wordmark-color-v1.svg" alt="EDDIE" width="174">
+# <img src="frontend/public/brand/eddie-wordmark-color-v1.svg" alt="EDDIE" width="100">
 
 **Evaluate, Design & Deploy Inference Environments**
 
