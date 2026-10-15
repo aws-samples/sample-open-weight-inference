@@ -85,7 +85,8 @@
     "docs/workload-benchmarks.md"
   ],
   "reviewedBinarySha256": {
-    "docs/images/architecture.png": "d022c766a4d283803825f70f608e9b5b384c839ba87b6dcff35fccd69697a03c",
+    "docs/images/architecture.png": "1daee12cd5287df9c413c3fc0198842ab751c3c56d9b9d3a3db5ddc68d03a6eb",
+    "docs/images/architecture-dark.png": "8386a510b17da0853ce27dc7fdc8eaad4d85cca2b45b67ba24453d04a3b08900",
     "frontend/public/favicon.ico": "43b81aa14cd0ed52f6f042775d4045a14999aa2f4f57426d0fbb6fb1966fb1f5",
     "frontend/public/brand/eddie-relay-v1.ico": "43b81aa14cd0ed52f6f042775d4045a14999aa2f4f57426d0fbb6fb1966fb1f5",
     "docs/images/benchmark-comparison.png": "741be49afcf76d6dcfb8b8cdd55633afcc1a203bb717a710861fe48a4303c985",

@@ -2,6 +2,7 @@
 """Build the public architecture figure from local, official AWS icons.
 
 Run: python3 scripts/render_architecture.py [--png]
+Writes an adaptive SVG and fixed light/dark variants from the same diagram.
 PNG export additionally needs rsvg-convert. No AWS access is used.
 """
 from __future__ import annotations
@@ -17,6 +18,47 @@ IMAGES = ROOT / "docs/images"
 ICONS = IMAGES / "aws-icons"
 INK, MUTED, BORDER = "#172b42", "#52677c", "#d5dee9"
 BLUE, PURPLE, GREEN = "#1473b5", "#7154b3", "#167d72"
+# Only diagram colors change. Embedded AWS artwork retains its original bytes.
+DARK_COLORS = {
+    INK: "#e6edf3",
+    MUTED: "#adbed0",
+    BORDER: "#566d88",
+    BLUE: "#79b8ff",
+    PURPLE: "#c4a7ff",
+    GREEN: "#6cd9bc",
+    "#ffffff": "#161b22",
+    "#f6f8fc": "#18212d",
+    "#f8f6fd": "#211a33",
+    "#c7b7e6": "#8365a8",
+    "#f6faf9": "#132826",
+    "#fcfaff": "#201a2b",
+    "#f5faf8": "#132822",
+    "#b9d9d0": "#477466",
+}
+DARK_CANVAS = "#0d1117"
+
+
+def apply_theme(svg, theme):
+    if theme == "light":
+        return svg
+    if theme == "dark":
+        # Match complete presentation attributes, never text or encoded artwork.
+        for light, dark in DARK_COLORS.items():
+            for attribute in ("fill", "stroke"):
+                svg = svg.replace(f'{attribute}="{light}"', f'{attribute}="{dark}"')
+        return svg.replace(
+            '<rect class="canvas" width="1440" height="1152" fill="#161b22"/>',
+            f'<rect class="canvas" width="1440" height="1152" fill="{DARK_CANVAS}"/>',
+        )
+    if theme != "auto":
+        raise ValueError("Expected auto, light or dark theme")
+    rules = []
+    for light, dark in DARK_COLORS.items():
+        for attribute in ("fill", "stroke"):
+            rules.append(f'[{attribute}="{light}"]{{{attribute}:{dark}}}')
+    rules.append(f".canvas{{fill:{DARK_CANVAS}}}")
+    style = "<style>@media (prefers-color-scheme: dark){" + "".join(rules) + "}</style>"
+    return svg.replace("<defs>", style + "<defs>", 1)
 
 
 def text(x, y, value, size=16, color=INK, weight=400, anchor="start"):
@@ -57,7 +99,7 @@ def line(points, color=BLUE, dashed=False):
     )
 
 
-def build():
+def build(theme="auto"):
     parts = [
         '<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1152" '
         'viewBox="0 0 1440 1152" role="img" aria-labelledby="title description">',
@@ -80,7 +122,7 @@ def build():
             f'<path d="M0 0L10 5L0 10Z" fill="{color}"/></marker>'
         )
     parts += [
-        '</defs><rect width="1440" height="1152" fill="#ffffff"/>',
+        '</defs><rect class="canvas" width="1440" height="1152" fill="#ffffff"/>',
         image(ROOT / "frontend/public/brand/eddie-wordmark-color-v1.svg", 40, 30, 134, 30),
         text(198, 55, "Architecture", 29, INK, 700),
         text(40, 91, "Model discovery and comparison, followed by an approved inference trial.", 18, MUTED),
@@ -102,6 +144,8 @@ def build():
 
         # Browser and authentication are client interactions, not an API Gateway.
         box(40, 340, 204, 176, "#f6f8fc"),
+        # Keep the official dark-outline artwork legible in either theme.
+        '<rect x="112" y="355" width="60" height="60" rx="8" fill="#f1f5f9"/>',
         icon("users", 116, 359, 52),
         text(142, 440, "Cloudscape app", 21, INK, 700, "middle"),
         text(142, 468, "Manual workspace", 16, MUTED, anchor="middle"),
@@ -211,18 +255,26 @@ def build():
         text(1130, 1100, "Application installation", 15, MUTED),
         '</svg>',
     ]
-    return "".join(parts) + "\n"
+    return apply_theme("".join(parts) + "\n", theme)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--png", action="store_true", help="Also render PNG with rsvg-convert.")
     args = parser.parse_args()
-    output = IMAGES / "architecture.svg"
-    output.write_text(build())
-    if args.png:
-        subprocess.run(["rsvg-convert", "-o", str(output.with_suffix(".png")), str(output)], check=True)
-    print(output.relative_to(ROOT))
+    for theme, stem in (
+        ("auto", "architecture"),
+        ("light", "architecture-light"),
+        ("dark", "architecture-dark"),
+    ):
+        output = IMAGES / f"{stem}.svg"
+        output.write_text(build(theme))
+        print(output.relative_to(ROOT))
+        if args.png and theme != "auto":
+            # Keep architecture.png as the light fallback for existing links.
+            png = IMAGES / ("architecture.png" if theme == "light" else "architecture-dark.png")
+            subprocess.run(["rsvg-convert", "-o", str(png), str(output)], check=True)
+            print(png.relative_to(ROOT))
 
 
 if __name__ == "__main__":

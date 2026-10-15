@@ -15,3 +15,7 @@ python3 scripts/render_architecture.py --png
 ```
 
 Omit `--png` when `rsvg-convert` is not installed.
+
+The generator creates an adaptive SVG plus fixed light and dark variants.
+Only diagram surfaces, text and connectors change color; the embedded AWS icons
+remain unmodified. PNG exports provide the matching README previews.

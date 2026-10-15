@@ -32,8 +32,9 @@ into one workspace.
   explicit assumptions and a recorded CPU speech example.
 - **Tokenomics:** compare public On-Demand and 1-year/3-year Savings Plan costs
   for GPU pools, including upfront payments and the full commitment.
-- **Evaluate:** explore published coding benchmarks, run bounded workload tests,
-  and compare observed quality, speed and cost with traceable evidence.
+- **Evaluate:** explore published coding benchmarks, or test your own workload
+  for quality, latency, throughput and cost. Inspect the evidence and exclusions
+  behind each comparison.
 - **Try and remove:** approve a supported, budget- and time-limited SageMaker
   trial, send authenticated requests, and track resource removal.
 
@@ -81,7 +82,12 @@ privately as described in [SECURITY.md](SECURITY.md).
 
 ## Architecture
 
-[![Architecture: Cloudscape workspace, authenticated AgentCore API, deterministic solver, and approved SageMaker trials](docs/images/architecture.png)](docs/images/architecture.svg)
+<a href="docs/images/architecture.svg">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/architecture-dark.png">
+    <img src="docs/images/architecture.png" alt="Architecture: Cloudscape workspace, authenticated AgentCore API, deterministic solver, and approved SageMaker trials">
+  </picture>
+</a>
 
 The Advisor explains; the solver decides. CloudFront serves the frontend, while
 authenticated API requests go directly to AgentCore.

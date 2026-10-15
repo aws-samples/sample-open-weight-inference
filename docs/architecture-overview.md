@@ -1,6 +1,11 @@
 # Architecture and supported paths
 
-[![Application architecture](images/architecture.png)](images/architecture.svg)
+<a href="images/architecture.svg">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/architecture-dark.png">
+    <img src="images/architecture.png" alt="Application architecture">
+  </picture>
+</a>
 
 ## How it works
 
@@ -79,5 +84,8 @@ It describes the implementation in `infra/cloudformation/application/eddie-app.y
 `backend/runtime/`, `backend/deploy/` and `frontend/src/`.
 
 Regenerate it with `python3 scripts/render_architecture.py --png`.
-The SVG and PNG are self-contained and contain no account IDs, customer information
-or installation-specific endpoints.
+The [adaptive SVG](images/architecture.svg) follows the viewer's color scheme.
+Fixed [light](images/architecture-light.svg) and [dark](images/architecture-dark.svg)
+versions are available for slides and exports. All versions use the same layout,
+labels and unmodified AWS icons. The SVG and PNG files are self-contained and
+contain no account IDs, customer information or installation-specific endpoints.
