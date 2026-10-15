@@ -254,11 +254,18 @@ test('a novice can save, see real streaming, recover the session and compare hon
     await section(page, 'Your needs');
     const editedGoal = 'Cedar support triage with human review — unsaved navigation check';
     await page.getByRole('textbox', { name: 'Your goal', exact: true }).fill(editedGoal);
+    // Opening the Advisor can collapse side navigation at this viewport.
+    if (!await page.getByRole('link', { name: 'New project', exact: true }).isVisible()) {
+      await page.getByRole('button', { name: 'Open side navigation', exact: true }).click();
+    }
     await page.getByRole('link', { name: 'New project', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'Save this project before leaving?', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Stay here', exact: true }).click();
     await expect(page.getByRole('textbox', { name: 'Your goal', exact: true })).toHaveValue(editedGoal);
     await save(page);
+    if (!await page.getByRole('link', { name: 'New project', exact: true }).isVisible()) {
+      await page.getByRole('button', { name: 'Open side navigation', exact: true }).click();
+    }
     await page.getByRole('link', { name: 'New project', exact: true }).click();
     await expect(page).toHaveURL(/\/requirements\?case=project-[A-Za-z0-9-]+&view=needs$/);
     await expect(page.getByRole('dialog', { name: 'Save this project before leaving?', exact: true })).toHaveCount(0);

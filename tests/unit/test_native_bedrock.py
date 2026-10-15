@@ -111,6 +111,24 @@ def test_realistic_text_quote_normalizes_units_and_never_qualifies_access_or_lat
     assert next(iter(doubled.snapshot.per_candidate.values())).cost.total == Decimal("61.05")
 
 
+def test_qwen_catalog_identity_uses_its_price_list_name_and_current_rates(monkeypatch):
+    class QwenPricing:
+        amount = ".0001"
+        def get_products(self, **kwargs):
+            filters = {item["Field"]: item["Value"] for item in kwargs["Filters"]}
+            assert filters == {"model": "Qwen3 Coder 30B A3B", "regionCode": "us-east-1"}
+            return {"PriceList": [
+                product(side, self.amount, model="Qwen3 Coder 30B A3B")
+                for side in ("input", "output")
+            ]}
+    client = QwenPricing()
+    monkeypatch.setattr(native, "pricing_client", lambda: client)
+    args = ("qwen.qwen3-coder-30b-a3b-v1:0", "Qwen3-Coder-30B-A3B-Instruct", "us-east-1", AS_OF)
+    assert native.native_rates(*args)["input"].amount == Decimal(".1")
+    client.amount = ".0002"
+    assert native.native_rates(*args)["input"].amount == Decimal(".2")
+
+
 def test_strict_single_region_is_not_silently_expanded_for_a_profile(aws):
     body = payload()
     del body["constraints"]["permittedProcessingRegions"]

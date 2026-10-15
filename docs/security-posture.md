@@ -138,3 +138,24 @@ unchanged. The added source receipt is stored under the existing user/project
 conversation key. New tests cover hostile URLs and headers, redirects, response
 bounds, malformed MCP output, timeouts, cancellation, source isolation and history
 restoration. Retrieval does not certify model-written prose or account readiness.
+
+## Benchmark evidence
+
+The authenticated `evaluation.compare` action recomputes metrics from bounded
+JSON reports. It executes no uploaded code and fetches no report URLs. Imported
+reports remain user-supplied evidence; they cannot qualify a solver gate or approve
+a deployment. The Advisor can read this comparison but cannot start a benchmark.
+
+The `benchmarks.public` action reads result metadata from the fixed public
+`www.swebench.com` HTTPS source. It sends no project text or credentials. Reads,
+cache lifetime and response sizes are bounded; malformed or inconsistent evidence
+cannot enter the comparison frontier. The Advisor treats source content as data.
+No model weights, benchmark task datasets or third-party submissions are bundled.
+
+Browser workload tests use the existing authenticated trial invocation boundary,
+including its model identity, request allowance and expiry checks. The optional
+local `benchmark.sh` runner uses the operator's AWS credentials and an explicit
+account check. Self-hosted endpoints must be reached through an existing loopback
+tunnel; redirects and arbitrary remote URLs are refused. Reports omit prompts and
+generated text. Follow [the benchmark guide](workload-benchmarks.md) for limits and
+measurement assumptions.

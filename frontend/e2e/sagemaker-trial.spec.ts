@@ -1,6 +1,7 @@
 import { expect, test, type Page, type Response } from '@playwright/test';
 import fs from 'node:fs/promises';
 import type { DeploymentListResponse, DeploymentPlanReview, DeploymentView, TestInvocationResponse } from '../src/api/types';
+import type { BenchmarkComparison } from '../src/api/benchmarks';
 
 // Opt-in, real AWS test. It approves one <= $5 admission estimate and requests
 // removal in finally. The independent expiry worker remains the fallback if this
@@ -189,6 +190,49 @@ test('a novice can review, approve, try and remove a real private Qwen endpoint'
     };
     await expect(page.getByRole('heading', { name: 'Model answer', exact: true })).toBeVisible();
     await capture('07-real-model-answer');
+
+    // Exercise the benchmark runner against this same approved endpoint. This
+    // adds four requests, not another deployment or a second GPU reservation.
+    await page.goto(`${SITE}/requirements?view=tests`);
+    await expect(page.getByRole('heading', { name: 'Measure and compare configurations', exact: true })).toBeVisible();
+    await page.getByRole('group', { name: 'Example 1', exact: true })
+      .getByRole('textbox', { name: 'Question or task', exact: true }).fill(
+        'Classify the ticket as billing, account, or technical. Reply only with the category. Ticket: I was charged twice.'
+      );
+    await page.getByRole('textbox', { name: 'Example 1 expected answer', exact: true }).fill('billing');
+    await page.getByRole('button', { name: 'Add example', exact: true }).click();
+    await page.getByRole('group', { name: 'Example 2', exact: true })
+      .getByRole('textbox', { name: 'Question or task', exact: true }).fill(
+        'Classify the ticket as billing, account, or technical. Reply only with the category. Ticket: Reset my password.'
+      );
+    await page.getByRole('textbox', { name: 'Example 2 expected answer', exact: true }).fill('account');
+    await page.getByRole('button', { name: 'Find ready text trials', exact: true }).click();
+    await page.getByRole('button', { name: /Existing text trial/ }).click();
+    await page.getByRole('option').filter({ hasText: MODEL_SOURCE }).click();
+    await page.getByRole('spinbutton', { name: 'Benchmark repetitions', exact: true }).fill('2');
+    await page.getByRole('spinbutton', { name: 'Benchmark concurrency', exact: true }).fill('2');
+    await page.getByRole('spinbutton', { name: 'Benchmark output limit', exact: true }).fill('32');
+    await page.getByRole('spinbutton', { name: 'Benchmark deadline', exact: true }).fill('120');
+    await expect(page.getByRole('button', { name: 'Run workload test', exact: true })).toBeDisabled();
+    await page.getByRole('checkbox', { name: /^Send up to 4 requests/ }).check();
+    await page.getByRole('button', { name: 'Run workload test', exact: true }).click();
+    await expect(page.getByText('Run complete. Compare the observations, then save your project.', { exact: true }))
+      .toBeVisible({ timeout: 180_000 });
+    const comparisonPending = page.waitForResponse((response) => actionIs(response, 'evaluation.compare'));
+    await page.getByRole('button', { name: 'Compare benchmark runs', exact: true }).click();
+    const benchmark = await resultOf<BenchmarkComparison>(await comparisonPending);
+    expect(benchmark.rows).toHaveLength(1);
+    expect(benchmark.rows[0].planned).toBe(4);
+    expect(benchmark.rows[0].attempted).toBe(4);
+    expect(benchmark.rows[0].errors).toBe(0);
+    expect(benchmark.rows[0].ungraded).toBe(0);
+    expect(benchmark.rows[0].p95Ms).toBeGreaterThan(0);
+    expect(benchmark.rows[0].p95TtftMs).toBeNull();
+    expect(benchmark.rows[0].costUsd).not.toBeNull();
+    expect(benchmark.rows[0].costEvidence.basis).toBe('capacity');
+    expect(benchmark.deploymentQualified).toBe(false);
+    evidence.browserBenchmark = benchmark;
+    await capture('08-bounded-workload-benchmark');
   } finally {
     if (jobId) {
       try {
@@ -208,7 +252,7 @@ test('a novice can review, approve, try and remove a real private Qwen endpoint'
         await page.getByRole('button', { name: 'Cleanup receipt', exact: true }).click();
         evidence.cleanupConfirmedAt = new Date().toISOString();
         evidence.recordedResourcesAllRemoved = lastJob?.resources.every((entry) => entry.state === 'DELETED');
-        await capture('08-cleanup-confirmed');
+        await capture('09-cleanup-confirmed');
       } catch (error) {
         evidence.cleanupVerificationError = error instanceof Error ? error.message : String(error);
         // Remains a failing verification. The independent lifetime still applies.

@@ -1,8 +1,8 @@
 {
   "format": 1,
-  "version": "2026-10-03.1",
+  "version": "2026-10-14.1",
   "purpose": "Public inference decision guidance; never price, gate or deployment authority.",
-  "contractSha256": "344406dba2b18814f8d7929b1a4ea7e18bb96ec8bb122f506be6e44e806c8571",
+  "contractSha256": "86fc0de3dc8072220ebf58f85e84af5aed8b005e118a1213bd45a759c39c952b",
   "runbooks": [
     {
       "id": "qualify-inference-workload",
@@ -240,9 +240,9 @@
         "eleutherai-evaluation",
         "stanford-helm"
       ],
-      "reviewedOn": "2026-09-28",
-      "reviewAfter": "2026-12-27",
-      "sha256": "e1efcc1c88993fc85622f244c4d39bd2dc363721f4ef1b539215ef4dbc0dc4de"
+      "reviewedOn": "2026-10-14",
+      "reviewAfter": "2027-01-12",
+      "sha256": "83b3c4fb581e020e92a26646e21a2340154ab8014a75421adf36f9bfc43634f9"
     },
     {
       "id": "evaluate-rag-grounding",
@@ -373,9 +373,9 @@
         "mlcommons-inference",
         "vllm-benchmark"
       ],
-      "reviewedOn": "2026-09-28",
-      "reviewAfter": "2026-12-27",
-      "sha256": "e94d70e26de699f341e3713ceaf4b7bdfa38c7ca96ac2ef09b5257ecb16a15d9"
+      "reviewedOn": "2026-10-14",
+      "reviewAfter": "2027-01-12",
+      "sha256": "d9b950ee3f96c06bd3727688935426d23faedd1ab94a710e39459c30510de221"
     },
     {
       "id": "validate-benchmark-transfer",
@@ -397,11 +397,12 @@
       "sources": [
         "mlcommons-inference",
         "stanford-helm",
-        "vllm-benchmark"
+        "vllm-benchmark",
+        "swebench-datasets"
       ],
-      "reviewedOn": "2026-09-28",
-      "reviewAfter": "2026-12-27",
-      "sha256": "16c1e2e752ef15d89d9136c2610e35e56bfde4a11961daf019140d45d48c3017"
+      "reviewedOn": "2026-10-14",
+      "reviewAfter": "2027-01-12",
+      "sha256": "496d11a72caf96718f5b07b8e310a22cf9f6bb8d7d0e75e0f0717a36ad82d48b"
     },
     {
       "id": "test-quantized-quality",

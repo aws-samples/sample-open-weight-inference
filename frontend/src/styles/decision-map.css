@@ -1,4 +1,4 @@
-/* EDDIE's diagram layout; all controls and icons are Cloudscape components.
+/* EDDIE's diagram layout; controls use Cloudscape and services use AWS artwork.
    Connectors are decorative CSS, with the same hierarchy expressed in text. */
 .eddie-decision-map {
   --map-canvas: #f7f6fc;
@@ -98,7 +98,8 @@
 .eddie-journey-evidence ul { padding-left: 18px; margin: 0; }
 .eddie-journey-evidence li { margin-bottom: 8px; line-height: 1.6; }
 .eddie-map-branch:focus-within { outline: 2px solid var(--map-accent); outline-offset: 3px; }
-.eddie-map-branch-icon { color: var(--map-accent); background: var(--map-accent-soft); display: grid; place-items: center; border-radius: 10px; width: 40px; height: 40px; }
+.eddie-map-service-icons { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.eddie-map-service-icons img { display: block; flex: 0 0 auto; width: 44px; height: 44px; }
 .eddie-map-branch h3 { font-size: 17px; line-height: 1.25; }
 .eddie-map-subtitle { color: var(--map-muted); min-height: 38px; font-size: 13px; }
 .eddie-map-route-note { color: var(--map-muted); font-size: 12px; margin-top: auto !important; padding-top: 4px; }
@@ -151,7 +152,8 @@
   .eddie-map-branch:first-child::after { left: -15px; top: -26px; }
   .eddie-map-branch:last-child::after { right: auto; bottom: calc(100% - 25px); }
   .eddie-map-branch::before { left: -15px; top: 24px; width: 14px; height: 0; border-left: 0; border-top: 2px solid var(--map-line); }
-  .eddie-map-branch-icon { width: 32px; height: 32px; }
+  .eddie-map-service-icons { min-height: 40px; }
+  .eddie-map-service-icons img { width: 40px; height: 40px; }
   .eddie-map-subtitle { min-height: 0; }
   .eddie-map-details { padding: 16px 12px; gap: 16px; }
   .eddie-map-stages { grid-template-columns: minmax(0, 1fr); }

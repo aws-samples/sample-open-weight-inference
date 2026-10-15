@@ -1,4 +1,6 @@
 import { BrandName } from './BrandName';
+import { BenchmarkWorkspace } from './BenchmarkWorkspace';
+import { PublishedBenchmarks } from './PublishedBenchmarks';
 import { useRef, useState } from 'react';
 import Alert from '@cloudscape-design/components/alert';
 import Box from '@cloudscape-design/components/box';
@@ -14,6 +16,7 @@ import StatusIndicator from '@cloudscape-design/components/status-indicator';
 import Table from '@cloudscape-design/components/table';
 import Textarea from '@cloudscape-design/components/textarea';
 import Toggle from '@cloudscape-design/components/toggle';
+import Tabs from '@cloudscape-design/components/tabs';
 import { useApp } from '../state/AppContext';
 import { useCase } from '../state/CaseContext';
 import type { EvaluationExample as Example, ScoreReport } from '../state/evaluationDraft';
@@ -74,7 +77,7 @@ export function ProjectTests({ onHosting }: { onHosting: () => void }) {
     URL.revokeObjectURL(url);
   };
   return (
-    <SpaceBetween size="l">
+    <Tabs tabs={[{ id: 'workload', label: 'Your workload', content: <SpaceBetween size="l">
       <Header variant="h2" description="Evaluation means testing how well a model handles your task. Answer quality and response speed need different tests.">
         Test what matters to your application
       </Header>
@@ -156,14 +159,9 @@ export function ProjectTests({ onHosting }: { onHosting: () => void }) {
         </Container>
       ) : null}
 
-      <Container header={<Header variant="h3">Check response speed under load</Header>}>
-        <SpaceBetween size="s">
-          <Box>A performance benchmark sends real requests to a specific hosting configuration and measures response time, concurrency, errors and cost.</Box>
-          <StatusIndicator type="pending">The deployment-backed load runner is not connected in this installation</StatusIndicator>
-          <Box variant="small" color="text-body-secondary">No speed measurements have been produced here. Supplied answer scores cannot clear a speed requirement.</Box>
-          <Button onClick={onHosting}>Review hosting and required checks</Button>
-        </SpaceBetween>
-      </Container>
-    </SpaceBetween>
+      <BenchmarkWorkspace onHosting={onHosting} />
+    </SpaceBetween> }, {
+      id: 'published', label: 'Public benchmarks', content: <PublishedBenchmarks />,
+    }]} />
   );
 }

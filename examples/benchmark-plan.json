@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "eddie-benchmark/1",
+  "workload": {
+    "name": "Authored category examples",
+    "tasks": [
+      {"id": "task-1", "input": "Classify this request as billing, account, or technical. Return only the label. Request: I was charged twice.", "expected": "billing"},
+      {"id": "task-2", "input": "Classify this request as billing, account, or technical. Return only the label. Request: Please reset my password.", "expected": "account"},
+      {"id": "task-3", "input": "Classify this request as billing, account, or technical. Return only the label. Request: The export button crashes.", "expected": "technical"}
+    ]
+  },
+  "target": {
+    "provider": "bedrock",
+    "model": "YOUR_BEDROCK_MODEL_ID",
+    "revision": "YOUR_MODEL_REVISION",
+    "runtime": "Bedrock Converse",
+    "hardware": "AWS managed",
+    "region": "us-east-1",
+    "label": "YOUR_CONFIGURATION_LABEL"
+  },
+  "settings": {
+    "repetitions": 1,
+    "concurrency": 1,
+    "maxOutputTokens": 128,
+    "temperature": 0,
+    "maxDurationSeconds": 180,
+    "caseSensitive": false
+  }
+}

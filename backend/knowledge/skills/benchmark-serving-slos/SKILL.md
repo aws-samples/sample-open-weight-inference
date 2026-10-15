@@ -28,7 +28,9 @@ Identify whether the bottleneck is queueing, prefill, decode, memory, tokenizati
 
 Return the configuration manifest, workload generator settings, raw-result location, measurements and passing operating envelope. Show the next experiment needed for an unresolved gate.
 
-SageMaker Inference Recommender can automate supported benchmarking experiments and incurs underlying resource charges. EDᗡIE currently offers planning and supplied evidence; its deployment-backed load runner is not connected.
+EDᗡIE offers bounded closed-loop text experiments and imported measurements. The browser runs existing approved trials; benchmark.sh can measure existing services through the AWS SDK or a loopback tunnel. Keep the measurement boundary visible. Browser completion latency is not time to first token, and a closed-loop run is not proof of an open-loop production arrival-rate target.
+
+Use `read_benchmark_results` to recompute acceptance, observed percentiles and cost per useful response. Missing grades, usage or prices remain unknown. Include unsuccessful requests and the full measurement window. Dedicated capacity costs outside that window belong in the lifecycle/Tokenomics comparison. Consult current AWS documentation for SageMaker Inference Recommender's supported experiments and charges.
 
 Rebenchmark after changing model, precision, runtime, hardware, cache policy, parallelism or traffic distribution.
 

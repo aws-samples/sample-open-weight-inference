@@ -17,6 +17,10 @@ export interface ScoreReport {
   note: string;
 }
 export interface EvaluationDraft {
+  benchmarkRuns?: import('../api/benchmarks').BenchmarkRun[];
+  benchmarkSettings?: import('../api/benchmarks').BenchmarkSettings;
+  benchmarkComparison?: import('../api/benchmarks').BenchmarkComparison | null;
+  benchmarkKey?: string | null;
   rows: EvaluationExample[];
   target: string;
   caseSensitive: boolean;

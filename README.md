@@ -11,6 +11,16 @@ Answering those questions usually means piecing together model documentation,
 pricing, service limits and deployment scripts. This accelerator brings that work
 into one workspace.
 
+<a href="docs/workload-benchmarks.md">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/benchmark-comparison-dark.png">
+    <img src="docs/images/benchmark-comparison.png" alt="Published coding benchmark comparison with model names, scores, costs and source dates">
+  </picture>
+</a>
+
+*Benchmark example: historical API costs, not current AWS quotes.
+[How to read this comparison](docs/workload-benchmarks.md).*
+
 ## What it does
 
 - **Discover:** browse Amazon Bedrock models or inspect a Hugging Face model.
@@ -22,8 +32,8 @@ into one workspace.
   explicit assumptions and a recorded CPU speech example.
 - **Tokenomics:** compare public On-Demand and 1-year/3-year Savings Plan costs
   for GPU pools, including upfront payments and the full commitment.
-- **Evaluate:** score supplied example answers and keep performance evidence
-  separate from estimates.
+- **Evaluate:** explore published coding benchmarks, run bounded workload tests,
+  and compare observed quality, speed and cost with traceable evidence.
 - **Try and remove:** approve a supported, budget- and time-limited SageMaker
   trial, send authenticated requests, and track resource removal.
 
@@ -84,6 +94,7 @@ authenticated API requests go directly to AgentCore.
 | Understand hosting paths and deployment decisions | [Architecture](docs/architecture-overview.md), [decision map](docs/decision-map.md) |
 | Bring your own fine-tuned model | [Fine-tuned checkpoints](docs/fine-tuned-checkpoints.md) |
 | Enable trials or support another model | [Deployment recipes](docs/adding-a-deployment-recipe.md) |
+| Compare public benchmarks or test your own workload | [Evaluation and benchmark guide](docs/workload-benchmarks.md) |
 | Size compute and compare hosting costs | [CPU and GPU planning](docs/compute-planning.md), [cost model](docs/cost-model.md), [Tokenomics](docs/tokenomics.md) |
 | Understand Advisor sources and decision methods | [AWS documentation MCP](docs/advisor-knowledge.md), [inference skills](docs/inference-runbooks.md) |
 | Review access controls and security settings | [Security considerations](docs/security-posture.md) |

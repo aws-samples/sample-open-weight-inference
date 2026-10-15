@@ -31,15 +31,22 @@ delivery path; it is not on the direct AgentCore API path. The SageMaker contain
 is network-isolated and configured with private subnets; this does not mean the
 SageMaker service API itself has become a private endpoint.
 
+The evaluation workspace also reads public result metadata from the fixed
+SWE-bench HTTPS source and compares raw workload reports. Browser tests use the
+existing authenticated trial-invocation path. The optional command-line runner
+uses the operator's credentials against an existing service. These results never
+set solver gates or grant deployment approval. See the
+[benchmark method and boundaries](workload-benchmarks.md).
+
 ## Supported paths
 
 | Path | Current capability |
 | --- | --- |
 | Native Amazon Bedrock | Live catalog selection and supported Standard text-token cost comparison. Access and performance still require verification. |
 | Bedrock Custom Model Import | Compatibility and active-copy cost comparison for supported configurations. Import deployment is not implemented. |
-| SageMaker AI | Supported instance cost comparison and one approval-gated, bounded Qwen trial recipe. |
-| EC2 / EKS / HyperPod | Broader discovery and deployment are roadmap work, not completed execution paths. |
-| Quality and performance | Supplied-answer scoring and evidence-aware checks. Automated model-invoking quality suites and load benchmarks remain in progress. |
+| SageMaker AI | Instance cost comparison and approval-gated text, fine-tuned checkpoint and CPU speech trials. See [enabled deployment recipes](adding-a-deployment-recipe.md). |
+| EC2 / EKS / HyperPod | CPU/GPU sizing and EC2 capacity pricing; the benchmark runner can test an existing self-hosted service. Automated cluster deployment is not implemented. |
+| Quality and performance | Supplied-answer scoring, bounded model-invoking workload tests, imported evaluation reports and public coding comparisons. These samples do not establish production SLOs. |
 | AWS documentation | Live AWS Knowledge MCP retrieval for Advisor service questions, with per-answer source receipts. No account or deployment authority. |
 | COA knowledge | Optional MCP adapter to a separately installed Context Ontology Accelerator. Disabled by default; no graph/search stack is silently installed. |
 

@@ -30,7 +30,10 @@ log = logging.getLogger(__name__)
 ROUTING_DOC = "https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html"
 PRICING_DOC = "https://aws.amazon.com/bedrock/pricing/"
 # Identifier mapping only, not prices. AWS uses different names in its two APIs.
-PRICE_MODEL_NAMES = {"amazon.nova-2-lite-v1:0": "Nova 2.0 Lite"}
+PRICE_MODEL_NAMES = {
+    "amazon.nova-2-lite-v1:0": "Nova 2.0 Lite",
+    "qwen.qwen3-coder-30b-a3b-v1:0": "Qwen3 Coder 30B A3B",
+}
 PRICE_SCOPE = (
     "Standard, uncached text input and output. User-estimated usage, live public USD rates. "
     "Excludes image/audio/video, prompt caching, batch, tools, guardrails, application "

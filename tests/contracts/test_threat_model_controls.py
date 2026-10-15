@@ -183,6 +183,11 @@ def test_no_advisor_tool_can_create_approve_delete_or_spend():
         # pinned unauthenticated MCP endpoint. The boundary is exercised by
         # test_aws_docs.py; neither tool has account-write or deployment authority.
         "lookup_aws_documentation", "read_aws_documentation",
+        # Pure comparison of the supplied project reports, and a fixed-host public
+        # result reader. Neither executes benchmarks, invokes an inference target,
+        # writes to a project, or changes deployment checks. Negative cases live in
+        # test_benchmark_runtime.py and test_published_benchmarks.py.
+        "read_benchmark_results", "read_public_benchmarks",
     }, f"the advisor's tool surface changed: {sorted(names)}. Re-review before widening it."
     # Reviewed collector: public model metadata + Price List reads + pure arithmetic.
     # It cannot invoke a model, provision compute, or qualify a deployment.

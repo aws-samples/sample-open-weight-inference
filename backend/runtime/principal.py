@@ -149,6 +149,8 @@ ACTION_CAPABILITY: dict[str, str] = {
     "checkpoint.inspect": Capability.READ,
     "connectors": Capability.READ,
     "evaluation.score": Capability.READ,
+    "evaluation.compare": Capability.READ,
+    "benchmarks.public": Capability.READ,
     "case.get": Capability.READ,
     "case.list": Capability.READ,
     # Editing a draft uses the same capability as the conversational editor.

@@ -58,9 +58,10 @@ remain identifiable and do not offer current-decision controls.
 
 ## Interaction and verification
 
-Cloudscape supplies the modal, buttons, selectors, expandable checks, status
-indicators and icons. Decorative CSS connectors express the same hierarchy as the
-text. No diagram CDN or graph runtime is used.
+Cloudscape supplies the modal, buttons, selectors, expandable checks and status
+indicators. Service cards use official AWS Architecture Icons, bundled locally
+in their original colors. Decorative CSS connectors express the same hierarchy
+as the text. No diagram or icon CDN is used.
 
 The modal keeps its title and close controls visible during scrolling. Branch
 selection brings the detail panel into view, respects reduced motion, and moves

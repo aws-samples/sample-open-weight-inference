@@ -4,7 +4,7 @@ import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
 import ExpandableSection from '@cloudscape-design/components/expandable-section';
 import FormField from '@cloudscape-design/components/form-field';
-import Icon, { type IconProps } from '@cloudscape-design/components/icon';
+import Icon from '@cloudscape-design/components/icon';
 import Modal from '@cloudscape-design/components/modal';
 import Select from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
@@ -12,6 +12,7 @@ import StatusIndicator, { type StatusIndicatorProps } from '@cloudscape-design/c
 import Table from '@cloudscape-design/components/table';
 import Tabs from '@cloudscape-design/components/tabs';
 import { DecisionJourney } from './DecisionJourney';
+import { AwsServiceIcon, type AwsService } from './AwsServiceIcon';
 import type { Candidate, EvaluateResponse } from '../api/types';
 import {
   allCandidates, asRecord, candidateExplanation, candidateStatus, checkStatus,
@@ -29,8 +30,9 @@ export interface DecisionMapActions {
   renderSizing?: () => ReactNode;
 }
 
-const ROUTE_ICONS: Record<RouteId, IconProps.Name> = {
-  native: 'gen-ai', import: 'upload', sagemaker: 'multiscreen', cpu: 'settings', gpu: 'multiscreen',
+const ROUTE_SERVICES: Record<RouteId, readonly AwsService[]> = {
+  native: ['bedrock'], import: ['bedrock'], sagemaker: ['sagemaker'],
+  cpu: ['batch', 'ec2'], gpu: ['ec2', 'eks'],
 };
 const INDICATORS: Record<MapStatus['tone'], StatusIndicatorProps.Type> = {
   chosen: 'success', passed: 'success', pending: 'pending', excluded: 'error', inactive: 'not-started',
@@ -171,7 +173,9 @@ export function DecisionMap({ result, initialCandidateId, onDismiss, ...actions 
               <section key={branch.id} className="eddie-map-branch" data-active={branchId === branch.id}
                 data-tone={branch.status.tone} data-testid={`decision-branch-${branch.id}`}
                 aria-label={`${branch.title} path`}>
-                <div className="eddie-map-branch-icon"><Icon name={ROUTE_ICONS[branch.id]} size="medium" /></div>
+                <div className="eddie-map-service-icons">
+                  {ROUTE_SERVICES[branch.id].map((service) => <AwsServiceIcon key={service} service={service} />)}
+                </div>
                 <h3>{branch.title}</h3>
                 <p className="eddie-map-subtitle">{branch.subtitle}</p>
                 <Status status={branch.status} />

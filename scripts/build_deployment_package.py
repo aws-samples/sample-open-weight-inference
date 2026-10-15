@@ -190,7 +190,7 @@ def build_package(output: Path, root: Path = ROOT) -> None:
             with WheelFile.open(path) as wheel:
                 install(wheel, scheme, additional_metadata={"INSTALLER": b"eddie-wheel-packager\n"})
         # netio carries the shared outbound-URL guard used by these application packages.
-        for package in ("deploy", "catalog", "solver", "netio"):
+        for package in ("deploy", "catalog", "solver", "netio", "api"):
             source = root / "backend" / package
             if source.is_symlink() or any(path.is_symlink() for path in source.rglob("*")):
                 raise ValueError("Application packages must not contain symbolic links.")

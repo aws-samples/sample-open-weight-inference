@@ -36,6 +36,8 @@ A published MLPerf result belongs to its model, division, scenario, quality targ
 
 Return a short applicability assessment, the claims allowed, claims not established and the smallest confirming test. Preserve original provenance; do not relabel supplied results as EDᗡIE measurements.
 
+For public coding comparisons, use `read_public_benchmarks`. Compare within an agent-version cohort, examine task coverage and arithmetic checks, and inspect paired wins and regressions. Published costs are historical source-reported API costs, not current AWS quotes. A source marked checked is not an independent rerun by EDᗡIE. Missing per-task results must not be inferred from a headline score.
+
 Reassess when any fingerprint dimension changes or a source corrects/withdraws its result. Keep historical evidence available with its original identity.
 
 ## Sources
@@ -43,3 +45,4 @@ Reassess when any fingerprint dimension changes or a source corrects/withdraws i
 - [MLPerf result divisions, availability and usage boundaries](https://mlcommons.org/benchmarks/inference-datacenter/)
 - [Stanford HELM: controlled adaptation and benchmarking limits](https://crfm.stanford.edu/2022/11/17/helm.html)
 - [vLLM benchmark workload controls](https://docs.vllm.ai/en/latest/cli/bench/serve/)
+- [SWE-bench dataset definitions and evaluation scope](https://www.swebench.com/SWE-bench/guides/datasets/)

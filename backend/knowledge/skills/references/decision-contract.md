@@ -32,7 +32,9 @@ Rank only candidates the solver qualifies. Retrieve model facts, prices and calc
 
 ## Keep actions within the installation's capabilities
 
-The Advisor can inspect public metadata, record agreed workload inputs, calculate usage, retrieve prices, compare supported configurations and explain planning estimates. Private checkpoint inspection remains in the authorized project UI. The Tests page scores supplied answers; it does not run an automated quality or load benchmark.
+The Advisor can inspect public metadata, record agreed workload inputs, calculate usage, retrieve prices, compare supported configurations and explain planning estimates. Private checkpoint inspection remains in the authorized project UI. Tests supports supplied-answer scoring, bounded exact-answer trials, imported experiment comparisons and public coding evidence. Trial invocation still requires the existing authorization and resource bounds.
+
+Use `read_benchmark_results` for the project's supplied observations and `read_public_benchmarks` for published coding outcomes. These tools recompute summaries; neither grants solver or deployment authority. Keep public scores, project measurements and projected hosting costs distinct. A public leaderboard does not establish this customer's quality, latency, capacity or price.
 
 The deployment flow accepts only registered, validated trial recipes. Use the running installation's reported capabilities and recipe-readiness results to establish which trial is available; a recipe in the source tree does not prove that it is enabled. Other inference paths remain documented handoffs unless the installation explicitly provides a verified implementation. Guidance must never advertise a planned or unsupported operation as completed.
 

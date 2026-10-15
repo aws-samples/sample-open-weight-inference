@@ -1,0 +1,112 @@
+.eddie-evidence-figure {
+  --chart-surface: #ffffff;
+  --chart-ink: #172d46;
+  --chart-muted: #51657c;
+  --chart-grid: #dce4ee;
+  --chart-line: #97a8ba;
+  --chart-accent: #007a63;
+  --chart-selected: #edf6ff;
+  --chart-blue: #086cc7;
+  --chart-orange: #b34d00;
+  --chart-purple: #7953c5;
+  --chart-gray: #536779;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--chart-surface);
+  border: 1px solid var(--chart-grid);
+  border-radius: 14px;
+  color: var(--chart-ink);
+  margin: 0;
+  overflow: hidden;
+}
+.awsui-dark-mode .eddie-evidence-figure {
+  --chart-surface: #111b29;
+  --chart-ink: #e6eef9;
+  --chart-muted: #a8b9ce;
+  --chart-grid: #2c3d50;
+  --chart-line: #688198;
+  --chart-accent: #60d9b2;
+  --chart-selected: #1a3048;
+  --chart-blue: #6bb7ff;
+  --chart-orange: #ffad71;
+  --chart-purple: #bd9cff;
+  --chart-gray: #b2c1d1;
+}
+.eddie-evidence-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 26px 28px 10px;
+}
+.eddie-evidence-eyebrow { font-size: 11px; font-weight: 750; letter-spacing: 1.8px; color: var(--chart-accent); }
+.eddie-evidence-heading h3 { font-size: 28px; font-weight: 720; line-height: 1.3; letter-spacing: -.8px; margin: 7px 0 8px; color: var(--chart-ink); }
+.eddie-evidence-heading p { margin: 0; font-size: 14px; color: var(--chart-muted); }
+.eddie-evidence-controls { flex-shrink: 0; padding-top: 8px; }
+.eddie-evidence-pan-hint { display: none; color: var(--chart-muted); font-size: 12px; padding: 0 20px; margin: 8px 0 0; }
+.eddie-evidence-scroll { overflow-x: auto; }
+.eddie-evidence-scroll:focus-visible { outline: 2px solid var(--chart-blue); outline-offset: -3px; }
+.eddie-evidence-scroll svg { display: block; width: 100%; min-width: 940px; }
+.eddie-evidence-scroll text { fill: var(--chart-ink); font-family: system-ui, sans-serif; }
+.eddie-evidence-axis-title { font-size: 16px; font-weight: 650; }
+.eddie-evidence-scroll .eddie-evidence-tick { font-size: 14px; fill: var(--chart-muted); font-variant-numeric: tabular-nums; }
+.eddie-evidence-scroll .eddie-evidence-direction { font-size: 13px; font-weight: 600; fill: var(--chart-accent); }
+.eddie-evidence-scroll .eddie-evidence-hint { font-size: 12px; fill: var(--chart-muted); }
+.eddie-evidence-grid { stroke: var(--chart-grid); stroke-width: 1; }
+.eddie-evidence-grid-vertical { stroke-dasharray: 2 6; opacity: .75; }
+.eddie-evidence-axis { stroke: var(--chart-line); }
+.eddie-evidence-frontier-line { fill: none; stroke: var(--chart-accent); stroke-width: 2.3; stroke-dasharray: 7 6; }
+.eddie-evidence-frontier-ring { fill: var(--chart-surface); stroke: var(--chart-accent); stroke-width: 1.6; }
+.eddie-evidence-interval { stroke: var(--chart-muted); stroke-width: 1.4; opacity: .65; }
+.eddie-evidence-point { cursor: pointer; outline: none; }
+.eddie-evidence-blue { --point-color: var(--chart-blue); }
+.eddie-evidence-orange { --point-color: var(--chart-orange); }
+.eddie-evidence-purple { --point-color: var(--chart-purple); }
+.eddie-evidence-gray { --point-color: var(--chart-gray); }
+.eddie-evidence-dot { fill: var(--point-color); stroke: var(--chart-surface); stroke-width: 2; }
+.eddie-evidence-leader { stroke: var(--chart-line); stroke-width: 1.2; }
+.eddie-evidence-label-bg { fill: var(--chart-surface); stroke: transparent; opacity: .96; }
+.eddie-evidence-scroll .eddie-evidence-label { font-size: 15px; font-weight: 650; fill: var(--point-color); }
+.eddie-evidence-scroll .eddie-evidence-metric { font-size: 13.5px; fill: var(--chart-muted); font-variant-numeric: tabular-nums; }
+.eddie-evidence-point.is-selected .eddie-evidence-label-bg { fill: var(--chart-selected); stroke: var(--point-color); stroke-width: 1; }
+.eddie-evidence-point:hover .eddie-evidence-label-bg,
+.eddie-evidence-point:focus-visible .eddie-evidence-label-bg { stroke: var(--point-color); stroke-width: 2; }
+.eddie-evidence-point:focus-visible .eddie-evidence-dot { stroke: var(--chart-accent); stroke-width: 4; }
+.eddie-evidence-target { stroke: var(--chart-purple); stroke-width: 1.5; stroke-dasharray: 3 5; opacity: .7; }
+.eddie-evidence-scroll .eddie-evidence-target-label { fill: var(--chart-purple); font-size: 12px; }
+.eddie-evidence-figure figcaption { border-top: 1px solid var(--chart-grid); padding: 18px 28px 22px; }
+.eddie-evidence-legend { display: flex; gap: 12px 30px; flex-wrap: wrap; font-size: 13px; font-weight: 600; }
+.eddie-evidence-legend span { display: inline-flex; gap: 9px; align-items: center; }
+.eddie-evidence-swatch { width: 9px; height: 9px; background: var(--point-color); border-radius: 50%; display: inline-block; }
+.eddie-evidence-swatch.is-diamond { border-radius: 0; transform: rotate(45deg); }
+.eddie-evidence-frontier-swatch { display: inline-block; width: 24px; border-top: 2px dashed var(--chart-accent); }
+.eddie-evidence-frontier-ring-swatch { display: inline-block; width: 11px; height: 11px; border: 2px solid var(--chart-accent); border-radius: 50%; }
+.eddie-evidence-figure figcaption p { color: var(--chart-muted); font-size: 12px; line-height: 1.6; margin: 13px 0 0; }
+.eddie-evidence-figure figcaption .eddie-evidence-footnote { margin-top: 4px; font-size: 11px; }
+.eddie-evidence-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  padding: 0 28px 24px;
+}
+.eddie-evidence-insight {
+  appearance: none; font: inherit; cursor: pointer; text-align: left;
+  background: var(--chart-surface); color: var(--chart-ink);
+  border: 1px solid var(--chart-grid); border-radius: 10px;
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 7px;
+  box-shadow: 0 2px 8px rgb(20 40 65 / 3%);
+}
+.eddie-evidence-insight:hover,
+.eddie-evidence-insight:focus-visible { border-color: var(--chart-accent); outline: 2px solid var(--chart-accent); outline-offset: 2px; }
+.eddie-evidence-insight.is-selected { background: var(--chart-selected); border-color: var(--chart-blue); }
+.eddie-evidence-insight-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--chart-muted); }
+.eddie-evidence-insight strong { font-size: 25px; font-weight: 730; letter-spacing: -.7px; line-height: 1.3; color: var(--chart-accent); }
+.eddie-evidence-insight-model { font-size: 13px; font-weight: 650; }
+.eddie-evidence-insight-detail { font-size: 12px; line-height: 1.5; color: var(--chart-muted); }
+.eddie-benchmark-cohort { max-width: 480px; }
+@media (max-width: 700px) {
+  .eddie-evidence-heading { flex-direction: column; gap: 12px; padding: 20px 20px 10px; }
+  .eddie-evidence-heading h3 { font-size: 22px; }
+  .eddie-evidence-controls { padding-top: 0; }
+  .eddie-evidence-pan-hint { display: block; }
+  .eddie-evidence-figure figcaption { padding: 16px 20px; }
+  .eddie-evidence-insights { padding: 0 20px 20px; }
+}

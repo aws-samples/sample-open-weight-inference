@@ -57,7 +57,7 @@ def wheel_bytes(*, metadata="", extra=None, bad_record=False, symlink=False):
 @pytest.fixture
 def source(tmp_path, monkeypatch):
     root = tmp_path / "repo"
-    for package in ("deploy", "catalog", "solver", "netio", "runtime"):
+    for package in ("deploy", "catalog", "solver", "netio", "runtime", "api"):
         directory = root / "backend" / package
         directory.mkdir(parents=True)
         (directory / "__init__.py").write_text("")

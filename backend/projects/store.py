@@ -85,6 +85,24 @@ def validate_document(value: Any) -> dict[str, Any]:
             raise ValueError("The saved answer-test report is invalid.")
         if not isinstance(evaluation.get("reportKey"), (str, type(None))):
             raise ValueError("The saved answer-test identity is invalid.")
+        runs = evaluation.get("benchmarkRuns", [])
+        if not isinstance(runs, list):
+            raise ValueError("Saved benchmark runs must be a list.")
+        if runs:
+            from evaluation.benchmarks import compare_benchmarks
+            compare_benchmarks({"runs": runs})
+        settings = evaluation.get("benchmarkSettings")
+        if settings is not None and (
+            not isinstance(settings, dict)
+            or set(settings) - {"minimumAcceptancePercent", "maximumP95Ms", "maximumErrorPercent", "minimumTasks"}
+            or any(not isinstance(item, str) or len(item) > 40 for item in settings.values())
+        ):
+            raise ValueError("Saved benchmark settings must contain supported short text fields.")
+        # This is a presentation cache, never server-owned evidence.
+        if evaluation.get("benchmarkComparison") is not None and not isinstance(evaluation["benchmarkComparison"], dict):
+            raise ValueError("The saved benchmark comparison is invalid.")
+        if not isinstance(evaluation.get("benchmarkKey"), (str, type(None))):
+            raise ValueError("The saved benchmark comparison identity is invalid.")
     return value
 
 

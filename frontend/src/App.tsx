@@ -99,6 +99,7 @@ function CaseSwitchGuard({ targetCase, switchCase, stay }: {
 }) {
   const { caseId, form, draft, persistedTurns, evaluationDraft, projectSave: save } = useCase();
   const hasWork = Boolean(draft || persistedTurns.length ||
+    evaluationDraft.benchmarkRuns?.length ||
     evaluationDraft.rows.some((row) => row.input || row.expected || row.actual) ||
     JSON.stringify({ ...form, caseId: '' }) !== JSON.stringify({ ...EMPTY_PROJECT, caseId: '' }));
   const changing = targetCase !== caseId;

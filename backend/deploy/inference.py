@@ -17,6 +17,7 @@ from typing import Any
 
 import boto3
 from botocore.config import Config
+from api.model_usage import normalized_usage
 
 from runtime.principal import Authenticator, authorize_action, authorize_project, strip_identity_fields
 from .models import JobState, with_step, _iso, _now
@@ -151,7 +152,10 @@ def invoke(store: Any, settings: Settings, payload: dict[str, Any], project: str
         Body=json.dumps({"model": "eddie-model", "messages": [{"role": "user", "content": text}],
                          "max_tokens": max_tokens, "temperature": 0, "stream": False}).encode(),
     )
-    raw = response["Body"].read(256 * 1024 + 1)
+    try:
+        raw = response["Body"].read(256 * 1024 + 1)
+    finally:
+        response["Body"].close()
     elapsed = round((time.perf_counter() - started) * 1000, 1)
     if len(raw) > 256 * 1024:
         raise ValueError("The endpoint returned more than the response limit.")
@@ -167,6 +171,7 @@ def invoke(store: Any, settings: Settings, payload: dict[str, Any], project: str
         "jobId": job.job_id, "endpointArn": endpoint.arn,
         "requestId": response.get("ResponseMetadata", {}).get("RequestId"),
         "outputSha256": hashlib.sha256(output.encode()).hexdigest(),
+        "usage": normalized_usage(generated.get("usage")),
         "elapsedMs": str(elapsed), "metric": "single_request_end_to_end_ms",
         "sampleCount": 1, "percentileQualified": False, "qualityQualified": False,
         "promptStored": False, "outputStored": False,

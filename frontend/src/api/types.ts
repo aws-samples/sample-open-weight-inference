@@ -42,6 +42,8 @@ export type AgentAction =
   | 'checkpoint.inspect'
   | 'connectors'
   | 'evaluation.score'
+  | 'evaluation.compare'
+  | 'benchmarks.public'
   | 'deployment.list'
   | 'deployment.get'
   | 'plan.list'
@@ -562,6 +564,7 @@ export interface ChatCase {
 }
 
 export interface ChatRequest {
+  benchmarkRuns?: import('./benchmarks').BenchmarkRun[];
   message: string;
   turnId: string;
   case: ChatCase;
@@ -878,6 +881,7 @@ export interface TestDeploymentRequest {
 }
 
 export interface InvocationReceipt {
+  usage?: import('./benchmarks').TokenUsage | null;
   runId: string;
   at: string;
   model: string;

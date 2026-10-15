@@ -39,7 +39,9 @@
     "docs/tokenomics.md",
     "docs/sources.md",
     "docs/images",
-    "docs/evidence/prices-2026-09-12.json"
+    "docs/evidence/prices-2026-09-12.json",
+    "benchmark.sh",
+    "docs/workload-benchmarks.md"
   ],
   "requiredFiles": [
     "README.md",
@@ -74,11 +76,19 @@
     "backend/knowledge/aws_doc_topics.py",
     "backend/knowledge/skills/README.md",
     "docs/advisor-knowledge.md",
-    "tests/installer-setup.sh"
+    "tests/installer-setup.sh",
+    "benchmark.sh",
+    "backend/evaluation/benchmarks.py",
+    "backend/evaluation/runner.py",
+    "backend/evaluation/published.py",
+    "backend/api/model_usage.py",
+    "docs/workload-benchmarks.md"
   ],
   "reviewedBinarySha256": {
     "docs/images/architecture.png": "d022c766a4d283803825f70f608e9b5b384c839ba87b6dcff35fccd69697a03c",
     "frontend/public/favicon.ico": "43b81aa14cd0ed52f6f042775d4045a14999aa2f4f57426d0fbb6fb1966fb1f5",
-    "frontend/public/brand/eddie-relay-v1.ico": "43b81aa14cd0ed52f6f042775d4045a14999aa2f4f57426d0fbb6fb1966fb1f5"
+    "frontend/public/brand/eddie-relay-v1.ico": "43b81aa14cd0ed52f6f042775d4045a14999aa2f4f57426d0fbb6fb1966fb1f5",
+    "docs/images/benchmark-comparison.png": "741be49afcf76d6dcfb8b8cdd55633afcc1a203bb717a710861fe48a4303c985",
+    "docs/images/benchmark-comparison-dark.png": "930681902dfbd13e6949d3892262cce371560e0f12775ffeb1990975027deda6"
   }
 }

@@ -146,7 +146,13 @@ describe('interactive explanation of a recorded placement decision', () => {
     const checks = within(map.getByRole('region', { name: 'Recorded requirement checks' }));
     await userEvent.click(checks.getByRole('button', { name: 'Account quota' }));
     expect(checks.getByText(text)).toBeVisible();
-    expect(map.queryByRole('img')).toBeNull();
+    expect(checks.queryByRole('img')).toBeNull();
+    const serviceIcons = map.getAllByRole('img');
+    expect(serviceIcons).toHaveLength(7);
+    for (const image of serviceIcons) {
+      expect(image).not.toHaveAttribute('src', 'x');
+      expect(image).not.toHaveAttribute('onerror');
+    }
     expect(map.queryByRole('link')).toBeNull();
   });
 

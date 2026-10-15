@@ -217,11 +217,12 @@ test('a support team can explore, compare and score supplied answers without a w
   await expect(page.getByRole('textbox', { name: 'Example 2 actual answer', exact: true })).toHaveValue('account');
 
   await section(page, 'Models & sources');
-  await page.getByRole('button', { name: 'Company or vendor source', exact: true }).click();
+  await page.getByRole('button', { name: 'Your model library', exact: true }).click();
+  await page.getByRole('button', { name: 'Another company source or vendor integration', exact: true }).click();
   await page.getByRole('textbox', { name: 'Company model source', exact: true }).fill('s3://company-models/support-model/');
   await expect(page.getByText('Private source access needs an adapter', { exact: true })).toBeVisible();
   const catalogPending = page.waitForResponse((response) => isAction(response, 'catalog'));
-  await page.getByRole('button', { name: 'Hosted on AWS', exact: true }).click();
+  await page.getByRole('button', { name: 'Amazon Bedrock', exact: true }).click();
   const catalog = await resultOf<Record<string, unknown>>(await catalogPending);
   expect(catalog.region).toBe('us-west-2');
   evidence.catalog = { region: catalog.region, count: catalog.count };
@@ -245,6 +246,24 @@ test('a support team can explore, compare and score supplied answers without a w
   }));
   expect(geometry.document).toBeLessThanOrEqual(geometry.viewport + 1);
   await section(page, 'Compare hosting');
+  // Entering an uninspected company source invalidates the earlier model and
+  // comparison. A mobile view must not silently resurrect that old result.
+  await expect(page.getByTestId('comparison-summary')).toHaveCount(0);
+  await expect(page.getByText('Choose a model to compare its hosting options.', { exact: true })).toBeVisible();
+  await section(page, 'Models & sources');
+  await page.getByRole('button', { name: /^Model source / }).click();
+  await page.getByRole('option', { name: 'Hugging Face', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Hugging Face model source', exact: true }).fill('Qwen/Qwen2.5-7B-Instruct');
+  const mobileInspection = page.waitForResponse((response) => isAction(response, 'inspect_model'));
+  await page.getByRole('button', { name: 'Read model details', exact: true }).click();
+  await resultOf(await mobileInspection);
+  await section(page, 'Compare hosting');
+  const mobileComparison = page.waitForResponse((response) => isAction(response, 'evaluate'));
+  await page.getByRole('button', { name: 'Update comparison', exact: true }).click();
+  const mobileResult = await resultOf<EvaluateResponse>(await mobileComparison);
+  expect(mobileResult.evaluatedRequest).toMatchObject({
+    model: { name: 'Qwen/Qwen2.5-7B-Instruct' },
+  });
   await expect(page.getByTestId('comparison-summary')).toBeVisible();
   await capture('11-mobile-comparison');
   expect(errors).toEqual([]);

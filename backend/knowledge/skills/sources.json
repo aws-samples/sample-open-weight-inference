@@ -1077,5 +1077,18 @@
     "reviewAfter": "2026-11-02",
     "retrievedOn": "2026-10-03",
     "retrievedContentSha256": "7140398c164b1bb35d51ebce3b6f9f3bafb2b7547e76042183680b0cd3ac3e0c"
+  },
+  "swebench-datasets": {
+    "title": "SWE-bench datasets and evaluation scope",
+    "url": "https://www.swebench.com/SWE-bench/guides/datasets/",
+    "publisher": "SWE-bench",
+    "kind": "research",
+    "visibility": "public",
+    "supports": "Definitions and scope of the SWE-bench Verified software-issue benchmark.",
+    "limitations": "Published results describe particular agent and model configurations; they do not establish customer workload performance or current AWS prices.",
+    "reviewedOn": "2026-10-14",
+    "reviewAfter": "2027-01-12",
+    "retrievedOn": "2026-10-14",
+    "retrievedContentSha256": "d36d5a168fc2b248fe6ca6fd3b7c92e6b9d361f72e343244207a460e36d1a5e9"
   }
 }

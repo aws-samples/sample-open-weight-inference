@@ -671,14 +671,27 @@ async def action_chat(
     initial_case = dict(case)
     if len(json.dumps(case, allow_nan=False).encode()) > 256 * 1024:
         raise ValueError("The current case is too large for an Advisor turn.")
+    from evaluation.benchmarks import compare_benchmarks
+    benchmark_runs = payload.get("benchmarkRuns", [])
+    if not isinstance(benchmark_runs, list):
+        raise ValueError("Benchmark runs must be a list.")
+    if benchmark_runs:
+        # Validate raw observations before admitting the turn. They remain supplied
+        # evidence, not model-authored tool results or deployment authority.
+        compare_benchmarks({"runs": benchmark_runs})
     case_id = str(case.get("caseId") or payload.get("caseId") or "")
     turn_id = payload.get("turnId")
     assume_cleared_default = payload.get("assumeChecksCleared", False)
     if not isinstance(assume_cleared_default, bool):
         raise ValueError("Assumed checks must be an explicit true or false.")
-    request_hash = hashlib.sha256(json.dumps({
+    request_identity = {
         "message": message, "case": case, "assumeChecksCleared": assume_cleared_default,
-    }, sort_keys=True, allow_nan=False, separators=(",", ":")).encode()).hexdigest()
+    }
+    if benchmark_runs:
+        request_identity["benchmarkRuns"] = benchmark_runs
+    request_hash = hashlib.sha256(json.dumps(
+        request_identity, sort_keys=True, allow_nan=False, separators=(",", ":"),
+    ).encode()).hexdigest()
     transport = chat_transport.get() or ChatTransport(lambda *_: None, threading.Event())
 
     def prepare():
@@ -695,6 +708,21 @@ async def action_chat(
         "evaluatedPayload": None,
         "strictRequestedByAdvisor": False,
     }
+
+    def tool_read_benchmark_results(args: dict[str, Any]) -> dict[str, Any]:
+        if not benchmark_runs:
+            return {"available": False, "detail": (
+                "No benchmark reports accompany this project. Use Tests to run a supported "
+                "existing trial or import a companion-runner report. Do not invent measurements."
+            )}
+        report = compare_benchmarks({"runs": benchmark_runs, "settings": args})
+        report["rows"] = [{key: value for key, value in row.items() if key != "taskOutcomes"}
+                          for row in report["rows"]]
+        return {"available": True, **report}
+
+    def tool_read_public_benchmarks(args: dict[str, Any]) -> dict[str, Any]:
+        from evaluation.published import public_benchmarks
+        return public_benchmarks(args)
 
     def tool_propose_case_patch(args: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -975,6 +1003,8 @@ async def action_chat(
             "compare_gpu_commitments": tool_compare_gpu_commitments,
             "find_runbooks": find_runbooks,
             "read_runbooks": read_runbooks,
+            "read_benchmark_results": tool_read_benchmark_results,
+            "read_public_benchmarks": tool_read_public_benchmarks,
             "lookup_aws_documentation": aws_documents.lookup,
             "read_aws_documentation": aws_documents.read,
         },
@@ -1324,6 +1354,17 @@ async def action_tokenomics(payload: dict[str, Any]) -> dict[str, Any]:
 async def action_score(payload: dict[str, Any]) -> dict[str, Any]:
     return await asyncio.to_thread(score_responses, payload)
 
+async def action_benchmark_compare(payload: dict[str, Any]) -> dict[str, Any]:
+    from evaluation.benchmarks import compare_benchmarks
+    return await asyncio.to_thread(compare_benchmarks, payload)
+
+async def action_public_benchmarks(payload: dict[str, Any]) -> dict[str, Any]:
+    from evaluation.published import public_benchmarks
+    # The authenticated dispatcher adds projectId to every action. Public source
+    # selection has no project input; retain strict validation of all query fields.
+    query = {key: value for key, value in payload.items() if key != "projectId"}
+    return await asyncio.to_thread(public_benchmarks, query)
+
 
 def project_action(action: str):
     async def handle(payload: dict[str, Any], context: ActionContext) -> dict[str, Any]:
@@ -1361,6 +1402,8 @@ ACTIONS = {
     "case.remove": project_action("case.remove"),
     "connectors": action_connectors,
     "evaluation.score": action_score,
+    "evaluation.compare": action_benchmark_compare,
+    "benchmarks.public": action_public_benchmarks,
     "health": action_health,
     "inspect_model": action_inspect_model,
     "sizing.estimate": action_sizing,

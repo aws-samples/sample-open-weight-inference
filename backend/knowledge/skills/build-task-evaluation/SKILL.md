@@ -32,7 +32,9 @@ When using human reviewers, sample overlap to find disagreement and refine the r
 
 Return an evaluation specification, a versioned dataset and the candidate scorecard. Identify the next sample or failure class needed to reduce uncertainty.
 
-EDᗡIE's Tests page can score supplied expected/actual answers. Uploading answers does not run inference or validate their origin. A Bedrock evaluation job or external harness is a separate execution with its own costs and access requirements.
+EDᗡIE's Tests page can score supplied answers or run bounded exact-answer tests against an existing approved text trial. Its companion benchmark.sh runs against existing Bedrock, SageMaker or locally tunnelled self-hosted endpoints. Use an external task evaluator for generated code, free-form text and audio quality. No runner may invent acceptance decisions when grading is unavailable.
+
+Use `read_benchmark_results` for this project's measured samples. It checks workload and rubric fingerprints, retains failures and identifies incomparable runs. Use `read_public_benchmarks` for published coding results. A published task pass rate and an LLM judge score measure different things; do not plot them as one quality scale.
 
 Re-run affected slices after model, template, quantization, retrieval or output-format changes.
 

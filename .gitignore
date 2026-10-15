@@ -5,6 +5,8 @@ venv/
 node_modules/
 dist/
 /build/
+/benchmark-results/
+/my-benchmark.json
 .DS_Store
 config/local.yaml
 .env

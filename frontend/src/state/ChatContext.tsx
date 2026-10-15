@@ -114,6 +114,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     recordInspection,
     inspection,
     sizingDraft,
+    evaluationDraft,
     patchSizingDraft,
     projectSave,
   } = useCase();
@@ -381,6 +382,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           caseId: form.caseId,
         },
         assumeChecksCleared: form.assumeChecksCleared,
+        benchmarkRuns: evaluationDraft?.benchmarkRuns ?? [],
       };
 
       const onEvent = (event: StreamEvent<ChatResponse>) => {
@@ -503,7 +505,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [client, form, patchForm, recordDecision, recordInspection, inspection, sizingDraft, patchSizingDraft]
+    [client, form, patchForm, recordDecision, recordInspection, inspection, sizingDraft, patchSizingDraft, evaluationDraft]
   );
 
   const send = useCallback(
